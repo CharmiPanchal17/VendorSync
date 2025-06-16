@@ -47,3 +47,4 @@ Improved responsive design
 Added forgot password page
 Initial homepage layout
 Added vendor section
+Styled header and footer
