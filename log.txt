@@ -74,3 +74,4 @@ Initial homepage layout
 Added vendor section
 Styled header and footer
 Added vendor section
+Initial homepage layout
