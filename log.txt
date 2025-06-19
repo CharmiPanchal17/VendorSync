@@ -73,3 +73,4 @@ Added forgot password page
 Initial homepage layout
 Added vendor section
 Styled header and footer
+Added vendor section
