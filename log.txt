@@ -75,3 +75,4 @@ Added vendor section
 Styled header and footer
 Added vendor section
 Initial homepage layout
+Styled header and footer
