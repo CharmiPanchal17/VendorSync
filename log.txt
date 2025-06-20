@@ -114,3 +114,4 @@ Backend Excel parser
 Improved Excel UX
 Fixed duplicate rows issue
 Added vendor section
+Initial homepage layout
