@@ -129,3 +129,4 @@ Improved responsive design
 Added forgot password page
 Bug fix in auth flow
 Added vendor section
+Initial homepage layout
