@@ -130,3 +130,4 @@ Added forgot password page
 Bug fix in auth flow
 Added vendor section
 Initial homepage layout
+Styled header and footer
