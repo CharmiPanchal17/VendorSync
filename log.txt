@@ -67,3 +67,4 @@ Vendor dashboard template
 Added search functionality
 Setup login validation
 UI enhancements
+Bug fix in auth flow
