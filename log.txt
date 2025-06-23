@@ -39,3 +39,4 @@ Success message modal
 Improved Excel UX
 Upload history export option
 Vendor dashboard template
+Added search functionality
