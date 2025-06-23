@@ -40,3 +40,4 @@ Improved Excel UX
 Upload history export option
 Vendor dashboard template
 Added search functionality
+Setup login validation
