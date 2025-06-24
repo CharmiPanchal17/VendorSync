@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +13,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String email = '';
   String password = '';
   String role = 'vendor';
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void didChangeDependencies() {
@@ -80,7 +83,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (val) => email = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter email' : null,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter email';
+                              }
+                              if (!val.contains('@')) {
+                                return 'Email must contain @';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -90,7 +101,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             obscureText: true,
                             onChanged: (val) => password = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter password' : null,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter password';
+                              }
+                              if (val.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 24),
                           Align(
@@ -105,18 +124,49 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 8),
                           FilledButton.icon(
                             icon: const Icon(Icons.login),
-                            label: const Text('Login'),
+                            label: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Login'),
                             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                            onPressed: () {
+                            onPressed: _isLoading ? null : () async {
                               if (_formKey.currentState!.validate()) {
-                                if (role == 'vendor') {
-                                  Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
-                                } else {
-                                  Navigator.of(context).pushReplacementNamed('/supplier-dashboard');
+                                setState(() {
+                                  _isLoading = true;
+                                  _errorMessage = null;
+                                });
+                                try {
+                                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                    email: email,
+                                    password: password,
+                                  );
+                                  setState(() => _isLoading = false);
+                                  if (role == 'vendor') {
+                                    Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
+                                  } else {
+                                    Navigator.of(context).pushReplacementNamed('/supplier-dashboard');
+                                  }
+                                } on FirebaseAuthException catch (e) {
+                                  setState(() {
+                                    _isLoading = false;
+                                    if (e.code == 'user-not-found') {
+                                      _errorMessage = 'No user found for that email.';
+                                    } else if (e.code == 'wrong-password') {
+                                      _errorMessage = 'Wrong password provided.';
+                                    } else {
+                                      _errorMessage = 'Login failed. Please try again.';
+                                    }
+                                  });
+                                } catch (e) {
+                                  setState(() {
+                                    _isLoading = false;
+                                    _errorMessage = 'Login failed. Please try again.';
+                                  });
                                 }
                               }
                             },
                           ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 8),
+                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                          ],
                           if (role == 'vendor') ...[
                             const SizedBox(height: 16),
                             OutlinedButton.icon(
