@@ -27,7 +27,6 @@ class VendorSyncApp extends StatelessWidget {
         '/reset-password': (context) => const ResetPasswordScreen(),
         '/role-selection': (context) => const RoleSelectionScreen(),
         '/vendor-dashboard': (context) => const VendorDashboardScreen(),
-        '/vendor-create-order': (context) => const VendorCreateOrderScreen(),
         '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
         '/vendor-notifications': (context) => const VendorNotificationsScreen(),
         '/vendor-profile': (context) => const VendorProfileScreen(),

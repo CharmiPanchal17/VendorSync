@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -11,6 +12,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   bool submitted = false;
+  String newPassword = '';
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -49,24 +52,71 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           CircleAvatar(
                             radius: 40,
                             backgroundColor: colorScheme.primary.withOpacity(0.1),
-                            child: Icon(Icons.mark_email_read, size: 40, color: colorScheme.primary),
+                            child: Icon(Icons.lock_reset, size: 40, color: colorScheme.primary),
                           ),
                           const SizedBox(height: 24),
                           const Text(
-                            'Check your email!',
+                            'Set New Password',
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
-                          const Text('A password reset link has been sent to your email.'),
-                          const SizedBox(height: 32),
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              labelText: 'New Password',
+                              prefixIcon: Icon(Icons.lock_outline),
+                            ),
+                            obscureText: true,
+                            onChanged: (val) => newPassword = val,
+                          ),
+                          const SizedBox(height: 24),
                           FilledButton.icon(
-                            icon: const Icon(Icons.login),
-                            label: const Text('Back to Login'),
+                            icon: const Icon(Icons.save),
+                            label: const Text('Save Password'),
                             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              if (newPassword.length < 6) {
+                                setState(() => _errorMessage = 'Password must be at least 6 characters');
+                                return;
+                              }
+                              final collection = role == 'supplier' ? 'suppliers' : 'vendors';
+                              final query = await FirebaseFirestore.instance
+                                  .collection(collection)
+                                  .where('email', isEqualTo: email)
+                                  .limit(1)
+                                  .get();
+                              if (query.docs.isNotEmpty) {
+                                await FirebaseFirestore.instance
+                                    .collection(collection)
+                                    .doc(query.docs.first.id)
+                                    .update({'password': newPassword});
+                                setState(() {
+                                  _errorMessage = null;
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Success'),
+                                    content: const Text('Password updated! You can now log in.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                setState(() => _errorMessage = 'No account found with this email.');
+                              }
                             },
                           ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 8),
+                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                          ],
                         ],
                       )
                     : Column(
@@ -122,12 +172,31 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                   icon: const Icon(Icons.send),
                                   label: const Text('Send Reset Link'),
                                   style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      setState(() => submitted = true);
+                                      final collection = role == 'supplier' ? 'suppliers' : 'vendors';
+                                      final query = await FirebaseFirestore.instance
+                                          .collection(collection)
+                                          .where('email', isEqualTo: email)
+                                          .limit(1)
+                                          .get();
+                                      if (query.docs.isNotEmpty) {
+                                        setState(() {
+                                          submitted = true;
+                                          _errorMessage = null;
+                                        });
+                                      } else {
+                                        setState(() {
+                                          _errorMessage = 'No account found with this email.';
+                                        });
+                                      }
                                     }
                                   },
                                 ),
+                                if (_errorMessage != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                                ],
                               ],
                             ),
                           ),

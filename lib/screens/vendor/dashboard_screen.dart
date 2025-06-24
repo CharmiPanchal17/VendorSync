@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart';
 import 'suppliers_list_screen.dart';
+import 'create_order_screen.dart';
 
 class VendorDashboardScreen extends StatelessWidget {
   const VendorDashboardScreen({super.key});
@@ -54,7 +55,11 @@ class VendorDashboardScreen extends StatelessWidget {
                     label: const Text('Create New Order'),
                     style: FilledButton.styleFrom(minimumSize: const Size(160, 48)),
                     onPressed: () {
-                      Navigator.of(context).pushNamed('/vendor-create-order');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => VendorCreateOrderScreen(vendorEmail: 'vendor@example.com'),
+                        ),
+                      );
                     },
                   ),
                   OutlinedButton.icon(
