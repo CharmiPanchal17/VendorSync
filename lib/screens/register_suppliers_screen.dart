@@ -133,39 +133,6 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text('Registered Suppliers:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: suppliers.length,
-                      itemBuilder: (context, index) {
-                        final s = suppliers[index];
-                        return Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: colorScheme.primary.withOpacity(0.1),
-                              child: const Icon(Icons.person, color: Colors.black54),
-                            ),
-                            title: Text(s['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text(s['email'] ?? ''),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.dashboard),
-                      label: const Text('Finish & Go to Dashboard'),
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                      onPressed: () {
-                        Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
-                      },
-                    ),
                   ],
                 ),
               ),

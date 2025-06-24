@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../../mock_data/mock_users.dart';
 import '../../models/user.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VendorCreateOrderScreen extends StatefulWidget {
-  const VendorCreateOrderScreen({super.key});
+  final String vendorEmail;
+  const VendorCreateOrderScreen({super.key, required this.vendorEmail});
 
   @override
   State<VendorCreateOrderScreen> createState() => _VendorCreateOrderScreenState();
@@ -16,11 +18,35 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
   int quantity = 1;
   User? selectedSupplier;
   DateTime? preferredDate;
+  List<User> firestoreSuppliers = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSuppliers();
+  }
+
+  Future<void> _fetchSuppliers() async {
+    final query = await FirebaseFirestore.instance
+        .collection('suppliers')
+        .where('vendorEmail', isEqualTo: widget.vendorEmail)
+        .get();
+    setState(() {
+      firestoreSuppliers = query.docs.map((doc) => User(
+        id: doc.id,
+        name: doc['name'],
+        email: doc['email'],
+        role: UserRole.supplier,
+      )).toList();
+    });
+    print('Fetched suppliers: \\${firestoreSuppliers.length}');
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final suppliers = mockUsers.where((u) => u.role == UserRole.supplier).toList();
     return Scaffold(
       backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
       body: SafeArea(
@@ -90,7 +116,7 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                               prefixIcon: Icon(Icons.person_outline),
                             ),
                             value: selectedSupplier,
-                            items: suppliers
+                            items: firestoreSuppliers
                                 .map((s) => DropdownMenuItem(
                                       value: s,
                                       child: Text(s.name),
@@ -99,6 +125,14 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                             onChanged: (val) => setState(() => selectedSupplier = val),
                             validator: (val) => val == null ? 'Select supplier' : null,
                           ),
+                          if (firestoreSuppliers.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                'No suppliers found. Please register a supplier first.',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
                           const SizedBox(height: 16),
                           ListTile(
                             contentPadding: EdgeInsets.zero,
@@ -121,14 +155,41 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                           const SizedBox(height: 24),
                           FilledButton.icon(
                             icon: const Icon(Icons.check_circle),
-                            label: const Text('Create Order'),
+                            label: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Create Order'),
                             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                            onPressed: () {
+                            onPressed: _isLoading ? null : () async {
                               if (_formKey.currentState!.validate() && preferredDate != null) {
-                                Navigator.of(context).pop();
+                                setState(() {
+                                  _isLoading = true;
+                                  _errorMessage = null;
+                                });
+                                try {
+                                  await FirebaseFirestore.instance.collection('orders').add({
+                                    'productName': productName,
+                                    'quantity': quantity,
+                                    'supplierId': selectedSupplier?.id,
+                                    'supplierName': selectedSupplier?.name,
+                                    'supplierEmail': selectedSupplier?.email,
+                                    'vendorEmail': widget.vendorEmail,
+                                    'preferredDeliveryDate': preferredDate,
+                                    'status': 'Pending',
+                                    'createdAt': FieldValue.serverTimestamp(),
+                                  });
+                                  setState(() => _isLoading = false);
+                                  Navigator.of(context).pop();
+                                } catch (e) {
+                                  setState(() {
+                                    _isLoading = false;
+                                    _errorMessage = 'Failed to create order. Please try again.';
+                                  });
+                                }
                               }
                             },
                           ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 8),
+                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                          ],
                         ],
                       ),
                     ),

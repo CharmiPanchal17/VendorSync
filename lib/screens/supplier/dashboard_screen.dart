@@ -15,73 +15,75 @@ class SupplierDashboardScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                color: colorScheme.primaryContainer,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: colorScheme.primary.withOpacity(0.1),
-                        child: Icon(Icons.local_shipping, size: 32, color: colorScheme.primary),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Welcome, Supplier!', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                            Text('Manage your orders and deliveries', style: Theme.of(context).textTheme.bodyMedium),
-                          ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  color: colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: colorScheme.primary.withOpacity(0.1),
+                          child: Icon(Icons.local_shipping, size: 32, color: colorScheme.primary),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Welcome, Supplier!', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text('Manage your orders and deliveries', style: Theme.of(context).textTheme.bodyMedium),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                  FilledButton.icon(
-                    icon: const Icon(Icons.calendar_today),
-                    label: const Text('Delivery Schedule'),
-                    style: FilledButton.styleFrom(minimumSize: const Size(160, 48)),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/supplier-delivery-schedule');
-                    },
-                  ),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.notifications),
-                    label: const Text('Notifications'),
-                    style: OutlinedButton.styleFrom(minimumSize: const Size(160, 48)),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/supplier-notifications');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _StatCard(label: 'Orders Today', value: ordersToday.toString()),
-                  _StatCard(label: 'Pending Deliveries', value: pendingDeliveries.toString()),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text('New Orders', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('Delivery Schedule'),
+                      style: FilledButton.styleFrom(minimumSize: const Size(160, 48)),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/supplier-delivery-schedule');
+                      },
+                    ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.notifications),
+                      label: const Text('Notifications'),
+                      style: OutlinedButton.styleFrom(minimumSize: const Size(160, 48)),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/supplier-notifications');
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _StatCard(label: 'Orders Today', value: ordersToday.toString()),
+                    _StatCard(label: 'Pending Deliveries', value: pendingDeliveries.toString()),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text('New Orders', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: mockOrders.length,
                   itemBuilder: (context, index) {
                     final order = mockOrders[index];
@@ -117,8 +119,8 @@ class SupplierDashboardScreen extends StatelessWidget {
                     );
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

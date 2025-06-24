@@ -33,12 +33,19 @@ class SuppliersListScreen extends StatelessWidget {
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
                     final data = docs[index].data() as Map<String, dynamic>;
+                    final docId = docs[index].id;
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
                         title: Text(data['name'] ?? ''),
                         subtitle: Text(data['email'] ?? ''),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            await FirebaseFirestore.instance.collection('suppliers').doc(docId).delete();
+                          },
+                        ),
                       ),
                     );
                   },
