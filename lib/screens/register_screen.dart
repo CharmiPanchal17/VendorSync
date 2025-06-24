@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String password = '';
   String confirmPassword = '';
   final UserRole role = UserRole.vendor;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +83,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (val) => email = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter email' : null,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter email';
+                              }
+                              if (!val.contains('@')) {
+                                return 'Email must contain @';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -89,7 +101,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             obscureText: true,
                             onChanged: (val) => password = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter password' : null,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Enter password';
+                              }
+                              if (val.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -99,19 +119,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             obscureText: true,
                             onChanged: (val) => confirmPassword = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Confirm your password' : (val != password ? 'Passwords do not match' : null),
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Confirm your password';
+                              }
+                              if (val != password) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 24),
                           FilledButton.icon(
                             icon: const Icon(Icons.person_add_alt_1),
-                            label: const Text('Register'),
+                            label: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Register'),
                             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                            onPressed: () {
+                            onPressed: _isLoading ? null : () async {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushReplacementNamed('/register-suppliers');
+                                setState(() {
+                                  _isLoading = true;
+                                  _errorMessage = null;
+                                });
+                                try {
+                                  // Register with Firebase Auth
+                                  final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                                    email: email,
+                                    password: password,
+                                  );
+                                  // Save vendor info to Firestore
+                                  await FirebaseFirestore.instance.collection('vendors').doc(credential.user!.uid).set({
+                                    'name': name,
+                                    'email': email,
+                                    'createdAt': FieldValue.serverTimestamp(),
+                                  });
+                                  setState(() => _isLoading = false);
+                                  Navigator.of(context).pushReplacementNamed('/register-suppliers');
+                                } on FirebaseAuthException catch (e) {
+                                  setState(() {
+                                    _isLoading = false;
+                                    if (e.code == 'email-already-in-use') {
+                                      _errorMessage = 'Email is already registered.';
+                                    } else if (e.code == 'invalid-email') {
+                                      _errorMessage = 'Invalid email address.';
+                                    } else if (e.code == 'weak-password') {
+                                      _errorMessage = 'Password is too weak.';
+                                    } else {
+                                      _errorMessage = 'Registration failed. Please try again.';
+                                    }
+                                  });
+                                } catch (e) {
+                                  setState(() {
+                                    _isLoading = false;
+                                    _errorMessage = 'Failed to register. Please try again.';
+                                  });
+                                }
                               }
                             },
                           ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 8),
+                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                          ],
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             icon: const Icon(Icons.login),
