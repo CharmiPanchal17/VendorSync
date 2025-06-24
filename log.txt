@@ -3,3 +3,4 @@ Added vendor section
 Styled header and footer
 Vendor dashboard template
 Added search functionality
+Setup login validation
