@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -133,27 +133,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                   _errorMessage = null;
                                 });
                                 try {
-                                  await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                    email: email,
-                                    password: password,
-                                  );
-                                  setState(() => _isLoading = false);
-                                  if (role == 'vendor') {
-                                    Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
-                                  } else {
-                                    Navigator.of(context).pushReplacementNamed('/supplier-dashboard');
-                                  }
-                                } on FirebaseAuthException catch (e) {
-                                  setState(() {
-                                    _isLoading = false;
-                                    if (e.code == 'user-not-found') {
-                                      _errorMessage = 'No user found for that email.';
-                                    } else if (e.code == 'wrong-password') {
-                                      _errorMessage = 'Wrong password provided.';
+                                  final collection = role == 'vendor' ? 'vendors' : 'suppliers';
+                                  final dashboardRoute = role == 'vendor' ? '/vendor-dashboard' : '/supplier-dashboard';
+                                  final query = await FirebaseFirestore.instance
+                                    .collection(collection)
+                                    .where('email', isEqualTo: email)
+                                    .limit(1)
+                                    .get();
+                                  if (query.docs.isNotEmpty) {
+                                    final user = query.docs.first.data();
+                                    if (user['password'] == password) {
+                                      setState(() => _isLoading = false);
+                                      Navigator.of(context).pushReplacementNamed(dashboardRoute);
                                     } else {
-                                      _errorMessage = 'Login failed. Please try again.';
+                                      setState(() {
+                                        _isLoading = false;
+                                        _errorMessage = 'Incorrect password.';
+                                      });
                                     }
-                                  });
+                                  } else {
+                                    setState(() {
+                                      _isLoading = false;
+                                      _errorMessage = 'No account found with this email.';
+                                    });
+                                  }
                                 } catch (e) {
                                   setState(() {
                                     _isLoading = false;

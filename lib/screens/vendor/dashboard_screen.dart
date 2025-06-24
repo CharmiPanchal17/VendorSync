@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart';
+import 'suppliers_list_screen.dart';
 
 class VendorDashboardScreen extends StatelessWidget {
   const VendorDashboardScreen({super.key});
@@ -57,11 +58,15 @@ class VendorDashboardScreen extends StatelessWidget {
                     },
                   ),
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Register Supplier'),
+                    icon: const Icon(Icons.list),
+                    label: const Text('View My Suppliers'),
                     style: OutlinedButton.styleFrom(minimumSize: const Size(160, 48)),
                     onPressed: () {
-                      Navigator.of(context).pushNamed('/register-suppliers');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SuppliersListScreen(vendorEmail: 'vendor@example.com'),
+                        ),
+                      );
                     },
                   ),
                   OutlinedButton.icon(

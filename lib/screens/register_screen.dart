@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -141,32 +140,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   _errorMessage = null;
                                 });
                                 try {
-                                  // Register with Firebase Auth
-                                  final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                                    email: email,
-                                    password: password,
-                                  );
-                                  // Save vendor info to Firestore
-                                  await FirebaseFirestore.instance.collection('vendors').doc(credential.user!.uid).set({
+                                  await FirebaseFirestore.instance.collection('vendors').add({
                                     'name': name,
                                     'email': email,
+                                    'password': password,
                                     'createdAt': FieldValue.serverTimestamp(),
                                   });
                                   setState(() => _isLoading = false);
                                   Navigator.of(context).pushReplacementNamed('/register-suppliers');
-                                } on FirebaseAuthException catch (e) {
-                                  setState(() {
-                                    _isLoading = false;
-                                    if (e.code == 'email-already-in-use') {
-                                      _errorMessage = 'Email is already registered.';
-                                    } else if (e.code == 'invalid-email') {
-                                      _errorMessage = 'Invalid email address.';
-                                    } else if (e.code == 'weak-password') {
-                                      _errorMessage = 'Password is too weak.';
-                                    } else {
-                                      _errorMessage = 'Registration failed. Please try again.';
-                                    }
-                                  });
                                 } catch (e) {
                                   setState(() {
                                     _isLoading = false;
