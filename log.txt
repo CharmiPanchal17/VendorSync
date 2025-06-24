@@ -2,3 +2,4 @@ Initial homepage layout
 Added vendor section
 Styled header and footer
 Vendor dashboard template
+Added search functionality
