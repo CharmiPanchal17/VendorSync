@@ -40,13 +40,6 @@ class WelcomeScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 40),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.login),
-                      label: const Text('Vendor Login', style: TextStyle(fontSize: 18)),
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                      onPressed: () => Navigator.of(context).pushNamed('/login', arguments: 'vendor'),
-                    ),
-                    const SizedBox(height: 16),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.person_add_alt_1),
                       label: const Text('Vendor Register', style: TextStyle(fontSize: 18)),

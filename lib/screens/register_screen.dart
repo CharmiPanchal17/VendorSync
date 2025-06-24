@@ -118,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: const Text('Already have an account? Login'),
                             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                             onPressed: () {
-                              Navigator.of(context).pop();
+                              Navigator.of(context).pushReplacementNamed('/login', arguments: 'vendor');
                             },
                           ),
                         ],
