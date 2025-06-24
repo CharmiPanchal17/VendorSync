@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterSuppliersScreen extends StatefulWidget {
-  const RegisterSuppliersScreen({super.key});
+  final String vendorEmail;
+  const RegisterSuppliersScreen({super.key, required this.vendorEmail});
 
   @override
   State<RegisterSuppliersScreen> createState() => _RegisterSuppliersScreenState();
@@ -15,7 +17,7 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
   String confirmPassword = '';
   final List<Map<String, String>> suppliers = [];
 
-  void _addSupplier() {
+  void _addSupplier() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         suppliers.add({'name': name, 'email': email, 'password': password});
@@ -25,6 +27,14 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
         confirmPassword = '';
       });
       _formKey.currentState!.reset();
+      // Save to Firestore
+      await FirebaseFirestore.instance.collection('suppliers').add({
+        'name': suppliers.last['name'],
+        'email': suppliers.last['email'],
+        'password': suppliers.last['password'],
+        'vendorEmail': widget.vendorEmail,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
   }
 
