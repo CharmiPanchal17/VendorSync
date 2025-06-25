@@ -170,9 +170,10 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                         'email': email,
                                         'password': password,
                                         'createdAt': FieldValue.serverTimestamp(),
+                                        'vendorEmail': null,
                                       });
                                       setState(() => _isLoading = false);
-                                      Navigator.of(context).pushReplacementNamed('/supplier-dashboard');
+                                      Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
                                     } catch (e) {
                                       setState(() {
                                         _isLoading = false;

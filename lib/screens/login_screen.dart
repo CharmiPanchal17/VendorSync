@@ -178,7 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                           final user = query.docs.first.data();
                                           if (user['password'] == password) {
                                             setState(() => _isLoading = false);
-                                            Navigator.of(context).pushReplacementNamed(dashboardRoute);
+                                            if (role == 'vendor') {
+                                              Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
+                                            } else {
+                                              Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+                                            }
                                           } else {
                                             setState(() {
                                               _isLoading = false;
