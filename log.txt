@@ -160,3 +160,4 @@ Loading spinner for uploads
 Backend  parser
 Improved  UX
 Fixed duplicate rows issue
+Initial homepage layout
