@@ -20,192 +20,278 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final role = ModalRoute.of(context)?.settings.arguments as String?;
     return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
-      body: SafeArea(
-        child: Card(
-          margin: EdgeInsets.zero,
-          elevation: 8,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-            child: Center(
-              child: SingleChildScrollView(
-                child: submitted
-                    ? Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Builder(
-                            builder: (context) =>
-                              Navigator.canPop(context)
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.arrow_back),
-                                        onPressed: () => Navigator.of(context).pop(),
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
-                            child: Icon(Icons.lock_reset, size: 40, color: colorScheme.primary),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Set New Password',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'New Password',
-                              prefixIcon: Icon(Icons.lock_outline),
-                            ),
-                            obscureText: true,
-                            onChanged: (val) => newPassword = val,
-                          ),
-                          const SizedBox(height: 24),
-                          FilledButton.icon(
-                            icon: const Icon(Icons.save),
-                            label: const Text('Save Password'),
-                            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                            onPressed: () async {
-                              if (newPassword.length < 6) {
-                                setState(() => _errorMessage = 'Password must be at least 6 characters');
-                                return;
-                              }
-                              final collection = role == 'supplier' ? 'suppliers' : 'vendors';
-                              final query = await FirebaseFirestore.instance
-                                  .collection(collection)
-                                  .where('email', isEqualTo: email)
-                                  .limit(1)
-                                  .get();
-                              if (query.docs.isNotEmpty) {
-                                await FirebaseFirestore.instance
-                                    .collection(collection)
-                                    .doc(query.docs.first.id)
-                                    .update({'password': newPassword});
-                                setState(() {
-                                  _errorMessage = null;
-                                });
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Success'),
-                                    content: const Text('Password updated! You can now log in.'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: const Text('OK'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else {
-                                setState(() => _errorMessage = 'No account found with this email.');
-                              }
-                            },
-                          ),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 8),
-                            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                          ],
-                        ],
-                      )
-                    : Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Builder(
-                            builder: (context) =>
-                              Navigator.canPop(context)
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.arrow_back),
-                                        onPressed: () => Navigator.of(context).pop(),
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
-                            child: Icon(Icons.lock_reset, size: 40, color: colorScheme.primary),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Reset Password',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 24),
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Enter your ${role ?? ''} email to receive a reset link:',
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 24),
-                                TextFormField(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Email',
-                                    prefixIcon: Icon(Icons.email_outlined),
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  onChanged: (val) => email = val,
-                                  validator: (val) => val == null || val.isEmpty ? 'Enter email' : null,
-                                ),
-                                const SizedBox(height: 24),
-                                FilledButton.icon(
-                                  icon: const Icon(Icons.send),
-                                  label: const Text('Send Reset Link'),
-                                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      final collection = role == 'supplier' ? 'suppliers' : 'vendors';
-                                      final query = await FirebaseFirestore.instance
-                                          .collection(collection)
-                                          .where('email', isEqualTo: email)
-                                          .limit(1)
-                                          .get();
-                                      if (query.docs.isNotEmpty) {
-                                        setState(() {
-                                          submitted = true;
-                                          _errorMessage = null;
-                                        });
-                                      } else {
-                                        setState(() {
-                                          _errorMessage = 'No account found with this email.';
-                                        });
-                                      }
-                                    }
-                                  },
-                                ),
-                                if (_errorMessage != null) ...[
-                                  const SizedBox(height: 8),
-                                  Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+      body: Stack(
+        children: [
+          // Gradient background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF2196F3), // Blue
+                  Color(0xFF43E97B), // Green
+                ],
               ),
             ),
           ),
-        ),
+          // White overlay to soften the gradient
+          Container(
+            color: Colors.white.withOpacity(0.6),
+          ),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  elevation: 0, // No shadow
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
+                  ),
+                  color: Colors.transparent, // Fully transparent
+                  child: SingleChildScrollView(
+                    child: submitted
+                        ? Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Builder(
+                                builder: (context) =>
+                                  Navigator.canPop(context)
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                                        child: Align(
+                                          alignment: Alignment.topLeft,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.arrow_back),
+                                            onPressed: () => Navigator.of(context).pop(),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
+                                child: Icon(Icons.lock_reset, size: 40, color: role == 'supplier' ? Colors.green : Colors.blue),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                submitted ? 'Set New Password' : 'Reset Password',
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: role == 'supplier' ? Colors.green : Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'New Password',
+                                  prefixIcon: Icon(Icons.lock_outline),
+                                ),
+                                obscureText: true,
+                                onChanged: (val) {
+                                  newPassword = val;
+                                  if (_errorMessage != null) setState(() => _errorMessage = null);
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              FilledButton.icon(
+                                icon: const Icon(Icons.save),
+                                label: const Text('Submit'),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(48),
+                                  backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                  elevation: 2,
+                                ),
+                                onPressed: () async {
+                                  if (newPassword.length < 6) {
+                                    setState(() => _errorMessage = 'Password must be at least 6 characters');
+                                    return;
+                                  }
+                                  final collection = role == 'supplier' ? 'suppliers' : 'vendors';
+                                  final query = await FirebaseFirestore.instance
+                                      .collection(collection)
+                                      .where('email', isEqualTo: email)
+                                      .limit(1)
+                                      .get();
+                                  if (query.docs.isNotEmpty) {
+                                    await FirebaseFirestore.instance
+                                        .collection(collection)
+                                        .doc(query.docs.first.id)
+                                        .update({'password': newPassword});
+                                    setState(() {
+                                      _errorMessage = null;
+                                    });
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              color: role == 'supplier' ? Colors.green : Colors.blue,
+                                              size: 64,
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'Success',
+                                              style: TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                                color: role == 'supplier' ? Colors.green : Colors.blue,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                              'Password updated! You can now log in.',
+                                              style: TextStyle(fontSize: 16),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 24),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: const Text('OK'),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    setState(() => _errorMessage = 'No account found with this email.');
+                                  }
+                                },
+                              ),
+                              if (_errorMessage != null) ...[
+                                const SizedBox(height: 8),
+                                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                              ],
+                            ],
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Builder(
+                                builder: (context) =>
+                                  Navigator.canPop(context)
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                                        child: Align(
+                                          alignment: Alignment.topLeft,
+                                          child: IconButton(
+                                            icon: const Icon(Icons.arrow_back),
+                                            onPressed: () => Navigator.of(context).pop(),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
+                                child: Icon(Icons.lock_reset, size: 40, color: role == 'supplier' ? Colors.green : Colors.blue),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                submitted ? 'Set New Password' : 'Reset Password',
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: role == 'supplier' ? Colors.green : Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Form(
+                                key: _formKey,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Enter your ${role ?? ''} email to receive a reset link:',
+                                      style: const TextStyle(fontSize: 16),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    TextFormField(
+                                      decoration: const InputDecoration(
+                                        labelText: 'Email',
+                                        prefixIcon: Icon(Icons.email_outlined),
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                      onChanged: (val) {
+                                        email = val;
+                                        if (_errorMessage != null) setState(() => _errorMessage = null);
+                                      },
+                                      validator: (val) => val == null || val.isEmpty ? 'Enter email' : null,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    FilledButton.icon(
+                                      icon: const Icon(Icons.send),
+                                      label: const Text('Submit'),
+                                      style: FilledButton.styleFrom(
+                                        minimumSize: const Size.fromHeight(48),
+                                        backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                        elevation: 2,
+                                      ),
+                                      onPressed: () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          final collection = role == 'supplier' ? 'suppliers' : 'vendors';
+                                          final query = await FirebaseFirestore.instance
+                                              .collection(collection)
+                                              .where('email', isEqualTo: email)
+                                              .limit(1)
+                                              .get();
+                                          if (query.docs.isNotEmpty) {
+                                            setState(() {
+                                              submitted = true;
+                                              _errorMessage = null;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              _errorMessage = 'No account found with this email.';
+                                            });
+                                          }
+                                        }
+                                      },
+                                    ),
+                                    if (_errorMessage != null) ...[
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

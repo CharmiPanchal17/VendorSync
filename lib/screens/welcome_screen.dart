@@ -70,7 +70,7 @@ class WelcomeScreen extends StatelessWidget {
                             textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             elevation: 2,
                           ),
-                          onPressed: () => Navigator.of(context).pushNamed('/login', arguments: 'vendor'),
+                          onPressed: () => Navigator.of(context).pushNamed('/register'),
                         ),
                         const SizedBox(height: 16),
                         FilledButton.icon(
