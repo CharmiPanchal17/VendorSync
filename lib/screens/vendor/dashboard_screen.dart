@@ -396,34 +396,126 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               weekendTextStyle: const TextStyle(color: Colors.red),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Filter Orders',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
-                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Status Summary Cards
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.analytics, color: Colors.blue.shade700, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Order Summary',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildStatusButton('All', const Color(0xFF2196F3)),
-                                const SizedBox(width: 12),
-                                _buildStatusButton('Pending', Colors.orange),
-                                const SizedBox(width: 12),
-                                _buildStatusButton('Confirmed', Colors.blue),
-                                const SizedBox(width: 12),
-                                _buildStatusButton('Delivered', Colors.green),
-                              ],
-                            ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildVendorStatCard(
+                                  icon: Icons.inventory,
+                                  title: 'Total Orders',
+                                  value: _buildVendorTotalOrdersCount(),
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildVendorStatCard(
+                                  icon: Icons.pending,
+                                  title: 'Pending',
+                                  value: _buildVendorPendingOrdersCount(),
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildVendorStatCard(
+                                  icon: Icons.check_circle,
+                                  title: 'Confirmed',
+                                  value: _buildVendorConfirmedOrdersCount(),
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildVendorStatCard(
+                                  icon: Icons.local_shipping,
+                                  title: 'Delivered',
+                                  value: _buildVendorDeliveredOrdersCount(),
+                                  color: Colors.purple,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  
+                  // Status Filter
+                  Text(
+                    'Filter Orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildStatusButton('All', Colors.grey),
+                        const SizedBox(width: 12),
+                        _buildStatusButton('Pending', Colors.orange),
+                        const SizedBox(width: 12),
+                        _buildStatusButton('Confirmed', Colors.blue),
+                        const SizedBox(width: 12),
+                        _buildStatusButton('Delivered', Colors.green),
+                      ],
+                    ),
+                  ),
+                  
                   const SizedBox(height: 24),
                   
                   // Orders Section
@@ -872,6 +964,191 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+    );
+  }
+
+  Widget _buildVendorStatCard({
+    required IconData icon,
+    required String title,
+    required Widget value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.1),
+            color.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 12),
+          value,
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVendorTotalOrdersCount() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text(
+            '...',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          );
+        }
+        final count = snapshot.data?.docs.length ?? 0;
+        return Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVendorPendingOrdersCount() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .where('status', isEqualTo: 'Pending')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text(
+            '...',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
+          );
+        }
+        final count = snapshot.data?.docs.length ?? 0;
+        return Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVendorConfirmedOrdersCount() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .where('status', isEqualTo: 'Confirmed')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text(
+            '...',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          );
+        }
+        final count = snapshot.data?.docs.length ?? 0;
+        return Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVendorDeliveredOrdersCount() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('orders')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .where('status', isEqualTo: 'Delivered')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text(
+            '...',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
+            ),
+          );
+        }
+        final count = snapshot.data?.docs.length ?? 0;
+        return Text(
+          count.toString(),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.purple,
+          ),
+        );
+      },
     );
   }
 } 
