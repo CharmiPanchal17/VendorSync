@@ -27,12 +27,18 @@ class VendorSyncApp extends StatelessWidget {
         '/register-supplier': (context) => const RegisterSupplierScreen(),
         '/reset-password': (context) => const ResetPasswordScreen(),
         '/role-selection': (context) => const RoleSelectionScreen(),
-        '/vendor-dashboard': (context) => const VendorDashboardScreen(),
+        '/vendor-dashboard': (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return VendorDashboardScreen(vendorEmail: email ?? '');
+        },
         '/vendor-create-order': (context) => const VendorCreateOrderScreen(vendorEmail: ''),
         '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
         '/vendor-notifications': (context) => const VendorNotificationsScreen(),
         '/vendor-profile': (context) => const VendorProfileScreen(),
-        '/supplier-dashboard': (context) => const SupplierDashboardScreen(),
+        '/supplier-dashboard': (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return SupplierDashboardScreen(supplierEmail: email ?? '');
+        },
         '/supplier-order-details': (context) => const SupplierOrderDetailsScreen(),
         '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
         '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
