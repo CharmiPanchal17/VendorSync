@@ -166,8 +166,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               _buildStatusButton('Confirmed', Colors.blue),
                               const SizedBox(width: 12),
                               _buildStatusButton('Delivered', Colors.green),
-                              const SizedBox(width: 12),
-                              _buildStatusButton('Rejected', Colors.red),
                             ],
                           ),
                         ),
@@ -438,10 +436,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                               fontSize: 12,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () {
+                            ),
+                          ],
+                        ),
+                        onTap: () {
                                       // Create an order object for navigation
                                       final orderData = order_model.Order(
                                         id: orderId,
@@ -454,10 +452,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                             : DateTime.now(),
                                       );
                                       Navigator.of(context).pushNamed('/supplier-order-details', arguments: orderData);
-                                    },
-                                  ),
-                                );
-                              },
+                        },
+                      ),
+                    );
+                  },
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                             );
@@ -786,8 +784,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue.shade100;
       case 'Delivered':
         return Colors.green.shade100;
-      case 'Rejected':
-        return Colors.red.shade100;
       default:
         return Colors.grey.shade200;
     }
@@ -801,8 +797,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
-      case 'Rejected':
-        return Colors.red;
       default:
         return Colors.grey;
     }
@@ -816,8 +810,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
-      case 'Rejected':
-        return Colors.red;
       default:
         return Colors.grey;
     }
