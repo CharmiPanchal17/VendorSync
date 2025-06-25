@@ -12,9 +12,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   String name = '';
   String email = '';
+  int phone = 0;
   String password = '';
   String confirmPassword = '';
   final UserRole role = UserRole.vendor;
+
+  void _submit() {
+    final isValid = _formKey.currentState!.validate();
+    if (isValid) {
+      _formKey.currentState!.save();
+    }
+
+    print(name);
+    print(email);
+    print(phone);
+    print(password);
+    print(confirmPassword);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +48,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Builder(
-                      builder: (context) =>
-                        Navigator.canPop(context)
+                      builder: (context) => Navigator.canPop(context)
                           ? Padding(
-                              padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                              padding: const EdgeInsets.only(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                              ),
                               child: Align(
                                 alignment: Alignment.topLeft,
                                 child: IconButton(
@@ -51,12 +69,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(Icons.store, size: 40, color: colorScheme.primary),
+                      child: Icon(
+                        Icons.store,
+                        size: 40,
+                        color: colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Text(
                       'Vendor Register',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 24),
                     Form(
@@ -69,7 +92,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               prefixIcon: Icon(Icons.person_outline),
                             ),
                             onChanged: (val) => name = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter name' : null,
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Enter name'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -79,7 +104,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             keyboardType: TextInputType.emailAddress,
                             onChanged: (val) => email = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter email' : null,
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Enter email'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              labelText: 'Phone Number',
+                              prefixIcon: Icon(Icons.call_end_rounded),
+                            ),
+                            keyboardType: TextInputType.numberWithOptions(),
+                            onChanged: (val) => phone = int.tryParse(val) ?? 0,
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Enter Phone Number'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -89,7 +128,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             obscureText: true,
                             onChanged: (val) => password = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Enter password' : null,
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Enter password'
+                                : val.trim().length < 6
+                                ? 'Password must be atleast 6 characters long'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -99,24 +142,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             obscureText: true,
                             onChanged: (val) => confirmPassword = val,
-                            validator: (val) => val == null || val.isEmpty ? 'Confirm your password' : (val != password ? 'Passwords do not match' : null),
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Confirm your password'
+                                : (val != password
+                                      ? 'Passwords do not match'
+                                      : null),
                           ),
                           const SizedBox(height: 24),
                           FilledButton.icon(
                             icon: const Icon(Icons.person_add_alt_1),
                             label: const Text('Register'),
-                            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushReplacementNamed('/register-suppliers');
+                                Navigator.of(
+                                  context,
+                                ).pushReplacementNamed('/register-suppliers');
                               }
+
+                              _submit();
                             },
                           ),
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             icon: const Icon(Icons.login),
                             label: const Text('Already have an account? Login'),
-                            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
@@ -133,4 +188,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

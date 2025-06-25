@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// import 'package:vendorsync/screens/vendor/vendor_invoices.dart';
+// import 'package:vendorsync/screens/vendor/vendor_dashboard_screen.dart';
 import 'screens.dart';
 
 void main() {
@@ -12,10 +14,7 @@ class VendorSyncApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'VendorSync',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-      ),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
       initialRoute: '/welcome',
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
@@ -30,10 +29,15 @@ class VendorSyncApp extends StatelessWidget {
         '/vendor-notifications': (context) => const VendorNotificationsScreen(),
         '/vendor-profile': (context) => const VendorProfileScreen(),
         '/supplier-dashboard': (context) => const SupplierDashboardScreen(),
-        '/supplier-order-details': (context) => const SupplierOrderDetailsScreen(),
-        '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
-        '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
+        '/supplier-order-details': (context) =>
+            const SupplierOrderDetailsScreen(),
+        '/supplier-delivery-schedule': (context) =>
+            const SupplierDeliveryScheduleScreen(),
+        '/supplier-notifications': (context) =>
+            const SupplierNotificationsScreen(),
         '/supplier-profile': (context) => const SupplierProfileScreen(),
+        '/vendor-dashboard-screen': (context) => const VendorDashboardScreen2(),
+        '/vendor-invoices': (context) => const VendorInvoicesScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

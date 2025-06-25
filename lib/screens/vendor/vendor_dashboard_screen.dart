@@ -1,21 +1,85 @@
 import 'package:flutter/material.dart';
-// import 'package:vendorsync/screens/vendor/vendor_dashboard_screen.dart';
+import 'package:table_calendar/table_calendar.dart';
+// import 'package:table_calendar/table_calendar.dart'; // Add this package
 import '../../mock_data/mock_orders.dart';
-// import '../../models/order.dart';
+import '../../models/order.dart';
 
-class VendorDashboardScreen extends StatelessWidget {
-  const VendorDashboardScreen({super.key});
+class VendorDashboardScreen2 extends StatefulWidget {
+  const VendorDashboardScreen2({super.key});
+
+  @override
+  State<VendorDashboardScreen2> createState() => _VendorDashboardScreenState();
+}
+
+class _VendorDashboardScreenState extends State<VendorDashboardScreen2> {
+  String selectedFilter = 'All';
+  DateTime focusedDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    List<Order> filteredOrders = selectedFilter == 'All'
+        ? mockOrders
+        : mockOrders.where((order) => order.status == selectedFilter).toList();
+
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text(
+                'Vendor Dashboard',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: const Text('Orders'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('Invoices & Receipts'),
+              onTap: () {
+                Navigator.pushNamed(context, '/vendor-invoices');
+              },
+            ),
+          ],
+        ),
+      ),
+      appBar: AppBar(
+        title: const Text('Vendor Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+
+      // appBar: AppBar(
+      //   title: const Text('Vendor Dashboard'),
+      //   leading: IconButton(
+      //     icon: const Icon(Icons.arrow_back),
+      //     onPressed: () {
+      //       Navigator.pop(context);
+      //     },
+      //   ),
+      // ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Card
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -60,57 +124,52 @@ class VendorDashboardScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                  FilledButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create New Order'),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(160, 48),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/vendor-create-order');
-                    },
-                  ),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Register Supplier'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(160, 48),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/register-suppliers');
-                    },
-                  ),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Vendor Dashboard'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(160, 48),
-                    ),
-                    onPressed: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed('/vendor-dashboard-screen');
-                    },
-                  ),
+              const SizedBox(height: 16),
 
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.notifications),
-                    label: const Text('Notifications'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(160, 48),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/vendor-notifications');
-                    },
-                  ),
-                ],
+              // Calendar
+              TableCalendar(
+                focusedDay: focusedDay,
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                onDaySelected: (selectedDay, focused) {
+                  setState(() {
+                    focusedDay = focused;
+                    // Could filter by selected date here if needed
+                  });
+                },
+                selectedDayPredicate: (day) => isSameDay(day, focusedDay),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+
+              // Filters
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: ['All', 'Pending', 'Confirmed', 'Delivered']
+                      .map(
+                        (status) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(status),
+                            selected: selectedFilter == status,
+                            onSelected: (_) {
+                              setState(() {
+                                selectedFilter = status;
+                              });
+                            },
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Orders Header
               Text(
                 'Orders',
                 style: Theme.of(
@@ -118,11 +177,13 @@ class VendorDashboardScreen extends StatelessWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
+
+              // Orders List
               Expanded(
                 child: ListView.builder(
-                  itemCount: mockOrders.length,
+                  itemCount: filteredOrders.length,
                   itemBuilder: (context, index) {
-                    final order = mockOrders[index];
+                    final order = filteredOrders[index];
                     return Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(

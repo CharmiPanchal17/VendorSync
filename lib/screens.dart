@@ -1,6 +1,6 @@
 // This file will export all screen files for easy import.
 // Example:
-// export 'screens/splash_screen.dart'; 
+// export 'screens/splash_screen.dart';
 
 export 'screens/splash_screen.dart';
 export 'screens/login_screen.dart';
@@ -18,4 +18,6 @@ export 'screens/supplier/notifications_screen.dart';
 export 'screens/supplier/profile_screen.dart';
 export 'screens/welcome_screen.dart';
 export 'screens/register_suppliers_screen.dart';
-export 'screens/reset_password_screen.dart'; 
+export 'screens/reset_password_screen.dart';
+export 'screens/vendor/vendor_dashboard_screen.dart';
+export 'screens/vendor/vendor_invoices.dart';
