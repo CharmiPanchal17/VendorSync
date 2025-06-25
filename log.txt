@@ -161,3 +161,4 @@ Backend  parser
 Improved  UX
 Fixed duplicate rows issue
 Initial homepage layout
+Added vendor section
