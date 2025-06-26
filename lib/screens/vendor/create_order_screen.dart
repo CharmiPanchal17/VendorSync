@@ -104,21 +104,6 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Builder(
-                      builder: (context) =>
-                        Navigator.canPop(context)
-                          ? Padding(
-                                padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                              child: Align(
-                                alignment: Alignment.topLeft,
-                                child: IconButton(
-                                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
                     CircleAvatar(
                       radius: 40,
                         backgroundColor: Colors.white.withOpacity(0.2),

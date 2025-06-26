@@ -512,6 +512,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         _buildStatusButton('Confirmed', Colors.blue),
                         const SizedBox(width: 12),
                         _buildStatusButton('Delivered', Colors.green),
+                        const SizedBox(width: 12),
+                        _buildStatusButton('Pending Approval', Colors.purple),
                       ],
                     ),
                   ),
@@ -784,24 +786,46 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 ],
                               ),
                               trailing: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _statusColor(data['status'] ?? 'Pending'),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: _statusBorderColor(data['status'] ?? 'Pending'),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  data['status'] ?? 'Pending',
-                                  style: TextStyle(
-                                    color: _statusTextColor(data['status'] ?? 'Pending'),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                        ),
+                                child: (data['status'] == 'Pending Approval')
+                                    ? ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.purple,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          elevation: 2,
+                                        ),
+                                        onPressed: () => _approveOrder(orderId),
+                                        child: const Text(
+                                          'Approve',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: _statusColor(data['status'] ?? 'Pending'),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: _statusBorderColor(data['status'] ?? 'Pending'),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          data['status'] ?? 'Pending',
+                                          style: TextStyle(
+                                            color: _statusTextColor(data['status'] ?? 'Pending'),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                              ),
                         onTap: () {
                                 // Create an order object for navigation
                                 final orderData = order_model.Order(
@@ -829,6 +853,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
+            ),
+          );
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Create New Order',
       ),
     );
   }
@@ -893,6 +929,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         return Colors.blue.shade100;
       case 'Delivered':
         return Colors.green.shade100;
+      case 'Pending Approval':
+        return Colors.purple.shade100;
       default:
         return Colors.grey.shade200;
     }
@@ -906,6 +944,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -919,6 +959,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -1150,5 +1192,39 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         );
       },
     );
+  }
+
+  Future<void> _approveOrder(String orderId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('orders')
+          .doc(orderId)
+          .update({
+        'status': 'Delivered',
+        'approvedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Order approved successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to approve order. Please try again.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 } 

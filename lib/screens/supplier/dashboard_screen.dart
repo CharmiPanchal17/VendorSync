@@ -166,6 +166,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               _buildStatusButton('Confirmed', Colors.blue),
                               const SizedBox(width: 12),
                               _buildStatusButton('Delivered', Colors.green),
+                              const SizedBox(width: 12),
+                              _buildStatusButton('Pending Approval', Colors.purple),
                             ],
                           ),
                         ),
@@ -639,14 +641,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               isSelected: true,
             ),
             _buildMenuItem(
-              icon: Icons.calendar_today,
-              title: 'Delivery Schedule',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/supplier-delivery-schedule');
-              },
-            ),
-            _buildMenuItem(
               icon: Icons.notifications,
               title: 'Notifications',
               onTap: () {
@@ -784,6 +778,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue.shade100;
       case 'Delivered':
         return Colors.green.shade100;
+      case 'Pending Approval':
+        return Colors.purple.shade100;
       default:
         return Colors.grey.shade200;
     }
@@ -797,6 +793,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
       default:
         return Colors.grey;
     }
@@ -810,6 +808,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
       default:
         return Colors.grey;
     }

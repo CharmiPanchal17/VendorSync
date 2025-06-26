@@ -21,6 +21,15 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
     final order = ModalRoute.of(context)!.settings.arguments as order_model.Order;
     status ??= order.status;
     deliveryDate ??= order.actualDeliveryDate;
+
+    // Ensure status matches available options
+    final availableOptions = _getAvailableStatusOptions(order.status);
+    if (availableOptions.isNotEmpty && !availableOptions.any((item) => item.value == status)) {
+      status = availableOptions.first.value;
+    }
+    if (availableOptions.isEmpty) {
+      status = null;
+    }
     
     return Scaffold(
       body: Stack(
@@ -134,7 +143,8 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                   'Preferred Delivery',
                                   DateFormat.yMMMd().format(order.preferredDeliveryDate),
                                 ),
-                                _buildDetailRow('Current Status', order.status),
+                                if (order.status != 'Pending Approval')
+                                  _buildDetailRow('Current Status', order.status),
                               ],
                             ),
                           ),
@@ -154,7 +164,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+                              children: [
                                 const Text(
                                   'Update Order Status',
                                   style: TextStyle(
@@ -163,7 +173,39 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                     color: Color(0xFF1A1A1A),
                                   ),
                                 ),
-            const SizedBox(height: 16),
+                                const SizedBox(height: 16),
+                                if (_getAvailableStatusOptions(order.status).isEmpty && order.status != 'Pending Approval') ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(order.status).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: _getStatusColor(order.status).withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _getStatusIcon(order.status),
+                                          color: _getStatusColor(order.status),
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Current Status: ${order.status}',
+                                          style: TextStyle(
+                                            color: _getStatusColor(order.status),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
                                 Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
@@ -203,7 +245,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                         child: const Icon(Icons.assignment, color: Colors.white, size: 20),
                                       ),
                                     ),
-              value: status,
+                                    value: _getAvailableStatusOptions(order.status).isNotEmpty ? status : null,
                                     icon: Container(
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
@@ -221,62 +263,30 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                       color: Color(0xFF1A1A1A),
                                     ),
                                     items: [
-                                      DropdownMenuItem(
-                                        value: 'Pending',
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange.shade100,
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Icon(Icons.pending, color: Colors.orange, size: 16),
+                                      ..._getAvailableStatusOptions(order.status),
+                                    ],
+                                    onChanged: _getAvailableStatusOptions(order.status).isEmpty 
+                                        ? null 
+                                        : (val) {
+                                            if (val != null) {
+                                              setState(() => status = val);
+                                            }
+                                          },
+                                    hint: _getAvailableStatusOptions(order.status).isEmpty 
+                                        ? Text(
+                                            'No further updates',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 14,
                                             ),
-                                            const SizedBox(width: 12),
-                                            const Text('Pending'),
-                                          ],
-                                        ),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'Confirmed',
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.shade100,
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Icon(Icons.check_circle, color: Colors.blue, size: 16),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text('Confirmed'),
-                                          ],
-                                        ),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'Delivered',
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: Colors.green.shade100,
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Icon(Icons.local_shipping, color: Colors.green, size: 16),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text('Delivered'),
-                                          ],
-                                        ),
-                                      ),
-              ],
-              onChanged: (val) => setState(() => status = val),
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: false,
+                                            maxLines: 1,
+                                          )
+                                        : null,
                                   ),
-            ),
-            const SizedBox(height: 16),
+                                ),
+                                const SizedBox(height: 16),
                                 Container(
                                   decoration: BoxDecoration(
                                     border: Border.all(color: Colors.grey.shade300),
@@ -296,18 +306,18 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                     ),
                                     title: Text(
                                       deliveryDate == null
-                  ? 'Set Delivery Date'
+                      ? 'Set Delivery Date'
                                           : 'Delivery Date: ${DateFormat.yMMMd().format(deliveryDate!)}',
                                       style: TextStyle(
                                         color: deliveryDate == null ? Colors.grey.shade600 : Colors.black,
                                         fontWeight: deliveryDate == null ? FontWeight.normal : FontWeight.w500,
                                       ),
                                     ),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
                                         lastDate: DateTime.now().add(const Duration(days: 365)),
                                         builder: (context, child) {
                                           return Theme(
@@ -322,17 +332,17 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                             child: child!,
                                           );
                                         },
-                );
-                if (picked != null) {
-                  setState(() => deliveryDate = picked);
-                }
-              },
+                        );
+                        if (picked != null) {
+                          setState(() => deliveryDate = picked);
+                        }
+                      },
                                   ),
                                 ),
                               ],
                             ),
-            ),
-            const SizedBox(height: 24),
+                          ),
+                          const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -345,7 +355,9 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                 ),
                                 elevation: 2,
                               ),
-                              onPressed: _isLoading ? null : () => _showUpdateConfirmation(order.id),
+                              onPressed: _isLoading || _getAvailableStatusOptions(order.status).isEmpty 
+                                  ? null 
+                                  : () => _showUpdateConfirmation(order.id),
                               child: _isLoading
                                   ? const SizedBox(
                                       width: 20,
@@ -355,11 +367,16 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text(
-                                      'Update Order',
+                                  : Text(
+                                      _getAvailableStatusOptions(order.status).isEmpty 
+                                          ? 'No Updates Available'
+                                          : 'Update Order',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
+                                        color: _getAvailableStatusOptions(order.status).isEmpty 
+                                            ? Colors.grey.shade600 
+                                            : Colors.white,
                                       ),
                                     ),
                             ),
@@ -548,8 +565,72 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
         return Colors.blue;
       case 'Delivered':
         return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
       default:
         return Colors.grey;
+    }
+  }
+
+  List<DropdownMenuItem<String>> _getAvailableStatusOptions(String currentStatus) {
+    switch (currentStatus) {
+      case 'Pending':
+        return [
+          DropdownMenuItem(
+            value: 'Confirmed',
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.check_circle, color: Colors.blue, size: 16),
+                ),
+                const SizedBox(width: 12),
+                const Text('Confirmed'),
+              ],
+            ),
+          ),
+        ];
+      case 'Confirmed':
+        return [
+          DropdownMenuItem(
+            value: 'Pending Approval',
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.pending_actions, color: Colors.purple, size: 16),
+                ),
+                const SizedBox(width: 12),
+                const Text('Pending Approval'),
+              ],
+            ),
+          ),
+        ];
+      default:
+        return [];
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'Pending':
+        return Icons.pending;
+      case 'Confirmed':
+        return Icons.check_circle;
+      case 'Delivered':
+        return Icons.local_shipping;
+      case 'Pending Approval':
+        return Icons.pending_actions;
+      default:
+        return Icons.info;
     }
   }
 }
