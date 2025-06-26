@@ -163,3 +163,4 @@ Fixed duplicate rows issue
 Initial homepage layout
 Added vendor section
 Styled header and footer
+Initial homepage layout
