@@ -1,78 +1,21 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterSupplierScreen extends StatefulWidget {
+  const RegisterSupplierScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterSupplierScreen> createState() => _RegisterSupplierScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
   String name = '';
   String email = '';
   String password = '';
   String confirmPassword = '';
-  final UserRole role = UserRole.vendor;
   bool _isLoading = false;
   String? _errorMessage;
-
-  Future<void> _registerVendor() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      try {
-        // Check if vendor with this email already exists
-        final existingVendors = await FirebaseFirestore.instance
-            .collection('vendors')
-            .where('email', isEqualTo: email)
-            .get();
-
-        if (existingVendors.docs.isNotEmpty) {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'A vendor with trhis email already exists.';
-          });
-          return;
-        }
-
-        // Add new vendor to Firestore
-        await FirebaseFirestore.instance.collection('vendors').add({
-          'name': name,
-          'email': email,
-          'password': password, // Note: In production, this should be hashed
-          'role': 'vendor',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        setState(() => _isLoading = false);
-        
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration successful! Welcome to VendorSync.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          
-          // Navigate to vendor dashboard
-          Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
-        }
-      } catch (e) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Failed to register. Please check your connection and try again.';
-        });
-        print('Registration error: $e');
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +29,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF2196F3), // Blue
                   Color(0xFF43E97B), // Green
+                  Color(0xFF38F9D7), // Lighter green/teal
                 ],
               ),
             ),
@@ -128,13 +71,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: Colors.blue.withOpacity(0.1),
-                          child: Icon(Icons.store, size: 40, color: Colors.blue),
+                          backgroundColor: Colors.green.withOpacity(0.1),
+                          child: Icon(Icons.local_shipping, size: 40, color: Colors.green),
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Vendor Register',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue),
+                          'Supplier Register',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                         const SizedBox(height: 24),
                         Form(
@@ -143,11 +86,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             children: [
                               TextFormField(
                                 decoration: const InputDecoration(
-                                  labelText: 'Vendor Name',
+                                  labelText: 'Supplier Name',
                                   prefixIcon: Icon(Icons.person_outline),
                                 ),
                                 onChanged: (val) => name = val,
-                                validator: (val) => val == null || val.isEmpty ? 'Enter vendor name' : null,
+                                validator: (val) => val == null || val.isEmpty ? 'Enter supplier name' : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -206,18 +149,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const SizedBox(height: 24),
                               FilledButton.icon(
                                 icon: const Icon(Icons.person_add_alt_1),
-                                label: _isLoading
-                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                    : const Text('Register as Vendor'),
+                                label: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Register as Supplier'),
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  backgroundColor: Colors.blue,
+                                  backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                   elevation: 2,
                                 ),
-                                onPressed: _isLoading ? null : _registerVendor,
+                                onPressed: _isLoading ? null : () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() {
+                                      _isLoading = true;
+                                      _errorMessage = null;
+                                    });
+                                    try {
+                                      await FirebaseFirestore.instance.collection('suppliers').add({
+                                        'name': name,
+                                        'email': email,
+                                        'password': password,
+                                        'createdAt': FieldValue.serverTimestamp(),
+                                        'vendorEmail': null,
+                                      });
+                                      setState(() => _isLoading = false);
+                                      Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+                                    } catch (e) {
+                                      setState(() {
+                                        _isLoading = false;
+                                        _errorMessage = 'Failed to register. Please try again.';
+                                      });
+                                    }
+                                  }
+                                },
                               ),
                               if (_errorMessage != null) ...[
                                 const SizedBox(height: 8),
@@ -225,16 +189,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ],
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
-                                icon: const Icon(Icons.login, color: Colors.blue),
-                                label: const Text('Already have an account? Login', style: TextStyle(color: Colors.blue)),
+                                icon: const Icon(Icons.login, color: Colors.green),
+                                label: const Text('Already have an account? Login', style: TextStyle(color: Colors.green)),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  side: const BorderSide(color: Colors.blue),
+                                  side: const BorderSide(color: Colors.green),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 onPressed: () {
-                                  Navigator.of(context).pushReplacementNamed('/login', arguments: 'vendor');
+                                  Navigator.of(context).pushReplacementNamed('/login', arguments: 'supplier');
                                 },
                               ),
                             ],
