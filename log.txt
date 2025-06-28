@@ -103,3 +103,4 @@ UI enhancements
 Setup login validation
 Added search functionality
 Improved responsive design
+Added forgot password page
