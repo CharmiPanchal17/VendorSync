@@ -94,3 +94,4 @@ Success message modal
 Vendor dashboard template
 UI enhancements
 Setup login validation
+Added search functionality
