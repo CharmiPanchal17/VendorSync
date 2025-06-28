@@ -92,3 +92,4 @@ Fixed duplicate rows issue
 Upload history export option
 Success message modal
 Vendor dashboard template
+UI enhancements
