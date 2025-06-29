@@ -52,7 +52,10 @@ class VendorSyncApp extends StatelessWidget {
         },
         '/supplier-order-details': (context) => const SupplierOrderDetailsScreen(),
         '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
-        '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
+        '/supplier-notifications': (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return SupplierNotificationsScreen(supplierEmail: email ?? '');
+        },
         '/supplier-profile': (context) {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return SupplierProfileScreen(supplierEmail: email ?? '');

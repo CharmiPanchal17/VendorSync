@@ -23,4 +23,6 @@ export 'screens/supplier/profile_screen.dart';
 export 'screens/supplier/edit_profile_screen.dart';
 export 'screens/welcome_screen.dart';
 export 'screens/register_suppliers_screen.dart';
-export 'screens/reset_password_screen.dart'; 
+export 'screens/reset_password_screen.dart';
+export 'models/notification.dart';
+export 'services/notification_service.dart'; 

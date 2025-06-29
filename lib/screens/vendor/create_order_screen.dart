@@ -3,6 +3,7 @@ import '../../mock_data/mock_users.dart';
 import '../../models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/notification_service.dart';
 
 class VendorCreateOrderScreen extends StatefulWidget {
   final String vendorEmail;
@@ -407,7 +408,8 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                                   _errorMessage = null;
                                 });
                                 try {
-                                  await FirebaseFirestore.instance.collection('orders').add({
+                                  // Create the order
+                                  final orderDoc = await FirebaseFirestore.instance.collection('orders').add({
                                     'productName': productName,
                                     'quantity': quantity,
                                     'supplierId': selectedSupplier?.id,
@@ -418,28 +420,40 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                                     'status': 'Pending',
                                     'createdAt': FieldValue.serverTimestamp(),
                                   });
+
+                                  // Send notification to supplier
+                                  if (selectedSupplier?.email != null) {
+                                    await NotificationService.notifySupplierOfNewOrder(
+                                      supplierEmail: selectedSupplier!.email,
+                                      vendorEmail: widget.vendorEmail,
+                                      orderId: orderDoc.id,
+                                      productName: productName,
+                                      quantity: quantity,
+                                    );
+                                  }
+
                                   setState(() => _isLoading = false);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: const Text('Order created successfully!'),
-                                              backgroundColor: Colors.green,
-                                              behavior: SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            ),
-                                          );
-                                  Navigator.of(context).pop();
-                                        }
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text('Order created successfully!'),
+                                        backgroundColor: Colors.green,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                    );
+                                    Navigator.of(context).pop();
+                                  }
                                 } catch (e) {
                                   setState(() {
                                     _isLoading = false;
                                     _errorMessage = 'Failed to create order. Please try again.';
                                   });
                                 }
-                                    } else if (preferredDate == null) {
-                                      setState(() {
-                                        _errorMessage = 'Please select a preferred delivery date.';
-                                      });
+                              } else if (preferredDate == null) {
+                                setState(() {
+                                  _errorMessage = 'Please select a preferred delivery date.';
+                                });
                               }
                             },
                           ),
