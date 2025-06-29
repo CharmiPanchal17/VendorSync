@@ -15,11 +15,15 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   Map<String, dynamic>? vendorData;
   bool isLoading = true;
   String? errorMessage;
+  int suppliersCount = 0;
+  int totalOrdersCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchVendorData();
+    _fetchSuppliersCount();
+    _fetchTotalOrdersCount();
   }
 
   Future<void> _fetchVendorData() async {
@@ -45,6 +49,44 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       setState(() {
         errorMessage = 'Failed to load vendor data';
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchSuppliersCount() async {
+    try {
+      // Count suppliers linked to this vendor in vendor_suppliers collection
+      final vendorSuppliersQuery = await FirebaseFirestore.instance
+          .collection('vendor_suppliers')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .get();
+      
+      setState(() {
+        suppliersCount = vendorSuppliersQuery.docs.length;
+      });
+    } catch (e) {
+      // If there's an error fetching suppliers count, we'll just show 0
+      setState(() {
+        suppliersCount = 0;
+      });
+    }
+  }
+
+  Future<void> _fetchTotalOrdersCount() async {
+    try {
+      // Count all orders for this vendor
+      final ordersQuery = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .get();
+      
+      setState(() {
+        totalOrdersCount = ordersQuery.docs.length;
+      });
+    } catch (e) {
+      // If there's an error fetching orders count, we'll just show 0
+      setState(() {
+        totalOrdersCount = 0;
       });
     }
   }
@@ -93,10 +135,6 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     final String createdDate = createdAt != null 
         ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
         : 'Unknown';
-
-    // Mock stats for now - these could be fetched from orders collection later
-    final int totalOrders = 42;
-    final int totalSuppliers = 7;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Vendor Profile')),
@@ -160,8 +198,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatCard('Total Orders', totalOrders, Colors.blue),
-                            _buildStatCard('Suppliers', totalSuppliers, Colors.green),
+                            _buildStatCard('Total Orders', totalOrdersCount, Colors.blue),
+                            _buildStatCard('Suppliers', suppliersCount, Colors.green),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -179,6 +217,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                             // If the edit was successful, refresh the data
                             if (result == true) {
                               _fetchVendorData();
+                              _fetchSuppliersCount();
+                              _fetchTotalOrdersCount();
                             }
                           },
                           icon: const Icon(Icons.edit),
