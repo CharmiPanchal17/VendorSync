@@ -192,13 +192,29 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: const Text('Logout'),
-                            content: const Text('Are you sure you want to logout? This will remove your vendor details from the system.'),
+                            title: Text(
+                              'Logout',
+                              style: TextStyle(
+                                color: isDark ? colorScheme.onSurface : Colors.black,
+                              ),
+                            ),
+                            content: Text(
+                              'Are you sure you want to logout? This will remove your vendor details from the system.',
+                              style: TextStyle(
+                                color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                              ),
+                            ),
+                            backgroundColor: isDark ? colorScheme.surface : Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: isDark ? colorScheme.primary : Colors.blue,
+                                  ),
+                                ),
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
