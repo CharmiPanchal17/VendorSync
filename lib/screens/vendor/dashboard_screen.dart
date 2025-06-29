@@ -5,6 +5,7 @@ import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
 import 'suppliers_list_screen.dart';
 import 'create_order_screen.dart';
+import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
@@ -44,17 +45,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       drawer: Drawer(
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark 
+                ? [colorScheme.primary, colorScheme.secondary]
+                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
           child: ListView(
@@ -63,7 +65,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade700,
+                  color: isDark ? colorScheme.primary : Colors.blue.shade700,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -155,6 +157,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/vendor-profile', arguments: widget.vendorEmail);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.settings,
+                      title: 'Settings',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => VendorSettingsScreen(vendorEmail: widget.vendorEmail),
+                        ));
                       },
                     ),
                     const SizedBox(height: 24),
@@ -283,27 +296,25 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           const SizedBox(width: 8),
         ],
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark 
+                ? [colorScheme.primary, colorScheme.secondary]
+                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
+            colors: isDark 
+              ? [colorScheme.primary, colorScheme.secondary]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: SafeArea(
@@ -316,11 +327,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   // Welcome Card with modern design
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -333,8 +344,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                              gradient: LinearGradient(
+                                colors: isDark 
+                                  ? [colorScheme.primary, colorScheme.secondary]
+                                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -349,10 +362,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   vendorName != null
                                       ? 'Welcome back, $vendorName!'
                                       : 'Welcome to VendorSync',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
+                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -360,7 +373,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   'Manage your orders and suppliers efficiently',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.grey.shade600,
+                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                   ),
                                 ),
                           ],
@@ -375,11 +388,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   // Calendar and Status Filter Card
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -395,18 +408,22 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
+                                  color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
+                                child: Icon(
+                                  Icons.calendar_today, 
+                                  color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+                                  size: 20
+                                ),
                               ),
                               const SizedBox(width: 12),
-                              const Text(
+                              Text(
                                 'Calendar & Filters',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
+                                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                 ),
                               ),
                             ],
@@ -434,16 +451,20 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             ),
                             calendarStyle: CalendarStyle(
                               todayDecoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                                gradient: LinearGradient(
+                                  colors: isDark 
+                                    ? [colorScheme.primary, colorScheme.secondary]
+                                    : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                                 ),
                                 shape: BoxShape.circle,
                               ),
                               selectedDecoration: BoxDecoration(
-                                color: Colors.blue.shade600,
+                                color: isDark ? colorScheme.primary : Colors.blue.shade600,
                                 shape: BoxShape.circle,
                               ),
-                              weekendTextStyle: const TextStyle(color: Colors.red),
+                              weekendTextStyle: TextStyle(
+                                color: isDark ? Colors.red.shade300 : Colors.red
+                              ),
                             ),
                           ),
                         ],
@@ -455,11 +476,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   // Status Summary Cards
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -475,18 +496,22 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
+                                  color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(Icons.analytics, color: Colors.blue.shade700, size: 20),
+                                child: Icon(
+                                  Icons.analytics, 
+                                  color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+                                  size: 20
+                                ),
                               ),
                               const SizedBox(width: 12),
-                              const Text(
+                              Text(
                                 'Order Summary',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
+                                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                 ),
                               ),
                             ],
@@ -1262,7 +1287,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
-            const Text('Confirm Approval'),
+            const Text('Confirm'),
           ],
         ),
         content: const Text('Are you sure you want to approve the delivery? This action cannot be undone.'),
