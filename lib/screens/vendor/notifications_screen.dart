@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
 class VendorNotificationsScreen extends StatelessWidget {
-  const VendorNotificationsScreen({super.key});
+  final String vendorEmail;
+  
+  const VendorNotificationsScreen({super.key, required this.vendorEmail});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+      ),
       body: const Center(
-        child: Text('No notifications yet.'),
+        child: Text('Notifications page'),
       ),
     );
   }
