@@ -8,17 +8,30 @@ class VendorOrderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final order = ModalRoute.of(context)!.settings.arguments as Order;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
+      appBar: AppBar(
+        title: Text(
+          'Order Details',
+          style: TextStyle(
+            color: isDark ? colorScheme.onSurface : Colors.white,
+          ),
+        ),
+        backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFF2196F3),
+        iconTheme: IconThemeData(
+          color: isDark ? colorScheme.onSurface : Colors.white,
+        ),
+      ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
+            colors: isDark 
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: SafeArea(
@@ -30,36 +43,42 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Card with order info
-                    Card(
-                      shape: RoundedRectangleBorder(
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      elevation: 8,
-                      color: Colors.white.withOpacity(0.95),
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Order Information',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
+                                color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                               ),
                             ),
                             const SizedBox(height: 20),
-                            _buildInfoRow(Icons.shopping_bag, 'Product', order.productName),
+                            _buildInfoRow(Icons.shopping_bag, 'Product', order.productName, isDark, colorScheme),
                             const SizedBox(height: 12),
-                            _buildInfoRow(Icons.person, 'Supplier', order.supplierName),
+                            _buildInfoRow(Icons.person, 'Supplier', order.supplierName, isDark, colorScheme),
                             const SizedBox(height: 12),
-                            _buildInfoRow(Icons.format_list_numbered, 'Quantity', order.quantity.toString()),
+                            _buildInfoRow(Icons.format_list_numbered, 'Quantity', order.quantity.toString(), isDark, colorScheme),
                             const SizedBox(height: 12),
-                            _buildInfoRow(Icons.calendar_today, 'Delivery Date', DateFormat.yMMMd().format(order.preferredDeliveryDate)),
+                            _buildInfoRow(Icons.calendar_today, 'Delivery Date', DateFormat.yMMMd().format(order.preferredDeliveryDate), isDark, colorScheme),
                             if (order.actualDeliveryDate != null) ...[
                               const SizedBox(height: 12),
-                              _buildInfoRow(Icons.check_circle, 'Delivered', DateFormat.yMMMd().format(order.actualDeliveryDate!)),
+                              _buildInfoRow(Icons.check_circle, 'Delivered', DateFormat.yMMMd().format(order.actualDeliveryDate!), isDark, colorScheme),
                             ],
                           ],
                         ),
@@ -92,17 +111,21 @@ class VendorOrderDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, bool isDark, ColorScheme colorScheme) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
+            color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: Colors.blue.shade700, size: 20),
+          child: Icon(
+            icon, 
+            color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+            size: 20
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -111,18 +134,18 @@ class VendorOrderDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey,
+                  color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: Color(0xFF1A1A1A),
+                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                   fontWeight: FontWeight.bold,
                 ),
               ),
