@@ -81,7 +81,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Notification Icon with Badge
+                    // Notification Bell with Badge
                     Stack(
                       children: [
                         GestureDetector(
@@ -706,30 +706,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
               },
-              badge: StreamBuilder<int>(
-                stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
-                builder: (context, snapshot) {
-                  final unreadCount = snapshot.data ?? 0;
-                  if (unreadCount > 0) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
             ),
             _buildMenuItem(
               icon: Icons.person,
@@ -758,7 +734,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     required VoidCallback onTap,
     bool isSelected = false,
     bool isLogout = false,
-    Widget? badge,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -792,10 +767,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                 fontSize: 16,
               ),
             ),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              badge,
-            ],
           ],
         ),
         onTap: onTap,

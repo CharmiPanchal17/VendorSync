@@ -144,7 +144,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Notifications',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-notifications');
+                        Navigator.of(context).pushNamed('/vendor-notifications', arguments: widget.vendorEmail);
                       },
                     ),
                     const SizedBox(height: 8),
