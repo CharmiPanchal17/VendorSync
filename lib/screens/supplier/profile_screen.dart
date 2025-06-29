@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'edit_profile_screen.dart';
 
 class SupplierProfileScreen extends StatefulWidget {
   final String supplierEmail;
@@ -151,7 +152,21 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                         _buildStatCard('Orders Fulfilled', totalOrders, Colors.green),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            final result = await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => EditSupplierProfileScreen(
+                                  supplierEmail: widget.supplierEmail,
+                                  supplierData: supplierData ?? {},
+                                ),
+                              ),
+                            );
+                            
+                            // If the edit was successful, refresh the data
+                            if (result == true) {
+                              _fetchSupplierData();
+                            }
+                          },
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Profile'),
                           style: ElevatedButton.styleFrom(

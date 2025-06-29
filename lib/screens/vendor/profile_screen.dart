@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'edit_profile_screen.dart';
 
 class VendorProfileScreen extends StatefulWidget {
   final String vendorEmail;
@@ -165,7 +166,21 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            final result = await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => EditVendorProfileScreen(
+                                  vendorEmail: widget.vendorEmail,
+                                  vendorData: vendorData ?? {},
+                                ),
+                              ),
+                            );
+                            
+                            // If the edit was successful, refresh the data
+                            if (result == true) {
+                              _fetchVendorData();
+                            }
+                          },
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Profile'),
                           style: ElevatedButton.styleFrom(
