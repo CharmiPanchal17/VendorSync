@@ -80,6 +80,64 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                         size: 24,
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    // Notification Icon with Badge
+                    Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.notifications,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        // Notification Badge
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: StreamBuilder<int>(
+                            stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
+                            builder: (context, snapshot) {
+                              final unreadCount = snapshot.data ?? 0;
+                              if (unreadCount > 0) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 20,
+                                    minHeight: 20,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
