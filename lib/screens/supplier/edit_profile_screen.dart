@@ -92,9 +92,26 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+            ),
+          ),
+        ),
         actions: [
           if (_isLoading)
             const Padding(
@@ -108,14 +125,13 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF43E97B), // Green
-              Color(0xFF38F9D7), // Lighter green/teal
-            ],
+            colors: isDark 
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
           ),
         ),
         child: SafeArea(
@@ -125,10 +141,10 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                 padding: const EdgeInsets.all(24.0),
                 child: Card(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 8,
-                  color: Colors.white.withOpacity(0.95),
+                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Form(
@@ -139,16 +155,16 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundColor: Colors.green.shade100,
-                            child: const Icon(Icons.local_shipping, size: 48, color: Colors.green),
+                            backgroundColor: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.green.shade100,
+                            child: Icon(Icons.local_shipping, size: 48, color: isDark ? colorScheme.primary : Colors.green),
                           ),
                           const SizedBox(height: 24),
                           Text(
                             'Edit Profile',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -231,9 +247,11 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.red.shade50,
+                                color: isDark ? Colors.red.shade900.withOpacity(0.2) : Colors.red.shade50,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red.shade200),
+                                border: Border.all(
+                                  color: isDark ? Colors.red.shade400 : Colors.red.shade200,
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -242,7 +260,9 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                                   Expanded(
                                     child: Text(
                                       _errorMessage!,
-                                      style: TextStyle(color: Colors.red.shade700),
+                                      style: TextStyle(
+                                        color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -277,8 +297,10 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                             icon: const Icon(Icons.cancel),
                             label: const Text('Cancel'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.grey.shade700,
-                              side: BorderSide(color: Colors.grey.shade400),
+                              foregroundColor: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
+                              side: BorderSide(
+                                color: isDark ? colorScheme.onSurface.withOpacity(0.3) : Colors.grey.shade400,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

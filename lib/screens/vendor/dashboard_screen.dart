@@ -447,43 +447,84 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          TableCalendar(
-                            firstDay: DateTime.utc(2020, 1, 1),
-                            lastDay: DateTime.utc(2030, 12, 31),
-                            focusedDay: focusedDay,
-                            selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-                            onDaySelected: (selected, focused) {
-                              setState(() {
-                                selectedDay = selected;
-                                focusedDay = focused;
-                              });
-                            },
-                            headerStyle: const HeaderStyle(
-                              formatButtonVisible: false,
-                              titleCentered: true,
-                              titleTextStyle: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
-                              ),
-                            ),
-                            calendarStyle: CalendarStyle(
-                              todayDecoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isDark 
-                                    ? [colorScheme.primary, colorScheme.secondary]
-                                    : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                          StreamBuilder<List<DateTime>>(
+                            stream: _getConfirmedOrderDates(),
+                            builder: (context, snapshot) {
+                              final confirmedDates = snapshot.data ?? [];
+                              
+                              return TableCalendar(
+                                firstDay: DateTime.utc(2020, 1, 1),
+                                lastDay: DateTime.utc(2030, 12, 31),
+                                focusedDay: focusedDay,
+                                selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+                                onDaySelected: (selected, focused) {
+                                  setState(() {
+                                    selectedDay = selected;
+                                    focusedDay = focused;
+                                  });
+                                },
+                                eventLoader: (day) {
+                                  // Check if this day has any confirmed orders
+                                  final hasConfirmedOrder = confirmedDates.any((date) => 
+                                    isSameDay(date, day)
+                                  );
+                                  return hasConfirmedOrder ? ['Confirmed Order'] : [];
+                                },
+                                calendarStyle: CalendarStyle(
+                                  todayDecoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isDark 
+                                        ? [colorScheme.primary, colorScheme.secondary]
+                                        : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  selectedDecoration: BoxDecoration(
+                                    color: isDark ? colorScheme.primary : Colors.blue.shade600,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  weekendTextStyle: TextStyle(
+                                    color: isDark ? Colors.red.shade300 : Colors.red
+                                  ),
+                                  markerDecoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                                shape: BoxShape.circle,
+                                headerStyle: HeaderStyle(
+                                  formatButtonVisible: false,
+                                  titleCentered: true,
+                                  titleTextStyle: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          // Calendar Legend
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                              selectedDecoration: BoxDecoration(
-                                color: isDark ? colorScheme.primary : Colors.blue.shade600,
-                                shape: BoxShape.circle,
+                              const SizedBox(width: 8),
+                              Text(
+                                'Confirmed Orders',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                                ),
                               ),
-                              weekendTextStyle: TextStyle(
-                                color: isDark ? Colors.red.shade300 : Colors.red
-                              ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
@@ -492,95 +533,79 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   const SizedBox(height: 24),
                   
                   // Status Summary Cards
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  Icons.analytics, 
-                                  color: isDark ? colorScheme.primary : Colors.blue.shade700, 
-                                  size: 20
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Order Summary',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
-                                ),
-                              ),
-                            ],
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.analytics, 
+                              color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+                              size: 20
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildVendorStatCard(
-                                  icon: Icons.inventory,
-                                  title: 'Total Orders',
-                                  value: _buildVendorTotalOrdersCount(),
-                                  color: Colors.blue,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _buildVendorStatCard(
-                                  icon: Icons.pending,
-                                  title: 'Pending',
-                                  value: _buildVendorPendingOrdersCount(),
-                                  color: Colors.orange,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildVendorStatCard(
-                                  icon: Icons.check_circle,
-                                  title: 'Confirmed',
-                                  value: _buildVendorConfirmedOrdersCount(),
-                                  color: Colors.green,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _buildVendorStatCard(
-                                  icon: Icons.local_shipping,
-                                  title: 'Delivered',
-                                  value: _buildVendorDeliveredOrdersCount(),
-                                  color: Colors.purple,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 12),
+                          Text(
+                            'Order Summary',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildVendorStatCard(
+                              icon: Icons.inventory,
+                              title: 'Total Orders',
+                              value: _buildVendorTotalOrdersCount(),
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildVendorStatCard(
+                              icon: Icons.pending,
+                              title: 'Pending',
+                              value: _buildVendorPendingOrdersCount(),
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildVendorStatCard(
+                              icon: Icons.check_circle,
+                              title: 'Confirmed',
+                              value: _buildVendorConfirmedOrdersCount(),
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildVendorStatCard(
+                              icon: Icons.local_shipping,
+                              title: 'Delivered',
+                              value: _buildVendorDeliveredOrdersCount(),
+                              color: Colors.purple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   
@@ -842,10 +867,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               ),
                               title: Text(
                                 data['productName'] ?? 'Unknown Product',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
-                                  color: Color(0xFF1A1A1A),
+                                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                 ),
                               ),
                               subtitle: Column(
@@ -855,14 +880,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   Text(
                                     'Supplier: ${data['supplierName'] ?? 'Unknown Supplier'}',
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: isDark ? colorScheme.onSurface.withOpacity(0.9) : Colors.grey.shade600,
                                       fontSize: 14,
                                     ),
                                   ),
                                   Text(
                                     'Quantity: ${data['quantity'] ?? 'N/A'}',
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: isDark ? colorScheme.onSurface.withOpacity(0.9) : Colors.grey.shade600,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -871,7 +896,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                     Text(
                                       'Delivery: ${DateFormat.yMMMd().format((data['preferredDeliveryDate'] as Timestamp).toDate())}',
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: isDark ? colorScheme.onSurface.withOpacity(0.9) : Colors.grey.shade600,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -1364,5 +1389,21 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         );
       }
     }
+  }
+
+  // Method to get confirmed order dates for the calendar
+  Stream<List<DateTime>> _getConfirmedOrderDates() {
+    return FirebaseFirestore.instance
+        .collection('orders')
+        .where('vendorEmail', isEqualTo: widget.vendorEmail)
+        .where('status', isEqualTo: 'Confirmed')
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            final deliveryDate = data['preferredDeliveryDate'] as Timestamp?;
+            return deliveryDate?.toDate() ?? DateTime.now();
+          }).toList();
+        });
   }
 } 
