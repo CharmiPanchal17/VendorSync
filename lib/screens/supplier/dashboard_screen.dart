@@ -512,7 +512,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                             ? (data['preferredDeliveryDate'] as Timestamp).toDate()
                                             : DateTime.now(),
                                       );
-                                      Navigator.of(context).pushNamed('/supplier-order-details', arguments: orderData);
+                                      Navigator.of(context).pushNamed('/supplier-order-details', arguments: {
+                                        'order': orderData,
+                                        'supplierEmail': widget.supplierEmail,
+                                      });
                         },
                       ),
                     );

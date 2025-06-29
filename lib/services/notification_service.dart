@@ -128,4 +128,33 @@ class NotificationService {
       orderId: orderId,
     );
   }
+
+  // Create order confirmed notification for vendor
+  static Future<void> notifyVendorOfOrderConfirmation({
+    required String vendorEmail,
+    required String supplierEmail,
+    required String orderId,
+    required String productName,
+    required int quantity,
+  }) async {
+    final supplierQuery = await _firestore
+        .collection('suppliers')
+        .where('email', isEqualTo: supplierEmail)
+        .limit(1)
+        .get();
+
+    String supplierName = 'A supplier';
+    if (supplierQuery.docs.isNotEmpty) {
+      supplierName = supplierQuery.docs.first['name'] ?? 'A supplier';
+    }
+
+    await createNotification(
+      title: 'Order Confirmed',
+      message: '$supplierName has confirmed your order for $quantity $productName',
+      type: NotificationType.orderStatusChanged,
+      recipientEmail: vendorEmail,
+      senderEmail: supplierEmail,
+      orderId: orderId,
+    );
+  }
 } 

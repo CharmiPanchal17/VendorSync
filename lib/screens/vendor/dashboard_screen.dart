@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
+import '../../services/notification_service.dart';
 import 'suppliers_list_screen.dart';
 import 'create_order_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -232,6 +233,55 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        actions: [
+          // Notification Bell with Badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications, color: Colors.white),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/vendor-notifications', arguments: widget.vendorEmail);
+                },
+              ),
+              // Notification Badge
+              Positioned(
+                right: 8,
+                top: 8,
+                child: StreamBuilder<int>(
+                  stream: NotificationService.getUnreadNotificationCount(widget.vendorEmail),
+                  builder: (context, snapshot) {
+                    final unreadCount = snapshot.data ?? 0;
+                    if (unreadCount > 0) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

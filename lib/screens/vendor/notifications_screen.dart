@@ -1,18 +1,323 @@
 import 'package:flutter/material.dart';
+import '../../services/notification_service.dart';
+import '../../models/notification.dart';
+import 'package:intl/intl.dart';
 
-class VendorNotificationsScreen extends StatelessWidget {
+class VendorNotificationsScreen extends StatefulWidget {
   final String vendorEmail;
   
   const VendorNotificationsScreen({super.key, required this.vendorEmail});
 
   @override
+  State<VendorNotificationsScreen> createState() => _VendorNotificationsScreenState();
+}
+
+class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          StreamBuilder<int>(
+            stream: NotificationService.getUnreadNotificationCount(widget.vendorEmail),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+              if (unreadCount > 0) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    unreadCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.mark_email_read),
+            onPressed: () async {
+              await NotificationService.markAllNotificationsAsRead(widget.vendorEmail);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All notifications marked as read'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            tooltip: 'Mark all as read',
+          ),
+        ],
       ),
-      body: const Center(
-        child: Text('Notifications page'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2196F3), // Blue
+              Color(0xFF43E97B), // Green
+            ],
+          ),
+        ),
+        child: StreamBuilder<List<AppNotification>>(
+          stream: NotificationService.getNotificationsForUser(widget.vendorEmail),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(
+                        'Error loading notifications',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final notifications = snapshot.data ?? [];
+
+            if (notifications.isEmpty) {
+              return Center(
+                child: Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(Icons.notifications_none, size: 48, color: Colors.white),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'No Notifications',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'You\'ll see notifications here when suppliers confirm orders',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: notification.isRead 
+                              ? [Colors.grey.shade300, Colors.grey.shade400]
+                              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getNotificationIcon(notification.type),
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    title: Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+                        color: notification.isRead ? Colors.grey.shade600 : const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          notification.message,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat.yMMMd().add_jm().format(notification.createdAt),
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: notification.isRead 
+                        ? null 
+                        : Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                    onTap: () async {
+                      if (!notification.isRead) {
+                        await NotificationService.markNotificationAsRead(notification.id);
+                      }
+                      // TODO: Navigate to order details if it's an order notification
+                    },
+                    onLongPress: () {
+                      _showNotificationOptions(context, notification);
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  IconData _getNotificationIcon(NotificationType type) {
+    switch (type) {
+      case NotificationType.orderPlaced:
+        return Icons.shopping_cart;
+      case NotificationType.orderStatusChanged:
+        return Icons.update;
+      case NotificationType.orderDelivered:
+        return Icons.local_shipping;
+      case NotificationType.supplierAdded:
+        return Icons.person_add;
+      case NotificationType.general:
+        return Icons.notifications;
+    }
+  }
+
+  void _showNotificationOptions(BuildContext context, AppNotification notification) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Delete Notification'),
+              onTap: () async {
+                Navigator.pop(context);
+                await NotificationService.deleteNotification(notification.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Notification deleted'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+            if (!notification.isRead)
+              ListTile(
+                leading: const Icon(Icons.mark_email_read, color: Colors.blue),
+                title: const Text('Mark as Read'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await NotificationService.markNotificationAsRead(notification.id);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
