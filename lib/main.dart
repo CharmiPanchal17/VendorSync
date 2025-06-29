@@ -34,7 +34,10 @@ class VendorSyncApp extends StatelessWidget {
         '/vendor-create-order': (context) => const VendorCreateOrderScreen(vendorEmail: ''),
         '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
         '/vendor-notifications': (context) => const VendorNotificationsScreen(),
-        '/vendor-profile': (context) => const VendorProfileScreen(),
+        '/vendor-profile': (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return VendorProfileScreen(vendorEmail: email ?? '');
+        },
         '/supplier-dashboard': (context) {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return SupplierDashboardScreen(supplierEmail: email ?? '');
@@ -42,7 +45,10 @@ class VendorSyncApp extends StatelessWidget {
         '/supplier-order-details': (context) => const SupplierOrderDetailsScreen(),
         '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
         '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
-        '/supplier-profile': (context) => const SupplierProfileScreen(),
+        '/supplier-profile': (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return SupplierProfileScreen(supplierEmail: email ?? '');
+        },
       },
       debugShowCheckedModeBanner: false,
     );

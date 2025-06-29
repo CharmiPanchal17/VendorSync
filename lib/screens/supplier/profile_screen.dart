@@ -1,16 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class SupplierProfileScreen extends StatelessWidget {
-  const SupplierProfileScreen({super.key});
+class SupplierProfileScreen extends StatefulWidget {
+  final String supplierEmail;
+  const SupplierProfileScreen({super.key, required this.supplierEmail});
+
+  @override
+  State<SupplierProfileScreen> createState() => _SupplierProfileScreenState();
+}
+
+class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
+  Map<String, dynamic>? supplierData;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSupplierData();
+  }
+
+  Future<void> _fetchSupplierData() async {
+    try {
+      final supplierQuery = await FirebaseFirestore.instance
+          .collection('suppliers')
+          .where('email', isEqualTo: widget.supplierEmail)
+          .limit(1)
+          .get();
+      if (supplierQuery.docs.isNotEmpty) {
+        setState(() {
+          supplierData = supplierQuery.docs.first.data();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Supplier not found';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Failed to load supplier data';
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Mock data for demonstration
-    final String supplierName = 'Jane Smith';
-    final String email = 'supplier@example.com';
-    final String phone = '+1 987 654 3210';
-    final String company = 'Global Supplies Co.';
-    final String createdDate = 'Feb 10, 2022';
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Supplier Profile')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Supplier Profile')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, size: 64, color: Colors.red.shade300),
+              const SizedBox(height: 16),
+              Text(
+                errorMessage!,
+                style: const TextStyle(fontSize: 18, color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchSupplierData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final String supplierName = supplierData?['name'] ?? 'Unknown Supplier';
+    final String email = supplierData?['email'] ?? widget.supplierEmail;
+    final String phone = supplierData?['phone'] ?? 'Not provided';
+    final String company = supplierData?['company'] ?? 'Not specified';
+    final Timestamp? createdAt = supplierData?['createdAt'];
+    final String createdDate = createdAt != null
+        ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
+        : 'Unknown';
+    // Mock stat for now
     final int totalOrders = 58;
 
     return Scaffold(
