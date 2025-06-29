@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'screens/vendor/edit_profile_screen.dart';
+import 'screens/supplier/edit_profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,12 @@ class VendorSyncApp extends StatelessWidget {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return VendorProfileScreen(vendorEmail: email ?? '');
         },
+        '/vendor-edit-profile': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final email = args?['email'] as String? ?? '';
+          final vendorData = args?['vendorData'] as Map<String, dynamic>? ?? {};
+          return EditVendorProfileScreen(vendorEmail: email, vendorData: vendorData);
+        },
         '/supplier-dashboard': (context) {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return SupplierDashboardScreen(supplierEmail: email ?? '');
@@ -48,6 +56,12 @@ class VendorSyncApp extends StatelessWidget {
         '/supplier-profile': (context) {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return SupplierProfileScreen(supplierEmail: email ?? '');
+        },
+        '/supplier-edit-profile': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final email = args?['email'] as String? ?? '';
+          final supplierData = args?['supplierData'] as Map<String, dynamic>? ?? {};
+          return EditSupplierProfileScreen(supplierEmail: email, supplierData: supplierData);
         },
       },
       debugShowCheckedModeBanner: false,
