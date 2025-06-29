@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
+import 'settings_screen.dart';
 
 class SupplierDashboardScreen extends StatefulWidget {
   final String supplierEmail;
@@ -19,18 +20,20 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF43E97B), // Green
-              Color(0xFF38F9D7), // Lighter green/teal
-            ],
+            colors: isDark 
+              ? [colorScheme.primary, colorScheme.secondary]
+              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
           ),
         ),
         child: SafeArea(
@@ -145,9 +148,9 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               // Main Content
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: isDark ? colorScheme.surface : Colors.white,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
                     ),
@@ -210,7 +213,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
+                            color: isDark ? colorScheme.onSurface : Colors.grey.shade800,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -246,21 +249,26 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
+                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     ),
                                   ],
                                 ),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                    SizedBox(width: 12),
-                                    Text('Loading orders...'),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Loading orders...',
+                                      style: TextStyle(
+                                        color: isDark ? colorScheme.onSurface : Colors.black,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
@@ -270,11 +278,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
+                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     ),
@@ -287,7 +295,9 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                     Expanded(
                                       child: Text(
                                         'Error loading orders',
-                                        style: TextStyle(color: Colors.red.shade700),
+                                        style: TextStyle(
+                                          color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -315,11 +325,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
+                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     ),
@@ -330,20 +340,22 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                                        gradient: LinearGradient(
+                                          colors: isDark 
+                                            ? [colorScheme.primary, colorScheme.secondary]
+                                            : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                       child: const Icon(Icons.inventory_outlined, color: Colors.white, size: 32),
                                     ),
                                     const SizedBox(height: 16),
-                                    const Text(
+                                    Text(
                                       'No Orders Yet',
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A1A1A),
+                                        color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -351,7 +363,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                       'Orders from vendors will appear here',
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.grey.shade600,
+                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -370,11 +382,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
+                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     ),
@@ -382,14 +394,18 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 ),
                                 child: Column(
                                   children: [
-                                    Icon(Icons.filter_list, color: Colors.grey.shade400, size: 32),
+                                    Icon(
+                                      Icons.filter_list, 
+                                      color: isDark ? Colors.grey.shade500 : Colors.grey.shade400, 
+                                      size: 32
+                                    ),
                                     const SizedBox(height: 12),
                                     Text(
                                       'No $selectedStatus orders',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.grey.shade600,
+                                        color: isDark ? colorScheme.onSurface : Colors.grey.shade600,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -397,7 +413,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                       'Try changing the filter',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.grey.shade500,
+                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade500,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -416,11 +432,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.95),
+                                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                         blurRadius: 10,
                                         offset: const Offset(0, 5),
                                       ),
@@ -431,8 +447,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                     leading: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                                        gradient: LinearGradient(
+                                          colors: isDark 
+                                            ? [colorScheme.primary, colorScheme.secondary]
+                                            : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
@@ -440,10 +458,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                     ),
                                     title: Text(
                                       data['productName'] ?? 'Unknown Product',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 18,
-                                        color: Color(0xFF1A1A1A),
+                                        color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                       ),
                                     ),
                                     subtitle: Column(
@@ -453,14 +471,14 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                         Text(
                                           'Vendor: ${data['vendorEmail'] ?? 'Unknown Vendor'}',
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                             fontSize: 14,
                                           ),
                                         ),
                                         Text(
                                           'Quantity: ${data['quantity'] ?? 'N/A'}',
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -469,7 +487,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                           Text(
                                             'Delivery: ${DateFormat.yMMMd().format((data['preferredDeliveryDate'] as Timestamp).toDate())}',
                                             style: TextStyle(
-                                              color: Colors.grey.shade600,
+                                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                               fontSize: 12,
                                             ),
                                           ),
@@ -587,6 +605,9 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
 
   Widget _buildStatusButton(String status, Color color) {
     final isSelected = selectedStatus == status;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       decoration: BoxDecoration(
         gradient: isSelected 
@@ -609,7 +630,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? Colors.transparent : Colors.white,
+          backgroundColor: isSelected ? Colors.transparent : (isDark ? colorScheme.surface : Colors.white),
           foregroundColor: isSelected ? Colors.white : color,
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -638,29 +659,33 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   }
 
   Widget _buildDrawer() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Drawer(
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3),
-              Color(0xFF43E97B),
-            ],
+            colors: isDark 
+              ? [colorScheme.primary, colorScheme.secondary]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF43E97B), Color(0xFF38F9D7)], // Green gradient
+                  colors: isDark 
+                    ? [colorScheme.primary, colorScheme.secondary]
+                    : [const Color(0xFF43E97B), const Color(0xFF38F9D7)], // Green gradient
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
@@ -716,6 +741,16 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/supplier-profile', arguments: widget.supplierEmail);
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.settings,
+              title: 'Settings',
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => SupplierSettingsScreen(supplierEmail: widget.supplierEmail),
+                ));
               },
             ),
             const Divider(color: Colors.white24, height: 32),

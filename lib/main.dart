@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/vendor/edit_profile_screen.dart';
 import 'screens/supplier/edit_profile_screen.dart';
 import 'screens/vendor/settings_screen.dart';
+import 'screens/supplier/settings_screen.dart';
 import 'models/order.dart' as order_model;
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -88,6 +89,10 @@ class VendorSyncApp extends StatelessWidget {
               final supplierData = args?['supplierData'] as Map<String, dynamic>? ?? {};
               return EditSupplierProfileScreen(supplierEmail: email, supplierData: supplierData);
             },
+            '/supplier-settings': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return SupplierSettingsScreen(supplierEmail: email ?? '');
+            },
           },
           debugShowCheckedModeBanner: false,
         );
@@ -98,8 +103,17 @@ class VendorSyncApp extends StatelessWidget {
   ThemeData _buildLightTheme() {
     return ThemeData(
       useMaterial3: true,
-      colorSchemeSeed: Colors.blue,
       brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF43E97B),
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: Colors.white,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 
@@ -108,8 +122,19 @@ class VendorSyncApp extends StatelessWidget {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
+        seedColor: const Color(0xFF43E97B),
         brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
+      cardColor: const Color(0xFF1E1E1E),
+      dialogBackgroundColor: const Color(0xFF1E1E1E),
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: Color(0xFF1E1E1E),
       ),
     );
   }
