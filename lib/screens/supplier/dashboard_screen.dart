@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../models/order.dart' as order_model;
+import '../../services/notification_service.dart';
 
 class SupplierDashboardScreen extends StatefulWidget {
   final String supplierEmail;
@@ -645,8 +646,32 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               title: 'Notifications',
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/supplier-notifications');
+                Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
               },
+              badge: StreamBuilder<int>(
+                stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
+                builder: (context, snapshot) {
+                  final unreadCount = snapshot.data ?? 0;
+                  if (unreadCount > 0) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
             _buildMenuItem(
               icon: Icons.person,
@@ -675,6 +700,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     required VoidCallback onTap,
     bool isSelected = false,
     bool isLogout = false,
+    Widget? badge,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -696,15 +722,23 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
           size: 24,
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isLogout 
-                ? Colors.red.shade300
-                : (isSelected ? Colors.white : Colors.white.withOpacity(0.9)),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: 16,
-          ),
+        title: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: isLogout 
+                    ? Colors.red.shade300
+                    : (isSelected ? Colors.white : Colors.white.withOpacity(0.9)),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontSize: 16,
+              ),
+            ),
+            if (badge != null) ...[
+              const SizedBox(width: 8),
+              badge,
+            ],
+          ],
         ),
         onTap: onTap,
       ),
