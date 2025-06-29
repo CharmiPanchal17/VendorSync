@@ -3,12 +3,20 @@ import 'screens.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/vendor/edit_profile_screen.dart';
 import 'screens/supplier/edit_profile_screen.dart';
+import 'screens/vendor/settings_screen.dart';
 import 'models/order.dart' as order_model;
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const VendorSyncApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const VendorSyncApp(),
+    ),
+  );
 }
 
 class VendorSyncApp extends StatelessWidget {
@@ -16,67 +24,93 @@ class VendorSyncApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'VendorSync',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-      ),
-      initialRoute: '/welcome',
-      routes: {
-        '/welcome': (context) => const WelcomeScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/register-supplier': (context) => const RegisterSupplierScreen(),
-        '/reset-password': (context) => const ResetPasswordScreen(),
-        '/role-selection': (context) => const RoleSelectionScreen(),
-        '/vendor-dashboard': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return VendorDashboardScreen(vendorEmail: email ?? '');
-        },
-        '/vendor-create-order': (context) => const VendorCreateOrderScreen(vendorEmail: ''),
-        '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
-        '/vendor-notifications': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return VendorNotificationsScreen(vendorEmail: email ?? '');
-        },
-        '/vendor-profile': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return VendorProfileScreen(vendorEmail: email ?? '');
-        },
-        '/vendor-edit-profile': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          final email = args?['email'] as String? ?? '';
-          final vendorData = args?['vendorData'] as Map<String, dynamic>? ?? {};
-          return EditVendorProfileScreen(vendorEmail: email, vendorData: vendorData);
-        },
-        '/supplier-dashboard': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return SupplierDashboardScreen(supplierEmail: email ?? '');
-        },
-        '/supplier-order-details': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          final order = args?['order'] as order_model.Order?;
-          final supplierEmail = args?['supplierEmail'] as String? ?? '';
-          return SupplierOrderDetailsScreen(supplierEmail: supplierEmail);
-        },
-        '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
-        '/supplier-notifications': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return SupplierNotificationsScreen(supplierEmail: email ?? '');
-        },
-        '/supplier-profile': (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return SupplierProfileScreen(supplierEmail: email ?? '');
-        },
-        '/supplier-edit-profile': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          final email = args?['email'] as String? ?? '';
-          final supplierData = args?['supplierData'] as Map<String, dynamic>? ?? {};
-          return EditSupplierProfileScreen(supplierEmail: email, supplierData: supplierData);
-        },
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'VendorSync',
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          initialRoute: '/welcome',
+          routes: {
+            '/welcome': (context) => const WelcomeScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
+            '/register-supplier': (context) => const RegisterSupplierScreen(),
+            '/reset-password': (context) => const ResetPasswordScreen(),
+            '/role-selection': (context) => const RoleSelectionScreen(),
+            '/vendor-dashboard': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return VendorDashboardScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-create-order': (context) => const VendorCreateOrderScreen(vendorEmail: ''),
+            '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
+            '/vendor-notifications': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return VendorNotificationsScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-profile': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return VendorProfileScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-edit-profile': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final email = args?['email'] as String? ?? '';
+              final vendorData = args?['vendorData'] as Map<String, dynamic>? ?? {};
+              return EditVendorProfileScreen(vendorEmail: email, vendorData: vendorData);
+            },
+            '/vendor-settings': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return VendorSettingsScreen(vendorEmail: email ?? '');
+            },
+            '/supplier-dashboard': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return SupplierDashboardScreen(supplierEmail: email ?? '');
+            },
+            '/supplier-order-details': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final order = args?['order'] as order_model.Order?;
+              final supplierEmail = args?['supplierEmail'] as String? ?? '';
+              return SupplierOrderDetailsScreen(supplierEmail: supplierEmail);
+            },
+            '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
+            '/supplier-notifications': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return SupplierNotificationsScreen(supplierEmail: email ?? '');
+            },
+            '/supplier-profile': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return SupplierProfileScreen(supplierEmail: email ?? '');
+            },
+            '/supplier-edit-profile': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final email = args?['email'] as String? ?? '';
+              final supplierData = args?['supplierData'] as Map<String, dynamic>? ?? {};
+              return EditSupplierProfileScreen(supplierEmail: email, supplierData: supplierData);
+            },
+          },
+          debugShowCheckedModeBanner: false,
+        );
       },
-      debugShowCheckedModeBanner: false,
+    );
+  }
+
+  ThemeData _buildLightTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      colorSchemeSeed: Colors.blue,
+      brightness: Brightness.light,
+    );
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
+        brightness: Brightness.dark,
+      ),
     );
   }
 }
