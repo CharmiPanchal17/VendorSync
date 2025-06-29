@@ -153,7 +153,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Profile',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-profile');
+                        Navigator.of(context).pushNamed('/vendor-profile', arguments: widget.vendorEmail);
                       },
                     ),
                     const SizedBox(height: 24),

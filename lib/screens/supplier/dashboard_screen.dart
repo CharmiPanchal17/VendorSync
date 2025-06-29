@@ -653,7 +653,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               title: 'Profile',
               onTap: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/supplier-profile');
+                Navigator.of(context).pushNamed('/supplier-profile', arguments: widget.supplierEmail);
               },
             ),
             const Divider(color: Colors.white24, height: 32),

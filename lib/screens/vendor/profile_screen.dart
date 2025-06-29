@@ -1,17 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class VendorProfileScreen extends StatelessWidget {
-  const VendorProfileScreen({super.key});
+class VendorProfileScreen extends StatefulWidget {
+  final String vendorEmail;
+  
+  const VendorProfileScreen({super.key, required this.vendorEmail});
+
+  @override
+  State<VendorProfileScreen> createState() => _VendorProfileScreenState();
+}
+
+class _VendorProfileScreenState extends State<VendorProfileScreen> {
+  Map<String, dynamic>? vendorData;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVendorData();
+  }
+
+  Future<void> _fetchVendorData() async {
+    try {
+      final vendorQuery = await FirebaseFirestore.instance
+          .collection('vendors')
+          .where('email', isEqualTo: widget.vendorEmail)
+          .limit(1)
+          .get();
+
+      if (vendorQuery.docs.isNotEmpty) {
+        setState(() {
+          vendorData = vendorQuery.docs.first.data();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Vendor not found';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Failed to load vendor data';
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Mock data for demonstration
-    final String vendorName = 'John Doe';
-    final String email = 'vendor@example.com';
-    final String phone = '+1 234 567 8901';
-    final String company = 'Acme Supplies Ltd.';
-    final String createdDate = 'Jan 15, 2023';
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Vendor Profile')),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Vendor Profile')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, size: 64, color: Colors.red.shade300),
+              const SizedBox(height: 16),
+              Text(
+                errorMessage!,
+                style: const TextStyle(fontSize: 18, color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchVendorData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Extract vendor data with fallbacks
+    final String vendorName = vendorData?['name'] ?? 'Unknown Vendor';
+    final String email = vendorData?['email'] ?? widget.vendorEmail;
+    final String phone = vendorData?['phone'] ?? 'Not provided';
+    final String company = vendorData?['company'] ?? 'Not specified';
+    final Timestamp? createdAt = vendorData?['createdAt'];
+    final String createdDate = createdAt != null 
+        ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
+        : 'Unknown';
+
+    // Mock stats for now - these could be fetched from orders collection later
     final int totalOrders = 42;
     final int totalSuppliers = 7;
 
