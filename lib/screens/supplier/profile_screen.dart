@@ -14,11 +14,13 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
   Map<String, dynamic>? supplierData;
   bool isLoading = true;
   String? errorMessage;
+  int deliveredOrdersCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchSupplierData();
+    _fetchDeliveredOrdersCount();
   }
 
   Future<void> _fetchSupplierData() async {
@@ -43,6 +45,26 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
       setState(() {
         errorMessage = 'Failed to load supplier data';
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchDeliveredOrdersCount() async {
+    try {
+      // Count orders where supplier email matches and status is 'Delivered'
+      final ordersQuery = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('supplierEmail', isEqualTo: widget.supplierEmail)
+          .where('status', isEqualTo: 'Delivered')
+          .get();
+      
+      setState(() {
+        deliveredOrdersCount = ordersQuery.docs.length;
+      });
+    } catch (e) {
+      // If there's an error fetching orders count, we'll just show 0
+      setState(() {
+        deliveredOrdersCount = 0;
       });
     }
   }
@@ -87,8 +109,6 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
     final String createdDate = createdAt != null
         ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
         : 'Unknown';
-    // Mock stat for now
-    final int totalOrders = 58;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Supplier Profile')),
@@ -149,7 +169,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                         const SizedBox(height: 12),
                         _buildInfoRow(Icons.calendar_today, 'Account Created', createdDate),
                         const SizedBox(height: 24),
-                        _buildStatCard('Orders Fulfilled', totalOrders, Colors.green),
+                        _buildStatCard('Orders Fulfilled', deliveredOrdersCount, Colors.green),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
                           onPressed: () async {
@@ -165,6 +185,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                             // If the edit was successful, refresh the data
                             if (result == true) {
                               _fetchSupplierData();
+                              _fetchDeliveredOrdersCount();
                             }
                           },
                           icon: const Icon(Icons.edit),
