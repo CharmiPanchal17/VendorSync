@@ -847,7 +847,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                           ),
                                           elevation: 2,
                                         ),
-                                        onPressed: () => _approveOrder(orderId),
+                                        onPressed: () => _showApproveConfirmation(orderId),
                                         child: const Text(
                                           'Approve',
                                           style: TextStyle(
@@ -1241,6 +1241,50 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _showApproveConfirmation(String orderId) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.purple, Colors.blue],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text('Confirm Approval'),
+          ],
+        ),
+        content: const Text('Are you sure you want to approve the delivery? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _approveOrder(orderId);
+            },
+            child: const Text('Approve'),
+          ),
+        ],
+      ),
     );
   }
 
