@@ -21,6 +21,9 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
     final order = args?['order'] as order_model.Order? ?? order_model.Order(
       id: '',
@@ -47,14 +50,13 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
       body: Stack(
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF43E97B),
-                  Color(0xFF38F9D7),
-                ],
+                colors: isDark 
+                  ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
+                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
               ),
             ),
           ),
@@ -83,9 +85,9 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                 ),
                 Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: isDark ? colorScheme.surface : Colors.white,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(30),
                         topRight: Radius.circular(30),
                       ),
@@ -98,11 +100,11 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? colorScheme.surface : Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -116,8 +118,10 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                                        gradient: LinearGradient(
+                                          colors: isDark 
+                                            ? [colorScheme.primary, colorScheme.secondary]
+                                            : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
@@ -130,17 +134,17 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                         children: [
                                           Text(
                                             order.productName,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1A1A1A),
+                                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                             ),
                                           ),
                                           Text(
                                             'Order ID: ${order.id}',
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: Colors.grey.shade600,
+                                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                             ),
                                           ),
                                         ],
@@ -164,11 +168,11 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? colorScheme.surface : Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -177,12 +181,12 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Update Order Status',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
+                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -190,10 +194,10 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                   Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(order.status).withOpacity(0.1),
+                                      color: _getStatusColor(order.status).withOpacity(isDark ? 0.2 : 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: _getStatusColor(order.status).withOpacity(0.3),
+                                        color: _getStatusColor(order.status).withOpacity(isDark ? 0.5 : 0.3),
                                         width: 1,
                                       ),
                                     ),

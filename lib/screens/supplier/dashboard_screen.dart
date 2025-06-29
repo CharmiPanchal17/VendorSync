@@ -32,7 +32,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark 
-              ? [colorScheme.primary, colorScheme.secondary]
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
               : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
           ),
         ),
@@ -149,7 +149,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? colorScheme.surface : Colors.white,
+                    color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
@@ -250,7 +250,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
@@ -279,7 +279,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
@@ -326,7 +326,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 padding: const EdgeInsets.all(32),
                                 decoration: BoxDecoration(
                                   color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
@@ -383,7 +383,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
@@ -433,7 +433,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                   margin: const EdgeInsets.only(bottom: 12),
                                   decoration: BoxDecoration(
                                     color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
                                         color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
@@ -561,14 +561,17 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     required Widget value,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(20),
+        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -630,7 +633,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? Colors.transparent : (isDark ? colorScheme.surface : Colors.white),
+          backgroundColor: isSelected ? Colors.transparent : (isDark ? const Color(0xFF3D3D3D) : Colors.white),
           foregroundColor: isSelected ? Colors.white : color,
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -669,8 +672,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark 
-              ? [colorScheme.primary, colorScheme.secondary]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
           ),
         ),
         child: ListView(
@@ -680,8 +683,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isDark 
-                    ? [colorScheme.primary, colorScheme.secondary]
-                    : [const Color(0xFF43E97B), const Color(0xFF38F9D7)], // Green gradient
+                    ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                    : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -753,7 +756,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                 ));
               },
             ),
-            const Divider(color: Colors.white24, height: 32),
+            const Divider(
+              color: Colors.white24, 
+              height: 32,
+              thickness: 1,
+            ),
             _buildMenuItem(
               icon: Icons.logout,
               title: 'Logout',
@@ -773,15 +780,21 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     bool isSelected = false,
     bool isLogout = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
         color: isSelected 
-            ? Colors.white.withOpacity(0.2)
+            ? Colors.white.withOpacity(isDark ? 0.15 : 0.2)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: isSelected
-            ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+            ? Border.all(
+                color: Colors.white.withOpacity(isDark ? 0.25 : 0.3), 
+                width: 1,
+              )
             : null,
       ),
       child: ListTile(
@@ -789,8 +802,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         leading: Icon(
           icon,
           color: isLogout 
-              ? Colors.red.shade300
-              : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
+              ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
+              : (isSelected 
+                  ? Colors.white 
+                  : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
           size: 24,
         ),
         title: Row(
@@ -799,8 +814,10 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               title,
               style: TextStyle(
                 color: isLogout 
-                    ? Colors.red.shade300
-                    : (isSelected ? Colors.white : Colors.white.withOpacity(0.9)),
+                    ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
+                    : (isSelected 
+                        ? Colors.white 
+                        : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 16,
               ),
@@ -813,31 +830,52 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   }
 
   void _showLogoutDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                gradient: LinearGradient(
+                  colors: isDark 
+                    ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                    : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.logout, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
-            const Text('Logout'),
+            Text(
+              'Logout',
+              style: TextStyle(
+                color: isDark ? colorScheme.onSurface : Colors.black,
+              ),
+            ),
           ],
         ),
-        content: const Text('Are you sure you want to logout?'),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(
+            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? colorScheme.primary : Colors.blue,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(

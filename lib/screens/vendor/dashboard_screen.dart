@@ -55,7 +55,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: isDark 
-                ? [colorScheme.primary, colorScheme.secondary]
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
                 : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
@@ -65,7 +65,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? colorScheme.primary : Colors.blue.shade700,
+                  color: isDark 
+                      ? const Color(0xFF3D3D3D)
+                      : Colors.blue.shade700,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -204,7 +206,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                               ),
                             ),
-                            backgroundColor: isDark ? colorScheme.surface : Colors.white,
+                            backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             actions: [
                               TextButton(
@@ -317,7 +319,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDark 
-                ? [colorScheme.primary, colorScheme.secondary]
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
                 : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
@@ -329,7 +331,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark 
-              ? [colorScheme.primary, colorScheme.secondary]
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
               : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
@@ -344,12 +346,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -405,12 +407,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -493,12 +495,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
@@ -646,11 +648,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
+                            color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -670,11 +672,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
+                            color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -715,11 +717,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         return Container(
                           padding: const EdgeInsets.all(32),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
+                            color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -770,11 +772,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
+                            color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -816,11 +818,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.95),
-                              borderRadius: BorderRadius.circular(20),
+                              color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -1064,15 +1066,21 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     bool isSelected = false,
     bool isLogout = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
         color: isSelected 
-            ? Colors.white.withOpacity(0.2)
+            ? Colors.white.withOpacity(isDark ? 0.15 : 0.2)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: isSelected
-            ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+            ? Border.all(
+                color: Colors.white.withOpacity(isDark ? 0.25 : 0.3), 
+                width: 1,
+              )
             : null,
       ),
       child: ListTile(
@@ -1080,16 +1088,20 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         leading: Icon(
           icon,
           color: isLogout 
-              ? Colors.red.shade300
-              : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
+              ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
+              : (isSelected 
+                  ? Colors.white 
+                  : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
           size: 24,
         ),
         title: Text(
           title,
           style: TextStyle(
             color: isLogout 
-                ? Colors.red.shade300
-                : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
+                ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
+                : (isSelected 
+                    ? Colors.white 
+                    : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 16,
           ),
@@ -1106,27 +1118,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     required Widget value,
     required Color color,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-          ],
-        ),
+        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),

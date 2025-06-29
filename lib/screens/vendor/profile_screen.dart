@@ -93,9 +93,28 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     if (isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Vendor Profile')),
+        appBar: AppBar(
+          title: const Text('Vendor Profile'),
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+              ),
+            ),
+          ),
+        ),
         body: const Center(
           child: CircularProgressIndicator(),
         ),
@@ -104,7 +123,23 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     if (errorMessage != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Vendor Profile')),
+        appBar: AppBar(
+          title: const Text('Vendor Profile'),
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+              ),
+            ),
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -113,7 +148,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               const SizedBox(height: 16),
               Text(
                 errorMessage!,
-                style: const TextStyle(fontSize: 18, color: Colors.red),
+                style: TextStyle(
+                  fontSize: 18, 
+                  color: isDark ? Colors.red.shade400 : Colors.red,
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -137,16 +175,31 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         : 'Unknown';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Vendor Profile')),
+      appBar: AppBar(
+        title: const Text('Vendor Profile'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+            ),
+          ),
+        ),
+      ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
+            colors: isDark 
+              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: SafeArea(
@@ -159,7 +212,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                   elevation: 8,
-                  color: Colors.white.withOpacity(0.95),
+                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
@@ -167,16 +220,22 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: Colors.blue.shade100,
-                          child: const Icon(Icons.store, size: 48, color: Colors.blue),
+                          backgroundColor: isDark 
+                              ? colorScheme.primary.withOpacity(0.2)
+                              : Colors.blue.shade100,
+                          child: Icon(
+                            Icons.store, 
+                            size: 48, 
+                            color: isDark ? colorScheme.primary : Colors.blue,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           vendorName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1A1A),
+                            color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -184,11 +243,13 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           company,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey.shade700,
+                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Divider(color: Colors.grey.shade300),
+                        Divider(
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.2) : Colors.grey.shade300,
+                        ),
                         _buildInfoRow(Icons.email, 'Email', email),
                         const SizedBox(height: 12),
                         _buildInfoRow(Icons.phone, 'Phone', phone),
@@ -198,8 +259,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatCard('Total Orders', totalOrdersCount, Colors.blue),
-                            _buildStatCard('Suppliers', suppliersCount, Colors.green),
+                            _buildStatCard('Total Orders', totalOrdersCount, isDark ? colorScheme.primary : Colors.blue),
+                            _buildStatCard('Suppliers', suppliersCount, isDark ? colorScheme.secondary : Colors.green),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -224,7 +285,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Profile'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: isDark ? colorScheme.primary : Colors.blue,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -245,15 +306,24 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
+            color: isDark 
+                ? colorScheme.primary.withOpacity(0.2)
+                : Colors.blue.shade50,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: Colors.blue.shade700, size: 20),
+          child: Icon(
+            icon, 
+            color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+            size: 20,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -262,18 +332,18 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey,
+                  color: isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: Color(0xFF1A1A1A),
+                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -285,9 +355,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   }
 
   Widget _buildStatCard(String label, int value, Color color) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: isDark 
+            ? color.withOpacity(0.2)
+            : color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -295,24 +370,24 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         children: [
           Icon(
             label == 'Total Orders' ? Icons.shopping_cart : Icons.group,
-            color: Colors.deepPurple,
+            color: isDark ? colorScheme.primary : Colors.deepPurple,
             size: 28,
           ),
           const SizedBox(height: 4),
           Text(
             value.toString(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.deepPurple,
+              color: isDark ? colorScheme.primary : Colors.deepPurple,
               fontWeight: FontWeight.w600,
             ),
           ),
