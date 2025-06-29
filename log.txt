@@ -78,3 +78,4 @@ Initial homepage layout
 Styled header and footer
 Integrated CSV upload module
 Created upload history view
+Validated CSV data format
