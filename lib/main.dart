@@ -3,6 +3,7 @@ import 'screens.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/vendor/edit_profile_screen.dart';
 import 'screens/supplier/edit_profile_screen.dart';
+import 'models/order.dart' as order_model;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +54,12 @@ class VendorSyncApp extends StatelessWidget {
           final email = ModalRoute.of(context)?.settings.arguments as String?;
           return SupplierDashboardScreen(supplierEmail: email ?? '');
         },
-        '/supplier-order-details': (context) => const SupplierOrderDetailsScreen(),
+        '/supplier-order-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final order = args?['order'] as order_model.Order?;
+          final supplierEmail = args?['supplierEmail'] as String? ?? '';
+          return SupplierOrderDetailsScreen(supplierEmail: supplierEmail);
+        },
         '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
         '/supplier-notifications': (context) {
           final email = ModalRoute.of(context)?.settings.arguments as String?;

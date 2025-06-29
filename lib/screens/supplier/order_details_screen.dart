@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../models/order.dart' as order_model;
+import '../../services/notification_service.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SupplierOrderDetailsScreen extends StatefulWidget {
-  const SupplierOrderDetailsScreen({super.key});
+  final String supplierEmail;
+  
+  const SupplierOrderDetailsScreen({super.key, required this.supplierEmail});
 
   @override
   State<SupplierOrderDetailsScreen> createState() => _SupplierOrderDetailsScreenState();
@@ -18,7 +21,16 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final order = ModalRoute.of(context)!.settings.arguments as order_model.Order;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    final order = args?['order'] as order_model.Order? ?? order_model.Order(
+      id: '',
+      productName: 'Unknown Product',
+      supplierName: 'Unknown Supplier',
+      quantity: 0,
+      status: 'Pending',
+      preferredDeliveryDate: DateTime.now(),
+    );
+    
     status ??= order.status;
     deliveryDate ??= order.actualDeliveryDate;
 
@@ -470,6 +482,35 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
         if (deliveryDate != null) 'actualDeliveryDate': deliveryDate,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // Send notification to vendor when order is confirmed
+      if (status == 'Confirmed') {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+        final order = args?['order'] as order_model.Order?;
+        
+        if (order != null) {
+          // Get the order document to access vendorEmail
+          final orderDoc = await FirebaseFirestore.instance
+              .collection('orders')
+              .doc(orderId)
+              .get();
+          
+          if (orderDoc.exists) {
+            final orderData = orderDoc.data()!;
+            final vendorEmail = orderData['vendorEmail'] as String?;
+            
+            if (vendorEmail != null) {
+              await NotificationService.notifyVendorOfOrderConfirmation(
+                vendorEmail: vendorEmail,
+                supplierEmail: widget.supplierEmail,
+                orderId: orderId,
+                productName: order.productName,
+                quantity: order.quantity,
+              );
+            }
+          }
+        }
+      }
 
       setState(() => _isLoading = false);
 
