@@ -59,6 +59,9 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create New Order'),
@@ -67,27 +70,25 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
+            colors: isDark 
+              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: SafeArea(
@@ -131,11 +132,11 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                       const SizedBox(height: 32),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
+                          color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -157,15 +158,22 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                                       return Container(
                                         padding: const EdgeInsets.all(20),
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey.shade300),
+                                          border: Border.all(
+                                            color: isDark ? colorScheme.onSurface.withOpacity(0.2) : Colors.grey.shade300,
+                                          ),
                                           borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey.shade50,
+                                          color: isDark ? colorScheme.surface : Colors.grey.shade50,
                                         ),
-                                        child: const Row(
+                                        child: Row(
                                           children: [
                                             SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                            SizedBox(width: 12),
-                                            Text('Loading suppliers...'),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Loading suppliers...',
+                                              style: TextStyle(
+                                                color: isDark ? colorScheme.onSurface : Colors.black,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       );
@@ -176,18 +184,27 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                                       return Container(
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
-                                          color: Colors.red.shade50,
+                                          color: isDark ? Colors.red.shade900.withOpacity(0.2) : Colors.red.shade50,
                                           borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Colors.red.shade200),
+                                          border: Border.all(
+                                            color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
-                                            Icon(Icons.warning, color: Colors.red.shade600, size: 20),
+                                            Icon(
+                                              Icons.warning, 
+                                              color: isDark ? Colors.red.shade400 : Colors.red.shade600, 
+                                              size: 20,
+                                            ),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Text(
                                                 'No suppliers found. Please add a supplier first.',
-                                                style: TextStyle(color: Colors.red.shade700, fontSize: 14),
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.red.shade300 : Colors.red.shade700, 
+                                                  fontSize: 14,
+                                                ),
                                               ),
                                             ),
                                           ],

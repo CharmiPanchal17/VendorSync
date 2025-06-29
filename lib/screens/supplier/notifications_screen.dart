@@ -16,9 +16,26 @@ class SupplierNotificationsScreen extends StatefulWidget {
 class _SupplierNotificationsScreenState extends State<SupplierNotificationsScreen> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+            ),
+          ),
+        ),
         actions: [
           StreamBuilder<int>(
             stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
@@ -51,9 +68,9 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
               await NotificationService.markAllNotificationsAsRead(widget.supplierEmail);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All notifications marked as read'),
-                    backgroundColor: Colors.green,
+                  SnackBar(
+                    content: const Text('All notifications marked as read'),
+                    backgroundColor: isDark ? Colors.green.shade700 : Colors.green,
                   ),
                 );
               }
@@ -63,14 +80,13 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF43E97B), // Green
-              Color(0xFF38F9D7), // Lighter green/teal
-            ],
+            colors: isDark 
+              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
+              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
           ),
         ),
         child: StreamBuilder<List<AppNotification>>(
@@ -87,27 +103,27 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red),
-                      SizedBox(height: 16),
+                      Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                      const SizedBox(height: 16),
                       Text(
                         'Error loading notifications',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                         ),
                       ),
                     ],
@@ -123,11 +139,11 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -139,20 +155,22 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                          gradient: LinearGradient(
+                            colors: isDark 
+                              ? [colorScheme.primary, colorScheme.secondary]
+                              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(Icons.notifications_none, size: 48, color: Colors.white),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
+                      Text(
                         'No Notifications',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -160,7 +178,7 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                         'You\'ll see notifications here when vendors place orders',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade600,
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -178,11 +196,11 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -196,12 +214,14 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                         gradient: LinearGradient(
                           colors: notification.isRead 
                               ? [Colors.grey.shade300, Colors.grey.shade400]
-                              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                              : (isDark 
+                                  ? [colorScheme.primary, colorScheme.secondary]
+                                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)]),
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        _getNotificationIcon(notification.type),
+                        notification.isRead ? Icons.notifications_none : Icons.notifications_active,
                         color: Colors.white,
                         size: 24,
                       ),
@@ -210,7 +230,9 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                       notification.title,
                       style: TextStyle(
                         fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-                        color: notification.isRead ? Colors.grey.shade600 : const Color(0xFF1A1A1A),
+                        color: notification.isRead 
+                            ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
+                            : (isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A)),
                       ),
                     ),
                     subtitle: Column(
@@ -220,7 +242,7 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                         Text(
                           notification.message,
                           style: TextStyle(
-                            color: Colors.grey.shade700,
+                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
                             fontSize: 14,
                           ),
                         ),
@@ -228,7 +250,7 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                         Text(
                           DateFormat.yMMMd().add_jm().format(notification.createdAt),
                           style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: isDark ? colorScheme.onSurface.withOpacity(0.5) : Colors.grey.shade500,
                             fontSize: 12,
                           ),
                         ),
@@ -279,8 +301,12 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
   }
 
   void _showNotificationOptions(BuildContext context, AppNotification notification) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     showModalBottomSheet(
       context: context,
+      backgroundColor: isDark ? colorScheme.surface : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -291,15 +317,20 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
           children: [
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Delete Notification'),
+              title: Text(
+                'Delete Notification',
+                style: TextStyle(
+                  color: isDark ? colorScheme.onSurface : Colors.black,
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await NotificationService.deleteNotification(notification.id);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Notification deleted'),
-                      backgroundColor: Colors.red,
+                    SnackBar(
+                      content: const Text('Notification deleted'),
+                      backgroundColor: isDark ? Colors.red.shade700 : Colors.red,
                     ),
                   );
                 }
@@ -307,8 +338,16 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
             ),
             if (!notification.isRead)
               ListTile(
-                leading: const Icon(Icons.mark_email_read, color: Colors.blue),
-                title: const Text('Mark as Read'),
+                leading: Icon(
+                  Icons.mark_email_read, 
+                  color: isDark ? colorScheme.primary : Colors.blue,
+                ),
+                title: Text(
+                  'Mark as Read',
+                  style: TextStyle(
+                    color: isDark ? colorScheme.onSurface : Colors.black,
+                  ),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await NotificationService.markNotificationAsRead(notification.id);

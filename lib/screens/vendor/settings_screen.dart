@@ -25,7 +25,7 @@ class VendorSettingsScreen extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDark 
-                ? [colorScheme.primary, colorScheme.secondary]
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
                 : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
@@ -37,7 +37,7 @@ class VendorSettingsScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: isDark 
-              ? [colorScheme.primary, colorScheme.secondary]
+              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
               : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),

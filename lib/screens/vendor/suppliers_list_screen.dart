@@ -8,6 +8,9 @@ class SuppliersListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Suppliers'),
@@ -16,27 +19,25 @@ class SuppliersListScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
             ),
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
+            colors: isDark 
+              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
         ),
         child: StreamBuilder<QuerySnapshot>(
@@ -52,32 +53,33 @@ class SuppliersListScreen extends StatelessWidget {
                 ),
               );
             }
+            
             if (vendorSuppliersSnapshot.hasError) {
               return Center(
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(20),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red),
-                      SizedBox(height: 16),
+                      Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                      const SizedBox(height: 16),
                       Text(
                         'Error loading your suppliers',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                         ),
                       ),
                     ],
@@ -85,42 +87,46 @@ class SuppliersListScreen extends StatelessWidget {
                 ),
               );
             }
+            
             final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
+            
             if (vendorSupplierDocs.isEmpty) {
               return Center(
                 child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(24),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-        children: [
+                    children: [
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                          gradient: LinearGradient(
+                            colors: isDark 
+                              ? [colorScheme.primary, colorScheme.secondary]
+                              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(Icons.people_outline, size: 48, color: Colors.white),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
+                      Text(
                         'No Suppliers Yet',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -128,7 +134,7 @@ class SuppliersListScreen extends StatelessWidget {
                         'Add suppliers to start managing your orders',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade600,
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -156,7 +162,9 @@ class SuppliersListScreen extends StatelessWidget {
                 ),
               );
             }
+            
             final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
+            
             return StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('suppliers')
@@ -170,32 +178,33 @@ class SuppliersListScreen extends StatelessWidget {
                     ),
                   );
                 }
+                
                 if (suppliersSnapshot.hasError) {
                   return Center(
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
+                        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: const Column(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline, size: 48, color: Colors.red),
-                          SizedBox(height: 16),
+                          Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                          const SizedBox(height: 16),
                           Text(
                             'Error loading suppliers',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                             ),
                           ),
                         ],
@@ -203,7 +212,9 @@ class SuppliersListScreen extends StatelessWidget {
                     ),
                   );
                 }
+                
                 final supplierDocs = suppliersSnapshot.data?.docs ?? [];
+                
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -213,20 +224,13 @@ class SuppliersListScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF1976D2), // Darker blue
-                              Color(0xFF42A5F5), // Lighter blue
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
+                          color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
                             ),
                           ],
                         ),
@@ -235,18 +239,18 @@ class SuppliersListScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.people, size: 32, color: Colors.white),
+                                Icon(Icons.people, size: 32, color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'My Suppliers',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -254,7 +258,7 @@ class SuppliersListScreen extends StatelessWidget {
                                         '${supplierDocs.length} supplier${supplierDocs.length == 1 ? '' : 's'} in your network',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                         ),
                                       ),
                                     ],
@@ -263,14 +267,16 @@ class SuppliersListScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                    border: Border.all(
+                                      color: isDark ? colorScheme.primary.withOpacity(0.3) : Colors.blue.shade200,
+                                    ),
                                   ),
                                   child: Text(
                                     '${supplierDocs.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: isDark ? colorScheme.primary : Colors.blue.shade700,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                     ),
@@ -284,9 +290,9 @@ class SuppliersListScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.white.withOpacity(0.3),
-                                    Colors.white.withOpacity(0.1),
-                                    Colors.white.withOpacity(0.3),
+                                    isDark ? colorScheme.primary.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+                                    isDark ? colorScheme.primary.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                                    isDark ? colorScheme.primary.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
                                   ],
                                 ),
                               ),
@@ -300,31 +306,33 @@ class SuppliersListScreen extends StatelessWidget {
                       Expanded(
                         child: ListView.builder(
                           itemCount: supplierDocs.length,
-                  itemBuilder: (context, index) {
+                          itemBuilder: (context, index) {
                             final data = supplierDocs[index].data() as Map<String, dynamic>;
                             final supplierId = supplierDocs[index].id;
-                            // Find the vendor_suppliers doc for this supplier
                             final vendorSupplierDocList = vendorSupplierDocs.where((doc) => doc['supplierId'] == supplierId).toList();
+                            
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.95),
-                                borderRadius: BorderRadius.circular(20),
+                                color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                     blurRadius: 10,
                                     offset: const Offset(0, 5),
                                   ),
                                 ],
                               ),
-                      child: ListTile(
+                              child: ListTile(
                                 contentPadding: const EdgeInsets.all(20),
                                 leading: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                                    gradient: LinearGradient(
+                                      colors: isDark 
+                                        ? [colorScheme.primary, colorScheme.secondary]
+                                        : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
@@ -332,10 +340,10 @@ class SuppliersListScreen extends StatelessWidget {
                                 ),
                                 title: Text(
                                   data['name'] ?? 'Unknown Supplier',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
-                                    color: Color(0xFF1A1A1A),
+                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 subtitle: Column(
@@ -345,7 +353,7 @@ class SuppliersListScreen extends StatelessWidget {
                                     Text(
                                       data['email'] ?? 'No email provided',
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -354,19 +362,21 @@ class SuppliersListScreen extends StatelessWidget {
                                 trailing: vendorSupplierDocList.isNotEmpty
                                     ? Container(
                                         decoration: BoxDecoration(
-                                          color: Colors.red.shade50,
+                                          color: isDark ? Colors.red.shade900.withOpacity(0.2) : Colors.red.shade50,
                                           borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Colors.red.shade200),
+                                          border: Border.all(
+                                            color: isDark ? Colors.red.shade400 : Colors.red.shade200,
+                                          ),
                                         ),
                                         child: IconButton(
                                           icon: Icon(Icons.remove_circle, color: Colors.red.shade600, size: 24),
                                           tooltip: 'Remove from My Suppliers',
-                          onPressed: () async {
+                                          onPressed: () async {
                                             final confirm = await showDialog<bool>(
                                               context: context,
                                               builder: (context) => AlertDialog(
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                                backgroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                backgroundColor: isDark ? colorScheme.surface : Colors.white,
                                                 elevation: 20,
                                                 contentPadding: const EdgeInsets.all(24),
                                                 content: Column(
@@ -383,12 +393,12 @@ class SuppliersListScreen extends StatelessWidget {
                                                       child: const Icon(Icons.person_remove, size: 32, color: Colors.white),
                                                     ),
                                                     const SizedBox(height: 20),
-                                                    const Text(
+                                                    Text(
                                                       'Remove Supplier',
                                                       style: TextStyle(
                                                         fontSize: 24,
                                                         fontWeight: FontWeight.bold,
-                                                        color: Color(0xFF1A1A1A),
+                                                        color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
                                                       ),
                                                     ),
                                                     const SizedBox(height: 12),
@@ -396,7 +406,7 @@ class SuppliersListScreen extends StatelessWidget {
                                                       'Are you sure you want to remove ${data['name']} from your suppliers list?',
                                                       style: TextStyle(
                                                         fontSize: 16,
-                                                        color: Colors.grey.shade600,
+                                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                                       ),
                                                       textAlign: TextAlign.center,
                                                     ),
@@ -417,13 +427,17 @@ class SuppliersListScreen extends StatelessWidget {
                                                           child: OutlinedButton(
                                                             onPressed: () => Navigator.of(context).pop(false),
                                                             style: OutlinedButton.styleFrom(
-                                                              side: const BorderSide(color: Colors.grey),
+                                                              side: BorderSide(
+                                                                color: isDark ? colorScheme.onSurface.withOpacity(0.3) : Colors.grey,
+                                                              ),
                                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                                               padding: const EdgeInsets.symmetric(vertical: 12),
                                                             ),
-                                                            child: const Text(
+                                                            child: Text(
                                                               'Cancel',
-                                                              style: TextStyle(color: Colors.grey),
+                                                              style: TextStyle(
+                                                                color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -476,35 +490,37 @@ class SuppliersListScreen extends StatelessWidget {
                         ),
                       ),
                     ],
-                      ),
-                    );
-                  },
+                  ),
                 );
               },
-            ),
-          ),
+            );
+          },
+        ),
+      ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+          gradient: LinearGradient(
+            colors: isDark 
+              ? [colorScheme.primary, colorScheme.secondary]
+              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2196F3).withOpacity(0.3),
+              color: isDark ? Colors.black.withOpacity(0.3) : const Color(0xFF2196F3).withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
           ],
         ),
         child: FloatingActionButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
                 builder: (context) => AvailableSuppliersScreen(vendorEmail: vendorEmail),
-                    ),
-                  );
-                },
+              ),
+            );
+          },
           tooltip: 'Add Supplier',
           backgroundColor: Colors.transparent,
           elevation: 0,
