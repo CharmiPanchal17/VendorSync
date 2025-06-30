@@ -24,3 +24,4 @@ Initial homepage layout
 Added vendor section
 Styled header and footer
 Integrated CSV upload module
+Validated CSV data format
