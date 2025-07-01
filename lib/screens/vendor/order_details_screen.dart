@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import 'package:intl/intl.dart';
+import 'invoice_screen.dart';
 
 class VendorOrderDetailsScreen extends StatelessWidget {
   const VendorOrderDetailsScreen({super.key});
@@ -9,7 +10,41 @@ class VendorOrderDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final order = ModalRoute.of(context)!.settings.arguments as Order;
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
+      appBar: AppBar(
+        title: const Text('Order Details'),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF2196F3), // Blue
+                Color(0xFF43E97B), // Green
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => InvoiceScreen(
+                    orderId: order.id,
+                    vendorEmail: order.vendorEmail,
+                  ),
+                ),
+              );
+            },
+            tooltip: 'View Invoice',
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -80,6 +115,30 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                         backgroundColor: _getStatusColor(order.status),
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         elevation: 4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Invoice Button
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => InvoiceScreen(
+                              orderId: order.id,
+                              vendorEmail: order.vendorEmail,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.receipt_long),
+                      label: const Text('View Invoice'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2196F3),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        elevation: 2,
                       ),
                     ),
                   ],

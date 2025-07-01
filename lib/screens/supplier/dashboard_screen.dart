@@ -452,6 +452,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                         preferredDeliveryDate: data['preferredDeliveryDate'] != null 
                                             ? (data['preferredDeliveryDate'] as Timestamp).toDate()
                                             : DateTime.now(),
+                                        vendorEmail: data['vendorEmail'] ?? '',
                                       );
                                       Navigator.of(context).pushNamed('/supplier-order-details', arguments: orderData);
                         },
@@ -745,7 +746,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () async {
-              // Delete supplier document and navigate to login
+              // Delete supplier document and navigate to role selection
               try {
                 final query = await FirebaseFirestore.instance
                     .collection('suppliers')
@@ -761,7 +762,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               }
               
               Navigator.of(context).pop();
-              Navigator.of(context).pushReplacementNamed('/login');
+              Navigator.of(context).pushReplacementNamed('/role-selection');
             },
             child: const Text('Logout'),
           ),

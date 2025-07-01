@@ -17,6 +17,8 @@ class VendorDashboardScreen extends StatefulWidget {
 
 class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   String selectedStatus = 'All';
+  String? selectedSupplierId = 'All';
+  List<Map<String, dynamic>> suppliers = [];
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   String? vendorName;
@@ -25,6 +27,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   void initState() {
     super.initState();
     _fetchVendorName();
+    _fetchSuppliers();
   }
 
   Future<void> _fetchVendorName() async {
@@ -38,6 +41,30 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         vendorName = vendorQuery.docs.first['name'];
       });
     }
+  }
+
+  Future<void> _fetchSuppliers() async {
+    final vendorSuppliersQuery = await FirebaseFirestore.instance
+        .collection('vendor_suppliers')
+        .where('vendorEmail', isEqualTo: widget.vendorEmail)
+        .get();
+    final supplierIds = vendorSuppliersQuery.docs.map((doc) => doc['supplierId'] as String).toList();
+    if (supplierIds.isEmpty) {
+      setState(() {
+        suppliers = [];
+      });
+      return;
+    }
+    final suppliersQuery = await FirebaseFirestore.instance
+        .collection('suppliers')
+        .where(FieldPath.documentId, whereIn: supplierIds)
+        .get();
+    setState(() {
+      suppliers = suppliersQuery.docs.map((doc) => {
+        'id': doc.id,
+        'name': doc['name'],
+      }).toList();
+    });
   }
 
   @override
@@ -144,7 +171,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Notifications',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-notifications');
+                        Navigator.of(context).pushNamed('/vendor-notifications', arguments: widget.vendorEmail);
                       },
                     ),
                     const SizedBox(height: 8),
@@ -153,7 +180,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Profile',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-profile');
+                        Navigator.of(context).pushNamed('/vendor-profile', arguments: widget.vendorEmail);
                       },
                     ),
                     const SizedBox(height: 24),
@@ -211,9 +238,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 .doc(vendorQuery.docs.first.id)
                                 .delete();
                           }
-                          // Navigate to login page
+                          // Navigate to role selection page
                           if (context.mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false, arguments: 'vendor');
+                            Navigator.of(context).pushNamedAndRemoveUntil('/role-selection', (route) => false);
                           }
                         }
                       },
@@ -491,29 +518,55 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   
-                  // Status Filter
-                  Text(
-                    'Filter Orders',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // Filters Row
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildStatusButton('All', Colors.grey),
-                        const SizedBox(width: 12),
-                        _buildStatusButton('Pending', Colors.orange),
-                        const SizedBox(width: 12),
-                        _buildStatusButton('Confirmed', Colors.blue),
-                        const SizedBox(width: 12),
-                        _buildStatusButton('Delivered', Colors.green),
-                        const SizedBox(width: 12),
-                        _buildStatusButton('Pending Approval', Colors.purple),
+                        // Status filter buttons
+                        ...['All', 'Pending', 'Confirmed', 'Delivered', 'Pending Approval'].map((status) => SizedBox(
+                              width: 110, // Set a fixed width for each button
+                              child: _buildFilterButton(
+                                label: status,
+                                selected: selectedStatus == status,
+                                onTap: () => setState(() => selectedStatus = status),
+                                color: _statusColor(status),
+                              ),
+                            )),
+                        const SizedBox(width: 16),
+                        // Supplier filter: All Suppliers as dropdown, others as buttons
+                        SizedBox(
+                          width: 160,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF43E97B)]),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedSupplierId,
+                                dropdownColor: Colors.white,
+                                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                itemHeight: 48,
+                                items: [
+                                  const DropdownMenuItem(value: 'All', child: SizedBox(width: 120, child: Text('All Suppliers', style: TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
+                                  ...suppliers.map((s) => DropdownMenuItem(
+                                        value: s['id'],
+                                        child: SizedBox(width: 120, child: Text(s['name'], style: const TextStyle(color: Color(0xFF2196F3)), overflow: TextOverflow.ellipsis)),
+                                      )),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    selectedSupplierId = val;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -551,177 +604,132 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         .where('vendorEmail', isEqualTo: widget.vendorEmail)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            children: [
-                              SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                              SizedBox(width: 12),
-                              Text('Loading orders...'),
-                            ],
-                          ),
-                        );
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
                       }
-                      
-                      if (snapshot.hasError) {
-                        return Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Error loading orders',
-                                  style: TextStyle(color: Colors.red.shade700),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      
-                      final orders = snapshot.data?.docs ?? [];
-                      
-                      // Sort orders by createdAt in descending order (newest first)
-                      orders.sort((a, b) {
-                        final aData = a.data() as Map<String, dynamic>;
-                        final bData = b.data() as Map<String, dynamic>;
-                        final aCreatedAt = aData['createdAt'] as Timestamp?;
-                        final bCreatedAt = bData['createdAt'] as Timestamp?;
-                        
-                        if (aCreatedAt == null && bCreatedAt == null) return 0;
-                        if (aCreatedAt == null) return 1;
-                        if (bCreatedAt == null) return -1;
-                        
-                        return bCreatedAt.compareTo(aCreatedAt); // Descending order
-                      });
-                      
-                      if (orders.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(Icons.inventory_outlined, color: Colors.white, size: 32),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'No Orders Yet',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Create your first order to get started',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey.shade600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      
-                      final filteredOrders = orders.where((doc) {
+                      final allOrders = snapshot.data!.docs;
+                      // Filter by status
+                      var filteredOrders = allOrders.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final status = data['status'] as String? ?? 'Pending';
-                        return selectedStatus == 'All' || status == selectedStatus;
+                        if (selectedStatus != 'All' && data['status'] != selectedStatus) return false;
+                        if (selectedSupplierId != null && selectedSupplierId != 'All' && data['supplierId'] != selectedSupplierId) return false;
+                        return true;
                       }).toList();
-                      
-                      if (filteredOrders.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(Icons.filter_list, color: Colors.grey.shade400, size: 32),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No $selectedStatus orders',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey.shade600,
+                      // Group by supplier if 'All' is selected
+                      if (selectedSupplierId == 'All') {
+                        final Map<String, List<QueryDocumentSnapshot>> grouped = {};
+                        for (var doc in filteredOrders) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final supplierName = data['supplierName'] ?? 'Unknown Supplier';
+                          grouped.putIfAbsent(supplierName, () => []).add(doc);
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: grouped.entries.map((entry) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                                 ),
-                              ),
-              const SizedBox(height: 8),
-                              Text(
-                                'Try changing the filter or create a new order',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                                ...entry.value.map((doc) {
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  final orderId = doc.id;
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.95),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(20),
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: const Icon(Icons.inventory, color: Colors.white, size: 24),
+                                      ),
+                                      title: Text(
+                                        data['productName'] ?? 'Unknown Product',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Supplier: ${data['supplierName'] ?? 'Unknown Supplier'}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Quantity: ${data['quantity'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          if (data['preferredDeliveryDate'] != null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Delivery: ${DateFormat.yMMMd().format((data['preferredDeliveryDate'] as Timestamp).toDate())}',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      onTap: () {
+                                        final orderData = order_model.Order(
+                                          id: orderId,
+                                          productName: data['productName'] ?? 'Unknown Product',
+                                          supplierName: data['supplierName'] ?? 'Unknown Supplier',
+                                          quantity: data['quantity'] ?? 0,
+                                          status: data['status'] ?? 'Pending',
+                                          preferredDeliveryDate: data['preferredDeliveryDate'] != null
+                                              ? (data['preferredDeliveryDate'] as Timestamp).toDate()
+                                              : DateTime.now(),
+                                          vendorEmail: widget.vendorEmail,
+                                        );
+                                        Navigator.of(context).pushNamed('/vendor-order-details', arguments: orderData);
+                                      },
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            );
+                          }).toList(),
                         );
                       }
-                      
+                      // Otherwise, just show the filtered orders
                       return ListView.builder(
                         itemCount: filteredOrders.length,
-                  itemBuilder: (context, index) {
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
                           final doc = filteredOrders[index];
                           final data = doc.data() as Map<String, dynamic>;
                           final orderId = doc.id;
-                          
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
@@ -735,7 +743,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 ),
                               ],
                             ),
-                      child: ListTile(
+                            child: ListTile(
                               contentPadding: const EdgeInsets.all(20),
                               leading: Container(
                                 padding: const EdgeInsets.all(12),
@@ -785,66 +793,23 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   ],
                                 ],
                               ),
-                              trailing: Container(
-                                child: (data['status'] == 'Pending Approval')
-                                    ? ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.purple,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          elevation: 2,
-                                        ),
-                                        onPressed: () => _approveOrder(orderId),
-                                        child: const Text(
-                                          'Approve',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      )
-                                    : Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: _statusColor(data['status'] ?? 'Pending'),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(
-                                            color: _statusBorderColor(data['status'] ?? 'Pending'),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          data['status'] ?? 'Pending',
-                                          style: TextStyle(
-                                            color: _statusTextColor(data['status'] ?? 'Pending'),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                        onTap: () {
-                                // Create an order object for navigation
+                              onTap: () {
                                 final orderData = order_model.Order(
                                   id: orderId,
                                   productName: data['productName'] ?? 'Unknown Product',
                                   supplierName: data['supplierName'] ?? 'Unknown Supplier',
                                   quantity: data['quantity'] ?? 0,
                                   status: data['status'] ?? 'Pending',
-                                  preferredDeliveryDate: data['preferredDeliveryDate'] != null 
+                                  preferredDeliveryDate: data['preferredDeliveryDate'] != null
                                       ? (data['preferredDeliveryDate'] as Timestamp).toDate()
                                       : DateTime.now(),
+                                  vendorEmail: widget.vendorEmail,
                                 );
                                 Navigator.of(context).pushNamed('/vendor-order-details', arguments: orderData);
+                              },
+                            ),
+                          );
                         },
-                      ),
-                    );
-                  },
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
                       );
                     },
                   ),
@@ -867,103 +832,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         tooltip: 'Create New Order',
       ),
     );
-  }
-
-  Widget _buildStatusButton(String status, Color color) {
-    final isSelected = selectedStatus == status;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isSelected 
-            ? LinearGradient(
-                colors: [color, color.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: isSelected 
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? Colors.transparent : Colors.white,
-          foregroundColor: isSelected ? Colors.white : color,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          side: BorderSide(
-            color: isSelected ? Colors.transparent : color,
-            width: 2,
-          ),
-          minimumSize: const Size(100, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        ),
-        onPressed: () {
-          setState(() {
-            selectedStatus = status;
-          });
-        },
-        child: Text(
-          status,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'Pending':
-        return Colors.orange.shade100;
-      case 'Confirmed':
-        return Colors.blue.shade100;
-      case 'Delivered':
-        return Colors.green.shade100;
-      case 'Pending Approval':
-        return Colors.purple.shade100;
-      default:
-        return Colors.grey.shade200;
-    }
-  }
-
-  Color _statusBorderColor(String status) {
-    switch (status) {
-      case 'Pending':
-        return Colors.orange;
-      case 'Confirmed':
-        return Colors.blue;
-      case 'Delivered':
-        return Colors.green;
-      case 'Pending Approval':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _statusTextColor(String status) {
-    switch (status) {
-      case 'Pending':
-        return Colors.orange;
-      case 'Confirmed':
-        return Colors.blue;
-      case 'Delivered':
-        return Colors.green;
-      case 'Pending Approval':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
   }
 
   Widget _buildMenuItem({
@@ -1194,37 +1062,57 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     );
   }
 
-  Future<void> _approveOrder(String orderId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('orders')
-          .doc(orderId)
-          .update({
-        'status': 'Delivered',
-        'approvedAt': FieldValue.serverTimestamp(),
-      });
+  Widget _buildFilterButton({required String label, required bool selected, required VoidCallback onTap, Color? color}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      constraints: const BoxConstraints(minWidth: 100),
+      decoration: BoxDecoration(
+        gradient: selected
+            ? const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF43E97B)])
+            : null,
+        color: selected ? null : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: selected
+            ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 4))]
+            : null,
+        border: Border.all(color: selected ? Colors.transparent : (color ?? Colors.grey.shade300), width: 2),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: selected ? Colors.white : (color ?? Colors.grey.shade700),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Order approved successfully!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to approve order. Please try again.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return Colors.orange;
+      case 'Confirmed':
+        return Colors.blue;
+      case 'Delivered':
+        return Colors.green;
+      case 'Pending Approval':
+        return Colors.purple;
+      default:
+        return Colors.grey;
     }
   }
 } 

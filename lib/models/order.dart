@@ -3,6 +3,7 @@ class Order {
   final String productName;
   final int quantity;
   final String supplierName;
+  final String vendorEmail;
   final String status;
   final DateTime preferredDeliveryDate;
   final DateTime? actualDeliveryDate;
@@ -12,6 +13,7 @@ class Order {
     required this.productName,
     required this.quantity,
     required this.supplierName,
+    required this.vendorEmail,
     required this.status,
     required this.preferredDeliveryDate,
     this.actualDeliveryDate,

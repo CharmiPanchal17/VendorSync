@@ -3,6 +3,7 @@ import '../../mock_data/mock_users.dart';
 import '../../models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/email_service.dart';
 
 class VendorCreateOrderScreen extends StatefulWidget {
   final String vendorEmail;
@@ -12,15 +13,32 @@ class VendorCreateOrderScreen extends StatefulWidget {
   State<VendorCreateOrderScreen> createState() => _VendorCreateOrderScreenState();
 }
 
+enum OrderMode { singleSupplier, multipleSuppliers }
+
+class OrderItem {
+  String productName;
+  int quantity;
+  User? supplier;
+  DateTime? preferredDate;
+
+  OrderItem({this.productName = '', this.quantity = 1, this.supplier, this.preferredDate});
+}
+
 class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
   final _formKey = GlobalKey<FormState>();
-  String productName = '';
-  int quantity = 1;
-  User? selectedSupplier;
-  DateTime? preferredDate;
+  OrderMode _orderMode = OrderMode.singleSupplier;
   List<User> firestoreSuppliers = [];
   bool _isLoading = false;
   String? _errorMessage;
+
+  // For single supplier mode
+  User? selectedSupplier;
+  List<OrderItem> items = [OrderItem()];
+  final GlobalKey<AnimatedListState> _singleSupplierListKey = GlobalKey<AnimatedListState>();
+
+  // For multiple suppliers mode
+  List<OrderItem> multiSupplierItems = [OrderItem()];
+  final GlobalKey<AnimatedListState> _multiSupplierListKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
@@ -29,7 +47,6 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
   }
 
   Future<void> _fetchSuppliers() async {
-    // Get supplier IDs from vendor_suppliers
     final vendorSuppliersQuery = await FirebaseFirestore.instance
         .collection('vendor_suppliers')
         .where('vendorEmail', isEqualTo: widget.vendorEmail)
@@ -41,7 +58,6 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
       });
       return;
     }
-    // Get supplier details from suppliers collection
     final suppliersQuery = await FirebaseFirestore.instance
         .collection('suppliers')
         .where(FieldPath.documentId, whereIn: supplierIds)
@@ -56,205 +72,152 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
     });
   }
 
+  void _addItem() {
+    if (_orderMode == OrderMode.singleSupplier) {
+      final index = items.length;
+      items.add(OrderItem());
+      _singleSupplierListKey.currentState?.insertItem(index);
+      setState(() {});
+    } else {
+      final index = multiSupplierItems.length;
+      multiSupplierItems.add(OrderItem());
+      _multiSupplierListKey.currentState?.insertItem(index);
+      setState(() {});
+    }
+  }
+
+  void _removeItem(int index) {
+    if (_orderMode == OrderMode.singleSupplier) {
+      if (items.length > 1) {
+        final removed = items.removeAt(index);
+        _singleSupplierListKey.currentState?.removeItem(
+          index,
+          (context, animation) => SizeTransition(
+            sizeFactor: animation,
+            child: _buildOrderItemFields(removed, index, singleSupplier: true),
+          ),
+        );
+        setState(() {});
+      }
+    } else {
+      if (multiSupplierItems.length > 1) {
+        final removed = multiSupplierItems.removeAt(index);
+        _multiSupplierListKey.currentState?.removeItem(
+          index,
+          (context, animation) => SizeTransition(
+            sizeFactor: animation,
+            child: _buildOrderItemFields(removed, index, singleSupplier: false),
+          ),
+        );
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _submitOrders() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _isLoading = true; _errorMessage = null; });
+    try {
+      if (_orderMode == OrderMode.singleSupplier) {
+        for (final item in items) {
+          await FirebaseFirestore.instance.collection('orders').add({
+            'productName': item.productName,
+            'quantity': item.quantity,
+            'supplierId': selectedSupplier?.id,
+            'supplierName': selectedSupplier?.name,
+            'supplierEmail': selectedSupplier?.email,
+            'vendorEmail': widget.vendorEmail,
+            'preferredDeliveryDate': item.preferredDate,
+            'status': 'Pending',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      } else {
+        for (final item in multiSupplierItems) {
+          await FirebaseFirestore.instance.collection('orders').add({
+            'productName': item.productName,
+            'quantity': item.quantity,
+            'supplierId': item.supplier?.id,
+            'supplierName': item.supplier?.name,
+            'supplierEmail': item.supplier?.email,
+            'vendorEmail': widget.vendorEmail,
+            'preferredDeliveryDate': item.preferredDate,
+            'status': 'Pending',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      setState(() { _errorMessage = 'Failed to place orders: $e'; });
+    } finally {
+      setState(() { _isLoading = false; });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Order'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-        child: Card(
-          margin: EdgeInsets.zero,
-                elevation: 0,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
-                ),
-                color: Colors.transparent,
-              child: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Create Order(s)')),
+      body: firestoreSuppliers.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Icon(Icons.add_shopping_cart, size: 40, color: Colors.white),
+                  // Option selection
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF43E97B)]),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: Offset(0, 4))],
                     ),
-                    const SizedBox(height: 24),
-                      const Text(
-                        'Create New Order',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<OrderMode>(
+                            title: const Text('Multiple items to a single supplier', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            value: OrderMode.singleSupplier,
+                            groupValue: _orderMode,
+                            onChanged: (val) {
+                              setState(() { _orderMode = val!; });
+                            },
+                            activeColor: Colors.white,
+                            tileColor: Colors.transparent,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                    Text(
-                        'Fill in the details to create your order',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                        Expanded(
+                          child: RadioListTile<OrderMode>(
+                            title: const Text('Multiple orders to different suppliers', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            value: OrderMode.multipleSuppliers,
+                            groupValue: _orderMode,
+                            onChanged: (val) {
+                              setState(() { _orderMode = val!; });
+                            },
+                            activeColor: Colors.white,
+                            tileColor: Colors.transparent,
+                          ),
                             ),
                           ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
                           child: Form(
                       key: _formKey,
-                      child: Column(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: ListView(
+                          key: ValueKey(_orderMode),
                         children: [
-                                StreamBuilder<QuerySnapshot>(
-                                  stream: FirebaseFirestore.instance
-                                      .collection('vendor_suppliers')
-                                      .where('vendorEmail', isEqualTo: widget.vendorEmail)
-                                      .snapshots(),
-                                  builder: (context, vendorSuppliersSnapshot) {
-                                    if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey.shade300),
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey.shade50,
-                                        ),
-                                        child: const Row(
-                                          children: [
-                                            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                            SizedBox(width: 12),
-                                            Text('Loading suppliers...'),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
-                                    final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
-                                    if (supplierIds.isEmpty) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.shade50,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Colors.red.shade200),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.warning, color: Colors.red.shade600, size: 20),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                'No suppliers found. Please add a supplier first.',
-                                                style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    return StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('suppliers')
-                                          .where(FieldPath.documentId, whereIn: supplierIds)
-                                          .snapshots(),
-                                      builder: (context, suppliersSnapshot) {
-                                        if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
-                                          return Container(
-                                            padding: const EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Colors.grey.shade300),
-                                              borderRadius: BorderRadius.circular(12),
-                                              color: Colors.grey.shade50,
-                                            ),
-                                            child: const Row(
-                                              children: [
-                                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                                SizedBox(width: 12),
-                                                Text('Loading suppliers...'),
-                                              ],
-                                            ),
-                                          );
-                                        }
-                                        final supplierDocs = suppliersSnapshot.data?.docs ?? [];
-                                        final suppliers = supplierDocs.map((doc) => User(
-                                          id: doc.id,
-                                          name: doc['name'],
-                                          email: doc['email'],
-                                          role: UserRole.supplier,
-                                        )).toList();
-                                        return DropdownButtonFormField<User>(
-                                          decoration: InputDecoration(
-                              labelText: 'Select Supplier',
-                                            prefixIcon: Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                                ),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Icon(Icons.person_outline, color: Colors.white, size: 20),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: Colors.grey.shade300),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: Colors.grey.shade300),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.grey.shade50,
-                                          ),
-                                          value: selectedSupplier != null && suppliers.any((s) => s.id == selectedSupplier!.id)
-                                              ? suppliers.firstWhere((s) => s.id == selectedSupplier!.id)
-                                              : null,
-                                          items: suppliers
+                            if (_orderMode == OrderMode.singleSupplier) ...[
+                              DropdownButtonFormField<User>(
+                                value: selectedSupplier,
+                                items: firestoreSuppliers
                                 .map((s) => DropdownMenuItem(
                                       value: s,
                                       child: Text(s.name),
@@ -262,221 +225,201 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
                                 .toList(),
                             onChanged: (val) => setState(() => selectedSupplier = val),
                             validator: (val) => val == null ? 'Select supplier' : null,
-                                        );
-                                      },
+                                decoration: InputDecoration(
+                                  labelText: 'Supplier',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  filled: true,
+                                  fillColor: Colors.blue.shade50,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              AnimatedList(
+                                key: _singleSupplierListKey,
+                                initialItemCount: items.length,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index, animation) {
+                                  return SizeTransition(
+                                    sizeFactor: animation,
+                                    child: _buildOrderItemFields(items[index], index, singleSupplier: true),
+                                  );
+                                },
+                              ),
+                            ] else ...[
+                              AnimatedList(
+                                key: _multiSupplierListKey,
+                                initialItemCount: multiSupplierItems.length,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index, animation) {
+                                  return SizeTransition(
+                                    sizeFactor: animation,
+                                    child: _buildOrderItemFields(multiSupplierItems[index], index, singleSupplier: false),
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Product Name',
-                                    prefixIcon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey.shade50,
+                            ],
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _addItem,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add Item'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2196F3),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 2,
                                   ),
-                                  onChanged: (val) => productName = val,
-                                  validator: (val) => val == null || val.isEmpty ? 'Enter product name' : null,
                                 ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Quantity',
-                                    prefixIcon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.numbers, color: Colors.white, size: 20),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey.shade50,
+                                const SizedBox(width: 16),
+                                ElevatedButton.icon(
+                                  onPressed: ((_orderMode == OrderMode.singleSupplier && items.length > 1) ||
+                                              (_orderMode == OrderMode.multipleSuppliers && multiSupplierItems.length > 1))
+                                          ? () => _removeItem((_orderMode == OrderMode.singleSupplier)
+                                              ? items.length - 1
+                                              : multiSupplierItems.length - 1)
+                                          : null,
+                                  icon: const Icon(Icons.remove),
+                                  label: const Text('Remove Last'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 2,
                                   ),
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (val) => quantity = int.tryParse(val) ?? 1,
-                                  validator: (val) => val == null || val.isEmpty ? 'Enter quantity' : null,
                                 ),
-                                const SizedBox(height: 20),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.grey.shade50,
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    leading: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F50), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.calendar_today, color: Colors.white, size: 20),
-                                    ),
-                                    title: Text(
-                                      preferredDate == null
-                                          ? 'Preferred Delivery Date'
-                                          : 'Preferred Delivery Date: ${DateFormat.yMMMd().format(preferredDate!)}',
-                                      style: TextStyle(
-                                        color: preferredDate == null ? Colors.grey.shade600 : Colors.black,
-                                        fontWeight: preferredDate == null ? FontWeight.normal : FontWeight.w500,
-                                      ),
-                                    ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            if (_errorMessage != null)
+                              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _submitOrders,
+                                child: _isLoading
+                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    : const Text('Submit All Orders'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2196F3),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildOrderItemFields(OrderItem item, int index, {required bool singleSupplier}) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Item ${index + 1}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2196F3))),
+            const SizedBox(height: 8),
+            if (!singleSupplier)
+              DropdownButtonFormField<User>(
+                value: item.supplier,
+                items: firestoreSuppliers
+                    .map((s) => DropdownMenuItem(
+                          value: s,
+                          child: Text(s.name),
+                        ))
+                    .toList(),
+                onChanged: (val) => setState(() => item.supplier = val),
+                validator: (val) => val == null ? 'Select supplier' : null,
+                decoration: InputDecoration(
+                  labelText: 'Supplier',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.blue.shade50,
+                ),
+              ),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: item.productName,
+              decoration: InputDecoration(
+                labelText: 'Product Name',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.blue.shade50,
+              ),
+              onChanged: (val) => item.productName = val,
+              validator: (val) => val == null || val.isEmpty ? 'Enter product name' : null,
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: item.quantity.toString(),
+              decoration: InputDecoration(
+                labelText: 'Quantity',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.blue.shade50,
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (val) => item.quantity = int.tryParse(val) ?? 1,
+              validator: (val) => val == null || val.isEmpty ? 'Enter quantity' : null,
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
                             onTap: () async {
                               final picked = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now(),
+                  initialDate: item.preferredDate ?? DateTime.now(),
                                 firstDate: DateTime.now(),
                                         lastDate: DateTime.now().add(const Duration(days: 365)),
                                         builder: (context, child) {
                                           return Theme(
                                             data: Theme.of(context).copyWith(
-                                              colorScheme: const ColorScheme.light(
+                        colorScheme: ColorScheme.light(
                                                 primary: Color(0xFF2196F3),
                                                 onPrimary: Colors.white,
-                                                surface: Colors.white,
+                          surface: Color(0xFF43E97B),
                                                 onSurface: Colors.black,
                                               ),
+                        dialogBackgroundColor: Colors.white,
                                             ),
                                             child: child!,
                                           );
                                         },
                               );
-                              if (picked != null) {
-                                setState(() => preferredDate = picked);
-                              }
-                            },
-                          ),
-                                ),
-                                const SizedBox(height: 32),
-                          FilledButton.icon(
-                                  icon: _isLoading 
-                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Icon(Icons.check_circle),
-                                  label: _isLoading ? const Text('Creating Order...') : const Text('Create Order'),
-                                  style: FilledButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: const Color(0xFF2196F3),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    elevation: 2,
-                                  ),
-                            onPressed: _isLoading ? null : () async {
-                              if (_formKey.currentState!.validate() && preferredDate != null) {
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-                                try {
-                                  await FirebaseFirestore.instance.collection('orders').add({
-                                    'productName': productName,
-                                    'quantity': quantity,
-                                    'supplierId': selectedSupplier?.id,
-                                    'supplierName': selectedSupplier?.name,
-                                    'supplierEmail': selectedSupplier?.email,
-                                    'vendorEmail': widget.vendorEmail,
-                                    'preferredDeliveryDate': preferredDate,
-                                    'status': 'Pending',
-                                    'createdAt': FieldValue.serverTimestamp(),
-                                  });
-                                  setState(() => _isLoading = false);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: const Text('Order created successfully!'),
-                                              backgroundColor: Colors.green,
-                                              behavior: SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            ),
-                                          );
-                                  Navigator.of(context).pop();
-                                        }
-                                } catch (e) {
-                                  setState(() {
-                                    _isLoading = false;
-                                    _errorMessage = 'Failed to create order. Please try again.';
-                                  });
-                                }
-                                    } else if (preferredDate == null) {
-                                      setState(() {
-                                        _errorMessage = 'Please select a preferred delivery date.';
-                                      });
-                              }
-                            },
-                          ),
-                          if (_errorMessage != null) ...[
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
+                if (picked != null) setState(() => item.preferredDate = picked);
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                                     decoration: BoxDecoration(
-                                      color: Colors.red.shade50,
+                  color: Colors.green.shade50,
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.red.shade200),
+                  border: Border.all(color: Colors.green.shade200),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                                        const SizedBox(width: 12),
-                                        Expanded(
                                           child: Text(
-                                            _errorMessage!,
-                                            style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                      ),
-                    ),
-                  ],
+                  item.preferredDate != null
+                      ? 'Delivery Date: ${DateFormat.yMMMd().format(item.preferredDate!)}'
+                      : 'Select Delivery Date',
+                  style: TextStyle(
+                    color: item.preferredDate != null ? Colors.green.shade900 : Colors.grey.shade600,
                   ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

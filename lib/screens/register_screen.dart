@@ -77,6 +77,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pushReplacementNamed('/role-selection');
+          },
+        ),
+        backgroundColor: const Color(0xFF2196F3),
+        elevation: 0,
+      ),
       body: Stack(
         children: [
           // Gradient background
@@ -111,21 +121,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       children: [
-                        Builder(
-                          builder: (context) =>
-                            Navigator.canPop(context)
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.arrow_back),
-                                      onPressed: () => Navigator.of(context).pop(),
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
                         CircleAvatar(
                           radius: 40,
                           backgroundColor: Colors.blue.withOpacity(0.1),
