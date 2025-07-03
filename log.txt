@@ -147,3 +147,4 @@ Error handling for CSV
 Vendor dashboard template
 UI enhancements
 Bug fix in auth flow
+Setup login validation
