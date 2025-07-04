@@ -38,7 +38,7 @@ class WelcomeScreen extends StatelessWidget {
                           'Welcome to VendorSync',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Color(0xFFD50060),
                             fontSize: 36,
                           ),
                           textAlign: TextAlign.center,
@@ -46,36 +46,40 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         Text(
                           'Your all-in-one Vendor-to-Supplier Management System',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Color(0xFF333333)),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.person_add_alt_1),
-                          label: const Text('Vendor Register', style: TextStyle(fontSize: 18)),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            elevation: 2,
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            child: const Text('Vendor Register', style: TextStyle(fontSize: 18)),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              backgroundColor: const Color(0xFFD50060), // Magenta
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              elevation: 2,
+                            ),
+                            onPressed: () => Navigator.of(context).pushNamed('/register'),
                           ),
-                          onPressed: () => Navigator.of(context).pushNamed('/register'),
                         ),
                         const SizedBox(height: 16),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.local_shipping),
-                          label: const Text('Supplier Register', style: TextStyle(fontSize: 18)),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            elevation: 2,
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            child: const Text('Supplier Register', style: TextStyle(fontSize: 18)),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              backgroundColor: const Color(0xFFD50060), // Magenta
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              elevation: 2,
+                            ),
+                            onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
                           ),
-                          onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
                         ),
                       ],
                     ),
