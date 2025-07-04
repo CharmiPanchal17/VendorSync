@@ -79,22 +79,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
+          // Solid light cyan background to match welcome page
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
-          ),
-          // White overlay to soften the gradient
-          Container(
-            color: Colors.white.withOpacity(0.6),
+            color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
             child: Center(
@@ -119,7 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: IconButton(
-                                      icon: const Icon(Icons.arrow_back),
+                                      icon: const Icon(Icons.arrow_back, color: Color(0xFFD50060)),
                                       onPressed: () => Navigator.of(context).pop(),
                                     ),
                                   ),
@@ -128,13 +115,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: Colors.blue.withOpacity(0.1),
-                          child: Icon(Icons.store, size: 40, color: Colors.blue),
+                          backgroundColor: const Color(0xFFD50060).withOpacity(0.1),
+                          child: Icon(Icons.store, size: 40, color: Color(0xFFD50060)),
                         ),
                         const SizedBox(height: 24),
                         Text(
                           'Vendor Register',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue),
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Color(0xFFD50060), fontSize: 32),
                         ),
                         const SizedBox(height: 24),
                         Form(
@@ -144,7 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Vendor Name',
-                                  prefixIcon: Icon(Icons.person_outline),
+                                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                  prefixIcon: Icon(Icons.person_outline, color: Color(0xFFD50060)),
                                 ),
                                 onChanged: (val) => name = val,
                                 validator: (val) => val == null || val.isEmpty ? 'Enter vendor name' : null,
@@ -153,7 +141,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Email',
-                                  prefixIcon: Icon(Icons.email_outlined),
+                                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                  prefixIcon: Icon(Icons.email_outlined, color: Color(0xFFD50060)),
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 onChanged: (val) => email = val,
@@ -171,7 +160,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => password = val,
@@ -189,7 +179,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Confirm Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => confirmPassword = val,
@@ -208,29 +199,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 icon: const Icon(Icons.person_add_alt_1),
                                 label: _isLoading
                                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                    : const Text('Register as Vendor'),
+                                    : const Text('Register as Vendor', style: TextStyle(fontWeight: FontWeight.bold)),
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  backgroundColor: Colors.blue,
+                                  backgroundColor: const Color(0xFFD50060), // Magenta
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                   elevation: 2,
+                                  overlayColor: Color(0xFF0D1333), // Dark blue on press
                                 ),
                                 onPressed: _isLoading ? null : _registerVendor,
                               ),
                               if (_errorMessage != null) ...[
                                 const SizedBox(height: 8),
-                                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                                Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                               ],
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
-                                icon: const Icon(Icons.login, color: Colors.blue),
-                                label: const Text('Already have an account? Login', style: TextStyle(color: Colors.blue)),
+                                icon: const Icon(Icons.login, color: Color(0xFFD50060)),
+                                label: const Text('Already have an account? Login', style: TextStyle(color: Color(0xFFD50060), fontWeight: FontWeight.bold)),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  side: const BorderSide(color: Colors.blue),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  side: const BorderSide(color: Color(0xFFD50060)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 onPressed: () {

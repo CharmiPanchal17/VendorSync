@@ -50,7 +50,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
             color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
-            child: Center(
+            child: Center( 
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
                 child: Card(
