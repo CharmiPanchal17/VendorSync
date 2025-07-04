@@ -22,20 +22,20 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? Colors.transparent : const Color(0xFF800000),
         foregroundColor: Colors.white,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark 
-                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-            ),
-          ),
-        ),
+        flexibleSpace: isDark
+            ? Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF3D3D3D), Color(0xFF2D2D2D)],
+                  ),
+                ),
+              )
+            : null,
         actions: [
           StreamBuilder<int>(
             stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
@@ -81,13 +81,14 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2D2D2D), Color(0xFF1A1A1A)],
+                )
+              : null,
         ),
         child: StreamBuilder<List<AppNotification>>(
           stream: NotificationService.getNotificationsForUser(widget.supplierEmail),
@@ -162,7 +163,7 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.notifications_none, size: 48, color: Colors.white),
+                        child: Icon(Icons.notifications_none, size: 48, color: isDark ? Colors.white : Color(0xFF800000)),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -216,13 +217,13 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
                               ? [Colors.grey.shade300, Colors.grey.shade400]
                               : (isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)]),
+                                  : [const Color(0xFF800000), const Color(0xFF800000)]),
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         notification.isRead ? Icons.notifications_none : Icons.notifications_active,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Color(0xFF800000),
                         size: 24,
                       ),
                     ),
@@ -340,7 +341,7 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
               ListTile(
                 leading: Icon(
                   Icons.mark_email_read, 
-                  color: isDark ? colorScheme.primary : Colors.blue,
+                  color: isDark ? Colors.white : Color(0xFF800000),
                 ),
                 title: Text(
                   'Mark as Read',
