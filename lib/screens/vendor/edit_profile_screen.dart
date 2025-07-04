@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Add color constants at the top-level for use throughout the file
+const maroonVendorEdit = Color(0xFF800000);
+const lightCyanVendorEdit = Color(0xFFAFFFFF);
+
 class EditVendorProfileScreen extends StatefulWidget {
   final String vendorEmail;
   final Map<String, dynamic> vendorData;
@@ -108,7 +112,7 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroonVendorEdit, maroonVendorEdit.withOpacity(0.8)],
             ),
           ),
         ),
@@ -126,13 +130,7 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanVendorEdit,
         ),
         child: SafeArea(
           child: Center(
@@ -155,8 +153,8 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundColor: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade100,
-                            child: Icon(Icons.store, size: 48, color: isDark ? colorScheme.primary : Colors.blue),
+                            backgroundColor: isDark ? colorScheme.primary.withOpacity(0.2) : maroonVendorEdit.withOpacity(0.08),
+                            child: Icon(Icons.store, size: 48, color: isDark ? colorScheme.primary : maroonVendorEdit),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -280,7 +278,7 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
                                 : const Icon(Icons.save),
                             label: Text(_isLoading ? 'Saving...' : 'Save Changes'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: maroonVendorEdit,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
