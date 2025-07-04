@@ -8,6 +8,7 @@ import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
+import 'analytics_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -127,6 +128,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => const StockManagementScreen(),
+                        ));
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.analytics,
+                      title: 'Analytics',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const AnalyticsScreen(),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -978,18 +991,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
-            ),
-          );
-        },
-        backgroundColor: const Color(0xFF800000),
-        child: const Icon(Icons.add, color: Colors.white),
-        tooltip: 'Create New Order',
       ),
     );
   }

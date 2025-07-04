@@ -44,7 +44,6 @@ class VendorSyncApp extends StatelessWidget {
               final email = ModalRoute.of(context)?.settings.arguments as String?;
               return VendorDashboardScreen(vendorEmail: email ?? '');
             },
-            '/vendor-create-order': (context) => const VendorCreateOrderScreen(vendorEmail: ''),
             '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
             '/vendor-notifications': (context) {
               final email = ModalRoute.of(context)?.settings.arguments as String?;

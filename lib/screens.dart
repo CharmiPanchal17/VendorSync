@@ -8,7 +8,6 @@ export 'screens/register_screen.dart';
 export 'screens/register_supplier_screen.dart';
 export 'screens/role_selection_screen.dart';
 export 'screens/vendor/dashboard_screen.dart';
-export 'screens/vendor/create_order_screen.dart';
 export 'screens/vendor/order_details_screen.dart';
 export 'screens/vendor/notifications_screen.dart';
 export 'screens/vendor/profile_screen.dart';
