@@ -22,126 +22,140 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
+                )
+              : null,
         ),
         child: SafeArea(
             child: Column(
               children: [
               // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                    IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                    ),
-                    const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          const Text(
-                            'Supplier Dashboard',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            'Welcome back, ${widget.supplierEmail}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
+              ClipPath(
+                clipper: ConvexHeaderClipper(),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark 
+                        ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                        : [maroon, maroon.withOpacity(0.8)],
                     ),
                   ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                       ),
-                      child: const Icon(
-                        Icons.local_shipping,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Notification Bell with Badge
-                    Stack(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Supplier Dashboard',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.notifications,
-                              color: Colors.white,
-                              size: 24,
+                            Text(
+                              'Welcome back, ${widget.supplierEmail}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        // Notification Badge
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: StreamBuilder<int>(
-                            stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
-                            builder: (context, snapshot) {
-                              final unreadCount = snapshot.data ?? 0;
-                              if (unreadCount > 0) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.white, width: 2),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 20,
-                                    minHeight: 20,
-                                  ),
-                                  child: Text(
-                                    unreadCount > 99 ? '99+' : unreadCount.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.local_shipping,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Notification Bell with Badge
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
                             },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.notifications,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          // Notification Badge
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: StreamBuilder<int>(
+                              stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
+                              builder: (context, snapshot) {
+                                final unreadCount = snapshot.data ?? 0;
+                                if (unreadCount > 0) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 20,
+                                      minHeight: 20,
+                                    ),
+                                    child: Text(
+                                      unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               
@@ -681,13 +695,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark 
-                    ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                    : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: isDark ? const Color(0xFF3D3D3D) : const Color(0xFF800000),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -1036,4 +1044,23 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       },
     );
   }
+} 
+
+class ConvexHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final curveHeight = 40.0;
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(0, size.height - curveHeight);
+    path.quadraticBezierTo(0, size.height, curveHeight, size.height);
+    path.lineTo(size.width - curveHeight, size.height);
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - curveHeight);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 } 
