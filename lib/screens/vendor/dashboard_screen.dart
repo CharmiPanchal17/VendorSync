@@ -4,10 +4,10 @@ import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
 import 'suppliers_list_screen.dart';
-import 'create_order_screen.dart';
 import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'stock_management_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -121,24 +121,24 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
-                      icon: Icons.list,
-                      title: 'My Suppliers',
+                      icon: Icons.inventory,
+                      title: 'Stock Management',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => SuppliersListScreen(vendorEmail: widget.vendorEmail),
+                          builder: (context) => const StockManagementScreen(),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
-                      icon: Icons.add_shopping_cart,
-                      title: 'Create Order',
+                      icon: Icons.list,
+                      title: 'My Suppliers',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
+                          builder: (context) => SuppliersListScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
