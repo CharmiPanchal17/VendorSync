@@ -10,14 +10,16 @@ class SuppliersListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Suppliers'),
+        title: const Text('My Suppliers', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -25,20 +27,21 @@ class SuppliersListScreen extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
+                )
+              : null,
         ),
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -79,7 +82,7 @@ class SuppliersListScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                     ],
@@ -114,7 +117,7 @@ class SuppliersListScreen extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: isDark 
                               ? [colorScheme.primary, colorScheme.secondary]
-                              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                              : [maroon, maroon.withOpacity(0.8)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -126,7 +129,7 @@ class SuppliersListScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -134,7 +137,8 @@ class SuppliersListScreen extends StatelessWidget {
                         'Add suppliers to start managing your orders',
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -150,7 +154,7 @@ class SuppliersListScreen extends StatelessWidget {
                         icon: const Icon(Icons.add),
                         label: const Text('Add Your First Supplier'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2196F3),
+                          backgroundColor: maroon,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -204,7 +208,7 @@ class SuppliersListScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                         ],
@@ -250,7 +254,7 @@ class SuppliersListScreen extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                          color: isDark ? colorScheme.onSurface : maroon,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -332,7 +336,7 @@ class SuppliersListScreen extends StatelessWidget {
                                     gradient: LinearGradient(
                                       colors: isDark 
                                         ? [colorScheme.primary, colorScheme.secondary]
-                                        : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                        : [maroon, maroon.withOpacity(0.8)],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
@@ -502,7 +506,7 @@ class SuppliersListScreen extends StatelessWidget {
           gradient: LinearGradient(
             colors: isDark 
               ? [colorScheme.primary, colorScheme.secondary]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+              : [maroon, maroon.withOpacity(0.8)],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [

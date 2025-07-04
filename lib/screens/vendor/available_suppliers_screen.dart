@@ -9,14 +9,16 @@ class AvailableSuppliersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Available Suppliers'),
+        title: const Text('Available Suppliers', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -24,20 +26,21 @@ class AvailableSuppliersScreen extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
+                )
+              : null,
         ),
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -77,7 +80,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                     ],
@@ -125,7 +128,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                         ],
@@ -158,7 +161,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                               gradient: LinearGradient(
                                 colors: isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [const Color(0xFF4CAF50), const Color(0xFF66BB6A)],
+                                  : [maroon, maroon.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -170,7 +173,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -178,7 +181,8 @@ class AvailableSuppliersScreen extends StatelessWidget {
                             'Suppliers need to register first before they appear here',
                             style: TextStyle(
                               fontSize: 16,
-                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -215,7 +219,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.add_business, size: 32, color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A)),
+                                Icon(Icons.add_business, size: 32, color: isDark ? colorScheme.onSurface : maroon),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -226,7 +230,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                          color: isDark ? colorScheme.onSurface : maroon,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -332,7 +336,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                       gradient: LinearGradient(
                                         colors: isDark 
                                           ? [colorScheme.primary, colorScheme.secondary]
-                                          : [const Color(0xFF4CAF50), const Color(0xFF66BB6A)],
+                                          : [maroon, maroon.withOpacity(0.8)],
                                       ),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
@@ -343,7 +347,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                      color: isDark ? colorScheme.onSurface : maroon,
                                     ),
                                   ),
                                   subtitle: Column(
@@ -387,7 +391,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                                     gradient: LinearGradient(
                                                       colors: isDark 
                                                         ? [colorScheme.primary, colorScheme.secondary]
-                                                        : [const Color(0xFF4CAF50), const Color(0xFF66BB6A)],
+                                                        : [maroon, maroon.withOpacity(0.8)],
                                                     ),
                                                     borderRadius: BorderRadius.circular(20),
                                                   ),
@@ -399,7 +403,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                                   style: TextStyle(
                                                     fontSize: 24,
                                                     fontWeight: FontWeight.bold,
-                                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                                    color: isDark ? colorScheme.onSurface : maroon,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 12),
@@ -504,7 +508,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                       gradient: LinearGradient(
                                         colors: isDark 
                                           ? [colorScheme.primary, colorScheme.secondary]
-                                          : [const Color(0xFF4CAF50), const Color(0xFF66BB6A)],
+                                          : [maroon, maroon.withOpacity(0.8)],
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
@@ -516,7 +520,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                      color: isDark ? colorScheme.onSurface : maroon,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
