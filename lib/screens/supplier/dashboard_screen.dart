@@ -27,424 +27,246 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          color: isDark ? null : const Color(0xFFAFFFFF),
-          gradient: isDark
-              ? LinearGradient(
+      body: Stack(
+        children: [
+          // Solid light cyan background (like welcome page)
+          if (!isDark)
+            Container(
+              color: const Color(0xFFAFFFFF),
+            ),
+          if (isDark)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
-                )
-              : null,
-        ),
-        child: SafeArea(
-            child: Column(
-              children: [
-              // Header
-              ClipPath(
-                clipper: ConvexHeaderClipper(),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isDark 
-                        ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                        : [maroon, maroon.withOpacity(0.8)],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Supplier Dashboard',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Welcome back, ${widget.supplierEmail}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.local_shipping,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Notification Bell with Badge
-                      Stack(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(
-                                Icons.notifications,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                          // Notification Badge
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: StreamBuilder<int>(
-                              stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
-                              builder: (context, snapshot) {
-                                final unreadCount = snapshot.data ?? 0;
-                                if (unreadCount > 0) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: Colors.white, width: 2),
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 20,
-                                      minHeight: 20,
-                                    ),
-                                    child: Text(
-                                      unreadCount > 99 ? '99+' : unreadCount.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  colors: [Color(0xFF3D3D3D), Color(0xFF2D2D2D)],
                 ),
               ),
-              
-              // Main Content
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
+            ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                ClipPath(
+                  clipper: ConvexHeaderClipper(),
+                  child: Container(
                     padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isDark 
+                          ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                          : [maroon, maroon.withOpacity(0.8)],
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        // Stats Cards
-                        Row(
-                  children: [
-                            Expanded(
-                              child: _buildStatCard(
-                                icon: Icons.inventory,
-                                title: 'Total Orders',
-                                value: _buildTotalOrdersCount(),
-                                color: Colors.blue,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildStatCard(
-                                icon: Icons.pending,
-                                title: 'Pending',
-                                value: _buildPendingOrdersCount(),
-                                color: Colors.orange,
-                              ),
-                            ),
-                          ],
+                        IconButton(
+                          icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildStatCard(
-                                icon: Icons.check_circle,
-                                title: 'Confirmed',
-                                value: _buildConfirmedOrdersCount(),
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildStatCard(
-                                icon: Icons.local_shipping,
-                                title: 'Delivered',
-                                value: _buildDeliveredOrdersCount(),
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Status Filter
-                        Text(
-                          'Filter Orders',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? colorScheme.onSurface : Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildStatusButton('All', Colors.grey),
-                              const SizedBox(width: 12),
-                              _buildStatusButton('Pending', Colors.orange),
-                              const SizedBox(width: 12),
-                              _buildStatusButton('Confirmed', Colors.blue),
-                              const SizedBox(width: 12),
-                              _buildStatusButton('Delivered', Colors.green),
-                              const SizedBox(width: 12),
-                              _buildStatusButton('Pending Approval', Colors.purple),
+                              Text(
+                                'Supplier Dashboard',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                'Welcome back, ${widget.supplierEmail}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        
-                        const SizedBox(height: 24),
-                        
-                        // Orders List (appears directly below filter)
-                        const SizedBox(height: 16),
-                        
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('orders')
-                              .where('supplierEmail', isEqualTo: widget.supplierEmail)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.local_shipping,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Notification Bell with Badge
+                        Stack(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                  color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
                                 ),
-                                child: Row(
-                                  children: [
-                                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'Loading orders...',
-                                      style: TextStyle(
-                                        color: isDark ? colorScheme.onSurface : Colors.black,
-                                      ),
-                                    ),
-                                  ],
+                                child: const Icon(
+                                  Icons.notifications,
+                                  color: Colors.white,
+                                  size: 24,
                                 ),
-                              );
-                            }
-                            
-                            if (snapshot.hasError) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Error loading orders',
-                                        style: TextStyle(
-                                          color: isDark ? Colors.red.shade400 : Colors.red.shade700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            
-                            final orders = snapshot.data?.docs ?? [];
-                            
-                            // Sort orders by createdAt in descending order (newest first)
-                            orders.sort((a, b) {
-                              final aData = a.data() as Map<String, dynamic>;
-                              final bData = b.data() as Map<String, dynamic>;
-                              final aCreatedAt = aData['createdAt'] as Timestamp?;
-                              final bCreatedAt = bData['createdAt'] as Timestamp?;
-                              
-                              if (aCreatedAt == null && bCreatedAt == null) return 0;
-                              if (aCreatedAt == null) return 1;
-                              if (bCreatedAt == null) return -1;
-                              
-                              return bCreatedAt.compareTo(aCreatedAt); // Descending order
-                            });
-                            
-                            if (orders.isEmpty) {
-                              return Container(
-                                padding: const EdgeInsets.all(32),
-                                decoration: BoxDecoration(
-                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
+                              ),
+                            ),
+                            // Notification Badge
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: StreamBuilder<int>(
+                                stream: NotificationService.getUnreadNotificationCount(widget.supplierEmail),
+                                builder: (context, snapshot) {
+                                  final unreadCount = snapshot.data ?? 0;
+                                  if (unreadCount > 0) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: isDark 
-                                            ? [colorScheme.primary, colorScheme.secondary]
-                                            : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 20,
+                                        minHeight: 20,
+                                      ),
+                                      child: Text(
+                                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        borderRadius: BorderRadius.circular(16),
+                                        textAlign: TextAlign.center,
                                       ),
-                                      child: const Icon(Icons.inventory_outlined, color: Colors.white, size: 32),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'No Orders Yet',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Orders from vendors will appear here',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Main Content
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2D2D2D) : Colors.transparent,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Stats Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.inventory,
+                                  title: 'Total Orders',
+                                  value: _buildTotalOrdersCount(),
+                                  color: Colors.blue,
                                 ),
-                              );
-                            }
-                            
-                            final filteredOrders = orders.where((doc) {
-                              final data = doc.data() as Map<String, dynamic>;
-                              final status = data['status'] as String? ?? 'Pending';
-                              return selectedStatus == 'All' || status == selectedStatus;
-                            }).toList();
-                            
-                            if (filteredOrders.isEmpty) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.pending,
+                                  title: 'Pending',
+                                  value: _buildPendingOrdersCount(),
+                                  color: Colors.orange,
                                 ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.filter_list, 
-                                      color: isDark ? Colors.grey.shade500 : Colors.grey.shade400, 
-                                      size: 32
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'No $selectedStatus orders',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark ? colorScheme.onSurface : Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Try changing the filter',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade500,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.check_circle,
+                                  title: 'Confirmed',
+                                  value: _buildConfirmedOrdersCount(),
+                                  color: Colors.green,
                                 ),
-                              );
-                            }
-                            
-                            return ListView.builder(
-                              itemCount: filteredOrders.length,
-                              itemBuilder: (context, index) {
-                                final doc = filteredOrders[index];
-                                final data = doc.data() as Map<String, dynamic>;
-                                final orderId = doc.id;
-                                
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.local_shipping,
+                                  title: 'Delivered',
+                                  value: _buildDeliveredOrdersCount(),
+                                  color: Colors.purple,
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          
+                          // Status Filter
+                          Text(
+                            'Filter Orders',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? colorScheme.onSurface : Colors.grey.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _buildStatusButton('All', Colors.grey),
+                                const SizedBox(width: 12),
+                                _buildStatusButton('Pending', Colors.orange),
+                                const SizedBox(width: 12),
+                                _buildStatusButton('Confirmed', Colors.blue),
+                                const SizedBox(width: 12),
+                                _buildStatusButton('Delivered', Colors.green),
+                                const SizedBox(width: 12),
+                                _buildStatusButton('Pending Approval', Colors.purple),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Orders List (appears directly below filter)
+                          const SizedBox(height: 16),
+                          
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('orders')
+                                .where('supplierEmail', isEqualTo: widget.supplierEmail)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
                                 return Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
                                     color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
                                     borderRadius: BorderRadius.circular(16),
@@ -456,115 +278,299 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                       ),
                                     ],
                                   ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.all(20),
-                                    leading: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: isDark 
-                                            ? [colorScheme.primary, colorScheme.secondary]
-                                            : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                  child: Row(
+                                    children: [
+                                      SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Loading orders...',
+                                        style: TextStyle(
+                                          color: isDark ? colorScheme.onSurface : Colors.black,
                                         ),
-                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: const Icon(Icons.inventory, color: Colors.white, size: 24),
-                                    ),
-                                    title: Text(
-                                      data['productName'] ?? 'Unknown Product',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                        color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              if (snapshot.hasError) {
+                                return Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
                                       ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Vendor: ${data['vendorEmail'] ?? 'Unknown Vendor'}',
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Error loading orders',
                                           style: TextStyle(
-                                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                                            fontSize: 14,
+                                            color: isDark ? Colors.red.shade400 : Colors.red.shade700,
                                           ),
                                         ),
-                                        Text(
-                                          'Quantity: ${data['quantity'] ?? 'N/A'}',
-                                          style: TextStyle(
-                                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                                            fontSize: 14,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final orders = snapshot.data?.docs ?? [];
+                              
+                              // Sort orders by createdAt in descending order (newest first)
+                              orders.sort((a, b) {
+                                final aData = a.data() as Map<String, dynamic>;
+                                final bData = b.data() as Map<String, dynamic>;
+                                final aCreatedAt = aData['createdAt'] as Timestamp?;
+                                final bCreatedAt = bData['createdAt'] as Timestamp?;
+                                
+                                if (aCreatedAt == null && bCreatedAt == null) return 0;
+                                if (aCreatedAt == null) return 1;
+                                if (bCreatedAt == null) return -1;
+                                
+                                return bCreatedAt.compareTo(aCreatedAt); // Descending order
+                              });
+                              
+                              if (orders.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(32),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: isDark 
+                                              ? [colorScheme.primary, colorScheme.secondary]
+                                              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
                                           ),
+                                          borderRadius: BorderRadius.circular(16),
                                         ),
-                                        if (data['preferredDeliveryDate'] != null) ...[
-                                          const SizedBox(height: 4),
+                                        child: const Icon(Icons.inventory_outlined, color: Colors.white, size: 32),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No Orders Yet',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Orders from vendors will appear here',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final filteredOrders = orders.where((doc) {
+                                final data = doc.data() as Map<String, dynamic>;
+                                final status = data['status'] as String? ?? 'Pending';
+                                return selectedStatus == 'All' || status == selectedStatus;
+                              }).toList();
+                              
+                              if (filteredOrders.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.filter_list, 
+                                        color: isDark ? Colors.grey.shade500 : Colors.grey.shade400, 
+                                        size: 32
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'No $selectedStatus orders',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? colorScheme.onSurface : Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Try changing the filter',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade500,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              return ListView.builder(
+                                itemCount: filteredOrders.length,
+                                itemBuilder: (context, index) {
+                                  final doc = filteredOrders[index];
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  final orderId = doc.id;
+                                  
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(20),
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: isDark 
+                                              ? [colorScheme.primary, colorScheme.secondary]
+                                              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: const Icon(Icons.inventory, color: Colors.white, size: 24),
+                                      ),
+                                      title: Text(
+                                        data['productName'] ?? 'Unknown Product',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 8),
                                           Text(
-                                            'Delivery: ${DateFormat.yMMMd().format((data['preferredDeliveryDate'] as Timestamp).toDate())}',
+                                            'Vendor: ${data['vendorEmail'] ?? 'Unknown Vendor'}',
                                             style: TextStyle(
                                               color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                                              fontSize: 12,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Quantity: ${data['quantity'] ?? 'N/A'}',
+                                            style: TextStyle(
+                                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          if (data['preferredDeliveryDate'] != null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Delivery: ${DateFormat.yMMMd().format((data['preferredDeliveryDate'] as Timestamp).toDate())}',
+                                              style: TextStyle(
+                                                color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      trailing: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: _statusColor(data['status'] ?? 'Pending'),
+                                              borderRadius: BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: _statusBorderColor(data['status'] ?? 'Pending'),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              data['status'] ?? 'Pending',
+                                              style: TextStyle(
+                                                color: _statusTextColor(data['status'] ?? 'Pending'),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
                                         ],
-                                      ],
+                                      ),
+                                      onTap: () {
+                                        // Create an order object for navigation
+                                        final orderData = order_model.Order(
+                                          id: orderId,
+                                          productName: data['productName'] ?? 'Unknown Product',
+                                          supplierName: data['supplierName'] ?? 'Unknown Supplier',
+                                          quantity: data['quantity'] ?? 0,
+                                          status: data['status'] ?? 'Pending',
+                                          preferredDeliveryDate: data['preferredDeliveryDate'] != null 
+                                              ? (data['preferredDeliveryDate'] as Timestamp).toDate()
+                                              : DateTime.now(),
+                                        );
+                                        Navigator.of(context).pushNamed('/supplier-order-details', arguments: {
+                                          'order': orderData,
+                                          'supplierEmail': widget.supplierEmail,
+                                        });
+                                      },
                                     ),
-                                    trailing: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: _statusColor(data['status'] ?? 'Pending'),
-                                            borderRadius: BorderRadius.circular(20),
-                                            border: Border.all(
-                                              color: _statusBorderColor(data['status'] ?? 'Pending'),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            data['status'] ?? 'Pending',
-                                            style: TextStyle(
-                                              color: _statusTextColor(data['status'] ?? 'Pending'),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                                      // Create an order object for navigation
-                                      final orderData = order_model.Order(
-                                        id: orderId,
-                                        productName: data['productName'] ?? 'Unknown Product',
-                                        supplierName: data['supplierName'] ?? 'Unknown Supplier',
-                                        quantity: data['quantity'] ?? 0,
-                                        status: data['status'] ?? 'Pending',
-                                        preferredDeliveryDate: data['preferredDeliveryDate'] != null 
-                                            ? (data['preferredDeliveryDate'] as Timestamp).toDate()
-                                            : DateTime.now(),
-                                      );
-                                      Navigator.of(context).pushNamed('/supplier-order-details', arguments: {
-                                        'order': orderData,
-                                        'supplierEmail': widget.supplierEmail,
-                                      });
-                        },
+                                  );
+                                },
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                            );
-                          },
-                        ),
-                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -804,8 +810,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                     title: 'Logout',
                     onTap: () => _showLogoutDialog(),
                     isLogout: true,
-                    textColor: isDark ? Colors.red.shade400 : Colors.red.shade300,
-                    iconColor: isDark ? Colors.red.shade400 : Colors.red.shade300,
+                    textColor: maroon,
+                    iconColor: maroon,
                   ),
                 ],
               ),
@@ -846,21 +852,17 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(
           icon,
-          color: iconColor ?? (isLogout 
-              ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
-              : (isSelected 
-                  ? (isDark ? Colors.white : Color(0xFF800000))
-                  : (isDark ? Colors.white : Color(0xFF800000)))),
+          color: iconColor ?? (isSelected 
+              ? (isDark ? Colors.white : Color(0xFF800000))
+              : (isDark ? Colors.white : Color(0xFF800000))),
           size: 24,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: textColor ?? (isLogout 
-                ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
-                : (isSelected 
-                    ? (isDark ? Colors.white : Color(0xFF800000))
-                    : (isDark ? Colors.white : Color(0xFF800000)))),
+            color: textColor ?? (isSelected 
+                ? (isDark ? Colors.white : Color(0xFF800000))
+                : (isDark ? Colors.white : Color(0xFF800000))),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 16,
           ),
