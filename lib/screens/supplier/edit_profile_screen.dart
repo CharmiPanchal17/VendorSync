@@ -94,6 +94,8 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
+    const lightCyan = Color(0xFFAFFFFF);
     
     return Scaffold(
       appBar: AppBar(
@@ -108,7 +110,7 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
@@ -126,13 +128,7 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? const Color(0xFF3D3D3D) : lightCyan,
         ),
         child: SafeArea(
           child: Center(
@@ -155,8 +151,8 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 40,
-                            backgroundColor: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.green.shade100,
-                            child: Icon(Icons.local_shipping, size: 48, color: isDark ? colorScheme.primary : Colors.green),
+                            backgroundColor: isDark ? colorScheme.primary.withOpacity(0.2) : maroon.withOpacity(0.08),
+                            child: Icon(Icons.local_shipping, size: 48, color: isDark ? colorScheme.primary : maroon),
                           ),
                           const SizedBox(height: 24),
                           Text(
@@ -280,7 +276,7 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
                                 : const Icon(Icons.save),
                             label: Text(_isLoading ? 'Saving...' : 'Save Changes'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: maroon,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

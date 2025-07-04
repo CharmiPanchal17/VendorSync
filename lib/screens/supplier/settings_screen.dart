@@ -11,6 +11,8 @@ class SupplierSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
+    const lightCyan = Color(0xFFAFFFFF);
     
     return Scaffold(
       appBar: AppBar(
@@ -26,20 +28,14 @@ class SupplierSettingsScreen extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -70,7 +66,7 @@ class SupplierSettingsScreen extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: isDark 
                               ? [colorScheme.primary, colorScheme.secondary]
-                              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                              : [maroon, maroon.withOpacity(0.8)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -130,7 +126,7 @@ class SupplierSettingsScreen extends StatelessWidget {
                               gradient: LinearGradient(
                                 colors: isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                  : [maroon, maroon.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -237,7 +233,7 @@ class SupplierSettingsScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF43E97B),
+                      backgroundColor: maroon,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

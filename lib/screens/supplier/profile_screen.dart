@@ -73,6 +73,8 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
+    const lightCyan = Color(0xFFAFFFFF);
     
     if (isLoading) {
       return Scaffold(
@@ -88,7 +90,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                 end: Alignment.bottomRight,
                 colors: isDark 
                   ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                  : [maroon, maroon.withOpacity(0.8)],
               ),
             ),
           ),
@@ -110,7 +112,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                 end: Alignment.bottomRight,
                 colors: isDark 
                   ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                  : [maroon, maroon.withOpacity(0.8)],
               ),
             ),
           ),
@@ -161,20 +163,14 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
         ),
         child: SafeArea(
           child: Center(
@@ -196,11 +192,11 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                           radius: 40,
                           backgroundColor: isDark 
                               ? colorScheme.primary.withOpacity(0.2)
-                              : Colors.green.shade100,
+                              : maroon.withOpacity(0.08),
                           child: Icon(
                             Icons.local_shipping, 
                             size: 48, 
-                            color: isDark ? colorScheme.primary : Colors.green,
+                            color: isDark ? colorScheme.primary : maroon,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -230,7 +226,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                         const SizedBox(height: 12),
                         _buildInfoRow(Icons.calendar_today, 'Account Created', createdDate),
                         const SizedBox(height: 24),
-                        _buildStatCard('Orders Fulfilled', deliveredOrdersCount, isDark ? colorScheme.primary : Colors.green),
+                        _buildStatCard('Orders Fulfilled', deliveredOrdersCount, isDark ? colorScheme.primary : maroon),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
                           onPressed: () async {
@@ -252,7 +248,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Profile'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isDark ? colorScheme.primary : Colors.green,
+                            backgroundColor: isDark ? colorScheme.primary : maroon,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -275,6 +271,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Row(
       children: [
@@ -283,12 +280,12 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
           decoration: BoxDecoration(
             color: isDark 
                 ? colorScheme.primary.withOpacity(0.2)
-                : Colors.green.shade50,
+                : maroon.withOpacity(0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon, 
-            color: isDark ? colorScheme.primary : Colors.green.shade700, 
+            color: isDark ? colorScheme.primary : maroon, 
             size: 20,
           ),
         ),
@@ -324,12 +321,13 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
   Widget _buildStatCard(String label, int value, Color color) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Container(
       decoration: BoxDecoration(
         color: isDark 
             ? color.withOpacity(0.2)
-            : color.withOpacity(0.1),
+            : color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -337,7 +335,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
         children: [
           Icon(
             Icons.assignment_turned_in, 
-            color: isDark ? colorScheme.primary : color, 
+            color: isDark ? colorScheme.primary : maroon, 
             size: 28,
           ),
           const SizedBox(height: 4),
@@ -354,7 +352,7 @@ class _SupplierProfileScreenState extends State<SupplierProfileScreen> {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? colorScheme.primary : color,
+              color: isDark ? colorScheme.primary : maroon,
               fontWeight: FontWeight.w600,
             ),
           ),

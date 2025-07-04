@@ -4,6 +4,10 @@ import '../../services/notification_service.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Rename color constants to avoid export conflicts
+const maroonSupplier = Color(0xFF800000);
+const lightCyanSupplier = Color(0xFFAFFFFF);
+
 class SupplierOrderDetailsScreen extends StatefulWidget {
   final String supplierEmail;
   
@@ -59,20 +63,14 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                : [maroonSupplier, maroonSupplier.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanSupplier,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -107,7 +105,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                 gradient: LinearGradient(
                                   colors: isDark 
                                     ? [colorScheme.primary, colorScheme.secondary]
-                                    : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                    : [maroonSupplier, maroonSupplier.withOpacity(0.8)],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -246,7 +244,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                   gradient: LinearGradient(
                                     colors: isDark 
                                       ? [colorScheme.primary, colorScheme.secondary]
-                                      : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                      : [maroonSupplier, maroonSupplier.withOpacity(0.8)],
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -260,7 +258,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                 gradient: LinearGradient(
                                   colors: isDark 
                                     ? [colorScheme.primary, colorScheme.secondary]
-                                    : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                    : [maroonSupplier, maroonSupplier.withOpacity(0.8)],
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
@@ -313,7 +311,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                 gradient: LinearGradient(
                                   colors: isDark 
                                     ? [colorScheme.primary, colorScheme.secondary]
-                                    : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                    : [maroonSupplier, maroonSupplier.withOpacity(0.8)],
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -340,7 +338,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                   return Theme(
                                     data: Theme.of(context).copyWith(
                                       colorScheme: ColorScheme.light(
-                                        primary: isDark ? colorScheme.primary : const Color(0xFF43E97B),
+                                        primary: isDark ? colorScheme.primary : maroonSupplier,
                                         onPrimary: Colors.white,
                                         surface: isDark ? colorScheme.surface : Colors.white,
                                         onSurface: isDark ? colorScheme.onSurface : Colors.black,
@@ -366,7 +364,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? colorScheme.primary : const Color(0xFF43E97B),
+                      backgroundColor: isDark ? colorScheme.primary : maroonSupplier,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -552,8 +550,8 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                gradient: LinearGradient(
+                  colors: [maroonSupplier, maroonSupplier.withOpacity(0.8)],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -592,7 +590,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF43E97B),
+              backgroundColor: maroonSupplier,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -614,7 +612,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return Colors.green;
+        return maroonSupplier;
       case 'Pending Approval':
         return Colors.purple;
       default:

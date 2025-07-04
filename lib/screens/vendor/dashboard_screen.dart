@@ -9,6 +9,9 @@ import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+// Rename color constant to avoid export conflicts
+const maroonVendor = Color(0xFF800000);
+
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key, this.vendorEmail = 'vendor@example.com'});
   final String vendorEmail;
@@ -46,7 +49,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const maroon = Color(0xFF800000);
     
     return Scaffold(
       drawer: Drawer(
@@ -62,7 +64,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 decoration: BoxDecoration(
                   color: isDark 
                       ? const Color(0xFF3D3D3D)
-                      : maroon,
+                      : maroonVendor,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -75,7 +77,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     CircleAvatar(
                       radius: 35,
                       backgroundColor: Colors.white.withOpacity(0.2),
-                      child: Icon(Icons.store, size: 40, color: isDark ? Colors.white : maroon),
+                      child: Icon(Icons.store, size: 40, color: isDark ? Colors.white : maroonVendor),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -221,7 +223,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: maroonVendor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
@@ -265,7 +267,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: isDark ? colorScheme.onSurface : maroon,
+        foregroundColor: isDark ? colorScheme.onSurface : maroonVendor,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           // Notification Bell with Badge
@@ -323,7 +325,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [maroon, maroon.withOpacity(0.8)],
+                : [maroonVendor, maroonVendor.withOpacity(0.8)],
             ),
           ),
         ),
@@ -369,7 +371,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               gradient: LinearGradient(
                                 colors: isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [maroon, maroon.withOpacity(0.8)],
+                                  : [maroonVendor, maroonVendor.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -387,7 +389,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? colorScheme.onSurface : maroon,
+                                    color: isDark ? colorScheme.onSurface : maroonVendor,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -396,7 +398,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
+                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroonVendor.withOpacity(0.7),
                                   ),
                                 ),
                           ],
@@ -436,7 +438,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 ),
                                 child: Icon(
                                   Icons.calendar_today, 
-                                  color: isDark ? colorScheme.primary : maroon, 
+                                  color: isDark ? colorScheme.primary : maroonVendor, 
                                   size: 20
                                 ),
                               ),
@@ -446,7 +448,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? colorScheme.onSurface : maroon,
+                                  color: isDark ? colorScheme.onSurface : maroonVendor,
                                 ),
                               ),
                             ],
@@ -480,7 +482,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                     gradient: LinearGradient(
                                       colors: isDark 
                                         ? [colorScheme.primary, colorScheme.secondary]
-                                        : [maroon, maroon.withOpacity(0.8)],
+                                        : [maroonVendor, maroonVendor.withOpacity(0.8)],
                                     ),
                                     shape: BoxShape.circle,
                                   ),
@@ -551,7 +553,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             ),
                             child: Icon(
                               Icons.analytics, 
-                              color: isDark ? colorScheme.primary : maroon, 
+                              color: isDark ? colorScheme.primary : maroonVendor, 
                               size: 20
                             ),
                           ),
@@ -561,7 +563,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? colorScheme.onSurface : maroon,
+                              color: isDark ? colorScheme.onSurface : maroonVendor,
                             ),
                           ),
                         ],
@@ -596,7 +598,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               icon: Icons.check_circle,
                               title: 'Confirmed',
                               value: _buildVendorConfirmedOrdersCount(),
-                              color: Colors.green,
+                              color: maroonVendor,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -634,7 +636,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         const SizedBox(width: 12),
                         _buildStatusButton('Confirmed', Colors.blue),
                         const SizedBox(width: 12),
-                        _buildStatusButton('Delivered', Colors.green),
+                        _buildStatusButton('Delivered', maroonVendor),
                         const SizedBox(width: 12),
                         _buildStatusButton('Pending Approval', Colors.purple),
                       ],
@@ -863,8 +865,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               leading: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                                  gradient: LinearGradient(
+                                    colors: [maroonVendor, maroonVendor.withOpacity(0.8)],
                                   ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
@@ -1051,7 +1053,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       case 'Confirmed':
         return Colors.blue.shade100;
       case 'Delivered':
-        return Colors.green.shade100;
+        return maroonVendor.withOpacity(0.08);
       case 'Pending Approval':
         return Colors.purple.shade100;
       default:
@@ -1066,7 +1068,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return Colors.green;
+        return maroonVendor;
       case 'Pending Approval':
         return Colors.purple;
       default:
@@ -1081,7 +1083,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return Colors.green;
+        return maroonVendor;
       case 'Pending Approval':
         return Colors.purple;
       default:

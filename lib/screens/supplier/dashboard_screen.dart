@@ -5,6 +5,9 @@ import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
 import 'settings_screen.dart';
 
+// Add color constant at the top-level for use throughout the file
+const maroon = Color(0xFF800000);
+
 class SupplierDashboardScreen extends StatefulWidget {
   final String supplierEmail;
   
@@ -22,7 +25,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const maroon = Color(0xFF800000);
     
     return Scaffold(
       key: _scaffoldKey,
@@ -209,7 +211,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                   icon: Icons.check_circle,
                                   title: 'Confirmed',
                                   value: _buildConfirmedOrdersCount(),
-                                  color: Colors.green,
+                                  color: maroon, // Changed from Colors.green to maroon
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -246,7 +248,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 const SizedBox(width: 12),
                                 _buildStatusButton('Confirmed', Colors.blue),
                                 const SizedBox(width: 12),
-                                _buildStatusButton('Delivered', Colors.green),
+                                _buildStatusButton('Delivered', maroon), // Changed from Colors.green to maroon
                                 const SizedBox(width: 12),
                                 _buildStatusButton('Pending Approval', Colors.purple),
                               ],
@@ -469,7 +471,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                           gradient: LinearGradient(
                                             colors: isDark 
                                               ? [colorScheme.primary, colorScheme.secondary]
-                                              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
+                                              : [maroon, maroon.withOpacity(0.8)],
                                           ),
                                           borderRadius: BorderRadius.circular(16),
                                         ),
@@ -684,7 +686,6 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   Widget _buildDrawer() {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const maroon = Color(0xFF800000);
     const lightCyan = Color(0xFFAFFFFF);
     
     return Drawer(
@@ -960,7 +961,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue.shade100;
       case 'Delivered':
-        return Colors.green.shade100;
+        return maroon.withOpacity(0.08); // Changed from Colors.green.shade100 to maroon
       case 'Pending Approval':
         return Colors.purple.shade100;
       default:
@@ -975,7 +976,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return Colors.green;
+        return maroon; // Changed from Colors.green to maroon
       case 'Pending Approval':
         return Colors.purple;
       default:
@@ -990,7 +991,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return Colors.green;
+        return maroon; // Changed from Colors.green to maroon
       case 'Pending Approval':
         return Colors.purple;
       default:
