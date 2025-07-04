@@ -31,22 +31,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
+          // Solid light cyan background to match welcome page
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
-          ),
-          // White overlay to soften the gradient
-          Container(
-            color: Colors.white.withOpacity(0.6),
+            color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
             child: Center(
@@ -71,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: IconButton(
-                                      icon: const Icon(Icons.arrow_back),
+                                      icon: const Icon(Icons.arrow_back, color: Color(0xFFD50060)),
                                       onPressed: () => Navigator.of(context).pop(),
                                     ),
                                   ),
@@ -80,11 +67,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
+                          backgroundColor: (role == 'vendor' ? const Color(0xFFD50060) : Colors.green).withOpacity(0.1),
                           child: Icon(
                             role == 'supplier' ? Icons.local_shipping : Icons.store,
                             size: 40,
-                            color: role == 'supplier' ? Colors.green : Colors.blue,
+                            color: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -92,7 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           role == 'supplier' ? 'Supplier Login' : 'Vendor Login',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: role == 'supplier' ? Colors.green : Colors.blue,
+                            color: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
+                            fontSize: 32,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -102,9 +90,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               children: [
                                 TextFormField(
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     labelText: 'Email',
-                                    prefixIcon: Icon(Icons.email_outlined),
+                                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    prefixIcon: Icon(Icons.email_outlined, color: role == 'vendor' ? Color(0xFFD50060) : Colors.green),
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onChanged: (val) => email = val,
@@ -120,9 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 TextFormField(
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     labelText: 'Password',
-                                    prefixIcon: Icon(Icons.lock_outline),
+                                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    prefixIcon: Icon(Icons.lock_outline, color: role == 'vendor' ? Color(0xFFD50060) : Colors.green),
                                   ),
                                   obscureText: true,
                                   onChanged: (val) => password = val,
@@ -148,17 +138,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 FilledButton.icon(
-                                  icon: const Icon(Icons.login),
+                                  icon: Icon(Icons.login, color: Colors.white),
                                   label: _isLoading
                                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Text('Login'),
+                                      : const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)),
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                    backgroundColor: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
                                     foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     elevation: 2,
+                                    overlayColor: role == 'vendor' ? Color(0xFF0D1333) : Colors.green.shade700,
                                   ),
                                   onPressed: _isLoading ? null : () async {
                                     if (_formKey.currentState!.validate()) {
@@ -208,18 +199,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(height: 8),
                                   Text(
                                     _errorMessage!,
-                                    style: const TextStyle(color: Colors.red),
+                                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                                 if (role == 'vendor') ...[
                                   const SizedBox(height: 16),
                                   OutlinedButton.icon(
-                                    icon: const Icon(Icons.person_add_alt_1, color: Colors.blue),
-                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Colors.blue)),
+                                    icon: const Icon(Icons.person_add_alt_1, color: Color(0xFFD50060)),
+                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Color(0xFFD50060), fontWeight: FontWeight.bold)),
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
-                                      side: const BorderSide(color: Colors.blue),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      side: const BorderSide(color: Color(0xFFD50060)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                       textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     onPressed: () {
