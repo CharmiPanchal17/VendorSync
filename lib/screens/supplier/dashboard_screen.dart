@@ -678,24 +678,21 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   Widget _buildDrawer() {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
+    const lightCyan = Color(0xFFAFFFFF);
     
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-          ),
+          color: isDark ? const Color(0xFF3D3D3D) : lightCyan,
         ),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            Container(
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF3D3D3D) : const Color(0xFF800000),
+                color: isDark ? const Color(0xFF3D3D3D) : maroon,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -704,76 +701,114 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 20),
                   CircleAvatar(
-                    radius: 30,
+                    radius: 35,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: const Icon(
-                      Icons.local_shipping,
-                      color: Colors.white,
-                      size: 30,
-                    ),
+                    child: Icon(Icons.local_shipping, size: 40, color: isDark ? Colors.white : maroon),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   const Text(
                     'Supplier',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage your account',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     widget.supplierEmail,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
                     ),
                   ),
                 ],
               ),
             ),
-            _buildMenuItem(
-              icon: Icons.dashboard,
-              title: 'Dashboard',
-              onTap: () => Navigator.of(context).pop(),
-              isSelected: true,
-            ),
-            _buildMenuItem(
-              icon: Icons.notifications,
-              title: 'Notifications',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.person,
-              title: 'Profile',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pushNamed('/supplier-profile', arguments: widget.supplierEmail);
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.settings,
-              title: 'Settings',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => SupplierSettingsScreen(supplierEmail: widget.supplierEmail),
-                ));
-              },
-            ),
-            const Divider(
-              color: Colors.white24, 
-              height: 32,
-              thickness: 1,
-            ),
-            _buildMenuItem(
-              icon: Icons.logout,
-              title: 'Logout',
-              onTap: () => _showLogoutDialog(),
-              isLogout: true,
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _buildMenuItem(
+                    icon: Icons.dashboard,
+                    title: 'Dashboard',
+                    onTap: () => Navigator.of(context).pop(),
+                    isSelected: true,
+                    textColor: isDark ? Colors.white : maroon,
+                    iconColor: isDark ? Colors.white : maroon,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMenuItem(
+                    icon: Icons.notifications,
+                    title: 'Notifications',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
+                    },
+                    textColor: isDark ? Colors.white : maroon,
+                    iconColor: isDark ? Colors.white : maroon,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMenuItem(
+                    icon: Icons.person,
+                    title: 'Profile',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/supplier-profile', arguments: widget.supplierEmail);
+                    },
+                    textColor: isDark ? Colors.white : maroon,
+                    iconColor: isDark ? Colors.white : maroon,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMenuItem(
+                    icon: Icons.settings,
+                    title: 'Settings',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SupplierSettingsScreen(supplierEmail: widget.supplierEmail),
+                        ),
+                      );
+                    },
+                    textColor: isDark ? Colors.white : maroon,
+                    iconColor: isDark ? Colors.white : maroon,
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.1),
+                          Colors.white.withOpacity(0.3),
+                          Colors.white.withOpacity(0.1),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildMenuItem(
+                    icon: Icons.logout,
+                    title: 'Logout',
+                    onTap: () => _showLogoutDialog(),
+                    isLogout: true,
+                    textColor: isDark ? Colors.red.shade400 : Colors.red.shade300,
+                    iconColor: isDark ? Colors.red.shade400 : Colors.red.shade300,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -787,6 +822,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
     required VoidCallback onTap,
     bool isSelected = false,
     bool isLogout = false,
+    Color? textColor,
+    Color? iconColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -809,30 +846,27 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(
           icon,
-          color: isLogout 
+          color: iconColor ?? (isLogout 
               ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
               : (isSelected 
-                  ? Colors.white 
-                  : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
+                  ? (isDark ? Colors.white : Color(0xFF800000))
+                  : (isDark ? Colors.white : Color(0xFF800000)))),
           size: 24,
         ),
-        title: Row(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: isLogout 
-                    ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
-                    : (isSelected 
-                        ? Colors.white 
-                        : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                fontSize: 16,
-              ),
-            ),
-          ],
+        title: Text(
+          title,
+          style: TextStyle(
+            color: textColor ?? (isLogout 
+                ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
+                : (isSelected 
+                    ? (isDark ? Colors.white : Color(0xFF800000))
+                    : (isDark ? Colors.white : Color(0xFF800000)))),
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 16,
+          ),
         ),
         onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
