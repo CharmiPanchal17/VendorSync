@@ -67,11 +67,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: (role == 'vendor' ? const Color(0xFFD50060) : Colors.green).withOpacity(0.1),
+                          backgroundColor: const Color(0xFFD50060).withOpacity(0.1),
                           child: Icon(
                             role == 'supplier' ? Icons.local_shipping : Icons.store,
                             size: 40,
-                            color: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
+                            color: Color(0xFFD50060),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           role == 'supplier' ? 'Supplier Login' : 'Vendor Login',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
+                            color: Color(0xFFD50060),
                             fontSize: 32,
                           ),
                         ),
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Email',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                    prefixIcon: Icon(Icons.email_outlined, color: role == 'vendor' ? Color(0xFFD50060) : Colors.green),
+                                    prefixIcon: Icon(Icons.email_outlined, color: Color(0xFFD50060)),
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onChanged: (val) => email = val,
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                    prefixIcon: Icon(Icons.lock_outline, color: role == 'vendor' ? Color(0xFFD50060) : Colors.green),
+                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
                                   ),
                                   obscureText: true,
                                   onChanged: (val) => password = val,
@@ -144,12 +144,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)),
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: role == 'vendor' ? Color(0xFFD50060) : Colors.green,
+                                    backgroundColor: Color(0xFFD50060),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     elevation: 2,
-                                    overlayColor: role == 'vendor' ? Color(0xFF0D1333) : Colors.green.shade700,
+                                    overlayColor: Color(0xFF0D1333),
                                   ),
                                   onPressed: _isLoading ? null : () async {
                                     if (_formKey.currentState!.validate()) {
