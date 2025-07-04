@@ -70,7 +70,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                             'Welcome to VendorSync',
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFD50060),
+                              color: Color(0xFF800000),
                               fontSize: 44,
                             ),
                             textAlign: TextAlign.center,
@@ -105,7 +105,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                                     child: const Text('Vendor Register', style: TextStyle(fontSize: 18)),
                                     style: FilledButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
-                                      backgroundColor: const Color(0xFFD50060), // Magenta
+                                      backgroundColor: const Color(0xFF800000), // Maroon
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                       textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -122,7 +122,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                                     child: const Text('Supplier Register', style: TextStyle(fontSize: 18)),
                                     style: FilledButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
-                                      backgroundColor: const Color(0xFFD50060), // Magenta
+                                      backgroundColor: const Color(0xFF800000), // Maroon
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                       textStyle: const TextStyle(fontWeight: FontWeight.bold),

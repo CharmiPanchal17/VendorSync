@@ -46,18 +46,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Scaffold(
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark 
-                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-            ),
+            color: isDark ? const Color(0xFF3D3D3D) : const Color(0xFFAFFFFF),
           ),
           child: ListView(
             padding: EdgeInsets.zero,
@@ -67,7 +62,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 decoration: BoxDecoration(
                   color: isDark 
                       ? const Color(0xFF3D3D3D)
-                      : Colors.blue.shade700,
+                      : maroon,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -80,7 +75,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     CircleAvatar(
                       radius: 35,
                       backgroundColor: Colors.white.withOpacity(0.2),
-                      child: Icon(Icons.store, size: 40, color: Colors.white),
+                      child: Icon(Icons.store, size: 40, color: isDark ? Colors.white : maroon),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -120,6 +115,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Dashboard',
                       onTap: () => Navigator.pop(context),
                       isSelected: true,
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -131,6 +127,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           builder: (context) => SuppliersListScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -142,6 +139,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -151,6 +149,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/vendor-notifications', arguments: widget.vendorEmail);
                       },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -160,6 +159,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/vendor-profile', arguments: widget.vendorEmail);
                       },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -171,6 +171,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           builder: (context) => VendorSettingsScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 24),
                     Container(
@@ -250,6 +251,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         }
                       },
                       isLogout: true,
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                   ],
                 ),
@@ -259,11 +261,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Text('Vendor Dashboard'),
+        title: const Text('Vendor Dashboard', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: isDark ? colorScheme.onSurface : maroon,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           // Notification Bell with Badge
           Stack(
@@ -320,20 +323,21 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
+                )
+              : null,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -365,7 +369,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                               gradient: LinearGradient(
                                 colors: isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                  : [maroon, maroon.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -383,7 +387,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                    color: isDark ? colorScheme.onSurface : maroon,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -391,7 +395,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   'Manage your orders and suppliers efficiently',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
                                   ),
                                 ),
                           ],
@@ -431,7 +436,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 ),
                                 child: Icon(
                                   Icons.calendar_today, 
-                                  color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+                                  color: isDark ? colorScheme.primary : maroon, 
                                   size: 20
                                 ),
                               ),
@@ -441,7 +446,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                                  color: isDark ? colorScheme.onSurface : maroon,
                                 ),
                               ),
                             ],
@@ -475,7 +480,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                     gradient: LinearGradient(
                                       colors: isDark 
                                         ? [colorScheme.primary, colorScheme.secondary]
-                                        : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                        : [maroon, maroon.withOpacity(0.8)],
                                     ),
                                     shape: BoxShape.circle,
                                   ),
@@ -546,7 +551,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             ),
                             child: Icon(
                               Icons.analytics, 
-                              color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+                              color: isDark ? colorScheme.primary : maroon, 
                               size: 20
                             ),
                           ),
@@ -556,7 +561,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                         ],
@@ -1090,6 +1095,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     required VoidCallback onTap,
     bool isSelected = false,
     bool isLogout = false,
+    Color? textColor,
+    Color? iconColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1112,21 +1119,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(
           icon,
-          color: isLogout 
-              ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
-              : (isSelected 
-                  ? Colors.white 
-                  : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
+          color: iconColor ?? (isSelected 
+              ? (isDark ? Colors.white : Color(0xFF800000))
+              : (isDark ? Colors.white : Color(0xFF800000))),
           size: 24,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isLogout 
-                ? (isDark ? Colors.red.shade400 : Colors.red.shade300)
-                : (isSelected 
-                    ? Colors.white 
-                    : Colors.white.withOpacity(isDark ? 0.9 : 0.8)),
+            color: textColor ?? (isSelected 
+                ? (isDark ? Colors.white : Color(0xFF800000))
+                : (isDark ? Colors.white : Color(0xFF800000))),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 16,
           ),

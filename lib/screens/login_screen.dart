@@ -28,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    const maroon = Color(0xFF800000);
     return Scaffold(
       body: Stack(
         children: [
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: IconButton(
-                                      icon: const Icon(Icons.arrow_back, color: Color(0xFFD50060)),
+                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
                                       onPressed: () => Navigator.of(context).pop(),
                                     ),
                                   ),
@@ -67,11 +68,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: const Color(0xFFD50060).withOpacity(0.1),
+                          backgroundColor: const Color(0xFF800000).withOpacity(0.1),
                           child: Icon(
                             role == 'supplier' ? Icons.local_shipping : Icons.store,
                             size: 40,
-                            color: Color(0xFFD50060),
+                            color: Color(0xFF800000),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -79,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           role == 'supplier' ? 'Supplier Login' : 'Vendor Login',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFD50060),
+                            color: Color(0xFF800000),
                             fontSize: 32,
                           ),
                         ),
@@ -93,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Email',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                    prefixIcon: Icon(Icons.email_outlined, color: Color(0xFFD50060)),
+                                    prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onChanged: (val) => email = val,
@@ -112,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   decoration: InputDecoration(
                                     labelText: 'Password',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
+                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
                                   ),
                                   obscureText: true,
                                   onChanged: (val) => password = val,
@@ -133,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: () {
                                       Navigator.of(context).pushNamed('/reset-password', arguments: role);
                                     },
-                                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.red)),
+                                    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -144,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)),
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: Color(0xFFD50060),
+                                    backgroundColor: Color(0xFF800000),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -205,11 +206,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (role == 'vendor') ...[
                                   const SizedBox(height: 16),
                                   OutlinedButton.icon(
-                                    icon: const Icon(Icons.person_add_alt_1, color: Color(0xFFD50060)),
-                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Color(0xFFD50060), fontWeight: FontWeight.bold)),
+                                    icon: const Icon(Icons.person_add_alt_1, color: Color(0xFF800000)),
+                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold)),
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
-                                      side: const BorderSide(color: Color(0xFFD50060)),
+                                      side: const BorderSide(color: Color(0xFF800000)),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                       textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     ),

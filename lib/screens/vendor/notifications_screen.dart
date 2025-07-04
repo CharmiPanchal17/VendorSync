@@ -17,13 +17,15 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: const Text('Notifications', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -31,7 +33,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
@@ -80,13 +82,14 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)],
+                )
+              : null,
         ),
         child: StreamBuilder<List<AppNotification>>(
           stream: NotificationService.getNotificationsForUser(widget.vendorEmail),
@@ -122,7 +125,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                     ],
@@ -169,7 +172,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -177,7 +180,8 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         'You\'ll see notifications here when suppliers confirm orders',
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -231,7 +235,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                         color: notification.isRead 
                             ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
-                            : (isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A)),
+                            : (isDark ? colorScheme.onSurface : maroon),
                       ),
                     ),
                     subtitle: Column(

@@ -106,7 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: IconButton(
-                                      icon: const Icon(Icons.arrow_back, color: Color(0xFFD50060)),
+                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
                                       onPressed: () => Navigator.of(context).pop(),
                                     ),
                                   ),
@@ -115,13 +115,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: const Color(0xFFD50060).withOpacity(0.1),
-                          child: Icon(Icons.store, size: 40, color: Color(0xFFD50060)),
+                          backgroundColor: const Color(0xFF800000).withOpacity(0.1),
+                          child: Icon(Icons.store, size: 40, color: Color(0xFF800000)),
                         ),
                         const SizedBox(height: 24),
                         Text(
                           'Vendor Register',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Color(0xFFD50060), fontSize: 32),
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Color(0xFF800000), fontSize: 32),
                         ),
                         const SizedBox(height: 24),
                         Form(
@@ -132,7 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 decoration: const InputDecoration(
                                   labelText: 'Vendor Name',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                  prefixIcon: Icon(Icons.person_outline, color: Color(0xFFD50060)),
+                                  prefixIcon: Icon(Icons.person_outline, color: Color(0xFF800000)),
                                 ),
                                 onChanged: (val) => name = val,
                                 validator: (val) => val == null || val.isEmpty ? 'Enter vendor name' : null,
@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 decoration: const InputDecoration(
                                   labelText: 'Email',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                  prefixIcon: Icon(Icons.email_outlined, color: Color(0xFFD50060)),
+                                  prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 onChanged: (val) => email = val,
@@ -161,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 decoration: const InputDecoration(
                                   labelText: 'Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
+                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => password = val,
@@ -180,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 decoration: const InputDecoration(
                                   labelText: 'Confirm Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFFD50060)),
+                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => confirmPassword = val,
@@ -202,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     : const Text('Register as Vendor', style: TextStyle(fontWeight: FontWeight.bold)),
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  backgroundColor: const Color(0xFFD50060), // Magenta
+                                  backgroundColor: const Color(0xFF800000), // Maroon
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -217,11 +217,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ],
                               const SizedBox(height: 16),
                               OutlinedButton.icon(
-                                icon: const Icon(Icons.login, color: Color(0xFFD50060)),
-                                label: const Text('Already have an account? Login', style: TextStyle(color: Color(0xFFD50060), fontWeight: FontWeight.bold)),
+                                icon: const Icon(Icons.login, color: Color(0xFF800000)),
+                                label: const Text('Already have an account? Login', style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold)),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  side: const BorderSide(color: Color(0xFFD50060)),
+                                  side: const BorderSide(color: Color(0xFF800000)),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
