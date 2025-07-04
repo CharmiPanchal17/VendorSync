@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'edit_profile_screen.dart';
 
+// Rename color constants to avoid export conflicts
+const maroonVendorProfile = Color(0xFF800000);
+const lightCyanVendorProfile = Color(0xFFAFFFFF);
+
 class VendorProfileScreen extends StatefulWidget {
   final String vendorEmail;
   
@@ -110,7 +114,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                 end: Alignment.bottomRight,
                 colors: isDark 
                   ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                  : [maroonVendorProfile, maroonVendorProfile.withOpacity(0.8)],
               ),
             ),
           ),
@@ -135,7 +139,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                 end: Alignment.bottomRight,
                 colors: isDark 
                   ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                  : [maroonVendorProfile, maroonVendorProfile.withOpacity(0.8)],
               ),
             ),
           ),
@@ -187,20 +191,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroonVendorProfile, maroonVendorProfile.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanVendorProfile,
         ),
         child: SafeArea(
           child: Center(
@@ -222,11 +220,11 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           radius: 40,
                           backgroundColor: isDark 
                               ? colorScheme.primary.withOpacity(0.2)
-                              : Colors.blue.shade100,
+                              : maroonVendorProfile.withOpacity(0.08),
                           child: Icon(
                             Icons.store, 
                             size: 48, 
-                            color: isDark ? colorScheme.primary : Colors.blue,
+                            color: isDark ? colorScheme.primary : maroonVendorProfile,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -259,8 +257,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatCard('Total Orders', totalOrdersCount, isDark ? colorScheme.primary : Colors.blue),
-                            _buildStatCard('Suppliers', suppliersCount, isDark ? colorScheme.secondary : Colors.green),
+                            _buildStatCard('Total Orders', totalOrdersCount, isDark ? colorScheme.primary : maroonVendorProfile),
+                            _buildStatCard('Suppliers', suppliersCount, isDark ? colorScheme.secondary : maroonVendorProfile),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -285,7 +283,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Profile'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isDark ? colorScheme.primary : Colors.blue,
+                            backgroundColor: isDark ? colorScheme.primary : maroonVendorProfile,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -316,12 +314,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           decoration: BoxDecoration(
             color: isDark 
                 ? colorScheme.primary.withOpacity(0.2)
-                : Colors.blue.shade50,
+                : maroonVendorProfile.withOpacity(0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon, 
-            color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+            color: isDark ? colorScheme.primary : maroonVendorProfile, 
             size: 20,
           ),
         ),
@@ -362,7 +360,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       decoration: BoxDecoration(
         color: isDark 
             ? color.withOpacity(0.2)
-            : color.withOpacity(0.1),
+            : color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -370,7 +368,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
         children: [
           Icon(
             label == 'Total Orders' ? Icons.shopping_cart : Icons.group,
-            color: isDark ? colorScheme.primary : Colors.deepPurple,
+            color: isDark ? colorScheme.primary : maroonVendorProfile,
             size: 28,
           ),
           const SizedBox(height: 4),
@@ -387,7 +385,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? colorScheme.primary : Colors.deepPurple,
+              color: isDark ? colorScheme.primary : maroonVendorProfile,
               fontWeight: FontWeight.w600,
             ),
           ),
