@@ -985,7 +985,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             ),
           );
         },
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xFF800000),
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Create New Order',
       ),
