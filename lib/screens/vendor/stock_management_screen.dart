@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'product_analytics_screen.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -77,11 +78,26 @@ class StockManagementScreen extends StatelessWidget {
                       ),
                   ],
                 ),
-                trailing: IconButton(
-                  icon: Icon(Icons.edit, color: maroon),
-                  onPressed: () {
-                    // Show dialog to update stock
-                  },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.show_chart, color: maroon),
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => ProductAnalyticsScreen(
+                            productName: product['name'],
+                          ),
+                        ));
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: maroon),
+                      onPressed: () {
+                        // Show dialog to update stock
+                      },
+                    ),
+                  ],
                 ),
               ),
             );
