@@ -655,12 +655,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         child: Icon(Icons.inventory, color: Colors.blue.shade700, size: 20),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Recent Orders',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Color(0xFF800000),
                         ),
                   ),
                 ],
