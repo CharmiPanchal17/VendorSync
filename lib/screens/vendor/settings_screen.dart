@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 
+// Add color constants at the top-level for use throughout the file
+const maroonVendorSettings = Color(0xFF800000);
+const lightCyanVendorSettings = Color(0xFFAFFFFF);
+
 class VendorSettingsScreen extends StatelessWidget {
   final String vendorEmail;
   
@@ -26,20 +30,14 @@ class VendorSettingsScreen extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                : [maroonVendorSettings, maroonVendorSettings.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF2D2D2D), const Color(0xFF1A1A1A)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanVendorSettings,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -70,7 +68,7 @@ class VendorSettingsScreen extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: isDark 
                               ? [colorScheme.primary, colorScheme.secondary]
-                              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                              : [maroonVendorSettings, maroonVendorSettings.withOpacity(0.8)],
                           ),
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -130,7 +128,7 @@ class VendorSettingsScreen extends StatelessWidget {
                               gradient: LinearGradient(
                                 colors: isDark 
                                   ? [colorScheme.primary, colorScheme.secondary]
-                                  : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
+                                  : [maroonVendorSettings, maroonVendorSettings.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -237,7 +235,7 @@ class VendorSettingsScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2196F3),
+                      backgroundColor: maroonVendorSettings,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

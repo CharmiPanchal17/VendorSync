@@ -69,7 +69,7 @@ class _EditSupplierProfileScreenState extends State<EditSupplierProfileScreen> {
         // Show success message and navigate back
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Profile updated successfully!'),
               backgroundColor: Colors.green,
             ),
