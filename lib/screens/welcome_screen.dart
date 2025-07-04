@@ -9,18 +9,9 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
+          // Solid light cyan background
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
+            color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
             child: Center(
