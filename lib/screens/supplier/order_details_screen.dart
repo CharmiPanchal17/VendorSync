@@ -525,7 +525,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Order updated successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: maroonSupplier,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),

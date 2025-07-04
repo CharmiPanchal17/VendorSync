@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import 'package:intl/intl.dart';
 
+// Add color constants at the top-level for use throughout the file
+const maroonVendorOrderDetails = Color(0xFF800000);
+const lightCyanVendorOrderDetails = Color(0xFFAFFFFF);
+
 class VendorOrderDetailsScreen extends StatelessWidget {
   const VendorOrderDetailsScreen({super.key});
 
@@ -19,20 +23,25 @@ class VendorOrderDetailsScreen extends StatelessWidget {
             color: isDark ? colorScheme.onSurface : Colors.white,
           ),
         ),
-        backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFF2196F3),
+        backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(
           color: isDark ? colorScheme.onSurface : Colors.white,
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [maroonVendorOrderDetails, maroonVendorOrderDetails.withOpacity(0.8)],
+            ),
+          ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark 
-              ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-              : [const Color(0xFF2196F3), const Color(0xFF43E97B)],
-          ),
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanVendorOrderDetails,
         ),
         child: SafeArea(
           child: Center(
@@ -118,12 +127,12 @@ class VendorOrderDetailsScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.blue.shade50,
+            color: isDark ? colorScheme.primary.withOpacity(0.2) : maroonVendorOrderDetails.withOpacity(0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon, 
-            color: isDark ? colorScheme.primary : Colors.blue.shade700, 
+            color: isDark ? colorScheme.primary : maroonVendorOrderDetails, 
             size: 20
           ),
         ),
@@ -180,7 +189,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
       case 'Shipped':
         return Colors.purple;
       case 'Delivered':
-        return Colors.green;
+        return maroonVendorOrderDetails;
       default:
         return Colors.grey;
     }

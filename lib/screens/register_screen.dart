@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Add color constant at the top-level for use throughout the file
+const maroonPopup = Color(0xFF800000);
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -55,9 +58,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Registration successful! Welcome to VendorSync.'),
-              backgroundColor: Colors.green,
+              backgroundColor: maroonPopup,
             ),
           );
           

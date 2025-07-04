@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Rename color constant to avoid export conflicts
+const maroonPopupAvailableSuppliers = Color(0xFF800000);
+
 class AvailableSuppliersScreen extends StatelessWidget {
   final String vendorEmail;
   const AvailableSuppliersScreen({super.key, required this.vendorEmail});
@@ -379,7 +382,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                           context: context,
                                           builder: (context) => AlertDialog(
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                            backgroundColor: isDark ? colorScheme.surface : Colors.white,
+                                            backgroundColor: maroonPopupAvailableSuppliers,
                                             elevation: 20,
                                             contentPadding: const EdgeInsets.all(24),
                                             content: Column(

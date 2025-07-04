@@ -209,7 +209,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                               ),
                             ),
-                            backgroundColor: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+                            backgroundColor: maroonVendor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             actions: [
                               TextButton(
