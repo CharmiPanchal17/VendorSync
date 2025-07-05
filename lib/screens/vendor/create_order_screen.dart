@@ -437,139 +437,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                             fillColor: isDark ? Colors.white10 : Colors.white,
                                           ),
                                           value: _selectedSupplierId,
-                                          selectedItemBuilder: (BuildContext context) {
-                                            if (_selectedSupplierId == null) {
-                                              return [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                                  child: Row(
-                                                    children: [
-                                                      Container(
-                                                        padding: const EdgeInsets.all(8),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.grey.withOpacity(0.2),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        'Choose a supplier...',
-                                                        style: TextStyle(
-                                                          color: isDark ? Colors.white70 : Colors.grey[600],
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ];
-                                            }
-                                            
-                                            try {
-                                              // Find the selected supplier data
-                                              final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == _selectedSupplierId);
-                                              final data = selectedDoc.data() as Map<String, dynamic>;
-                                              final supplierName = data['name'] ?? 'Unknown Supplier';
-                                              final supplierEmail = data['email'] ?? 'No email';
-                                              
-                                              return [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                                  child: Row(
-                                                    children: [
-                                                      // Supplier Avatar
-                                                      Container(
-                                                        width: 32,
-                                                        height: 32,
-                                                        decoration: BoxDecoration(
-                                                          color: maroon.withOpacity(0.2),
-                                                          borderRadius: BorderRadius.circular(16),
-                                                        ),
-                                                        child: Center(
-                                                          child: Text(
-                                                            supplierName.isNotEmpty ? supplierName[0].toUpperCase() : 'S',
-                                                            style: TextStyle(
-                                                              color: maroon,
-                                                              fontWeight: FontWeight.bold,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      // Supplier Details
-                                                      Expanded(
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            Text(
-                                                              supplierName,
-                                                              style: TextStyle(
-                                                                color: isDark ? Colors.white : Colors.black87,
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 14,
-                                                              ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                            Text(
-                                                              supplierEmail,
-                                                              style: TextStyle(
-                                                                color: isDark ? Colors.white60 : Colors.grey[600],
-                                                                fontSize: 12,
-                                                              ),
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      // Change indicator
-                                                      Container(
-                                                        padding: const EdgeInsets.all(4),
-                                                        decoration: BoxDecoration(
-                                                          color: maroon.withOpacity(0.1),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: Icon(
-                                                          Icons.edit,
-                                                          color: maroon,
-                                                          size: 16,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ];
-                                            } catch (e) {
-                                              // Fallback if supplier data is not found
-                                              return [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                                  child: Row(
-                                                    children: [
-                                                      Container(
-                                                        padding: const EdgeInsets.all(8),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.red.withOpacity(0.2),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: Icon(Icons.error, color: Colors.red, size: 20),
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        'Supplier not found',
-                                                        style: TextStyle(
-                                                          color: Colors.red,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ];
-                                            }
-                                          },
+
                                           items: [
                                             // Add a placeholder item
                                             DropdownMenuItem<String>(
@@ -588,7 +456,9 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                                     ),
                                                     const SizedBox(width: 12),
                                                     Text(
-                                                      'Choose a supplier...',
+                                                      _selectedSupplierId == null 
+                                                          ? 'Choose a supplier...'
+                                                          : 'Change supplier...',
                                                       style: TextStyle(
                                                         color: isDark ? Colors.white70 : Colors.grey[600],
                                                         fontSize: 14,
@@ -1206,45 +1076,11 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
 
       // Show success dialog
       if (context.mounted) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         await showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [maroon, maroon.withOpacity(0.8)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: 12),
-                const Text('Order Created!'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Your order for ${_productNameController.text.trim()} has been created successfully.'),
-                const SizedBox(height: 8),
-                Text('Order ID: ${orderRef.id}'),
-                const SizedBox(height: 8),
-                if (_enableAutoOrder)
-                  Text('Auto-ordering is enabled with ${_thresholdController.text}% threshold.'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
+          barrierDismissible: false,
+          builder: (context) => _buildSuccessDialog(context, orderRef.id, isDark),
         );
       }
 
@@ -1254,5 +1090,298 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         _errorMessage = 'Failed to create order. Please try again.';
       });
     }
+  }
+
+  Widget _buildSuccessDialog(BuildContext context, String orderId, bool isDark) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [Colors.white, Colors.grey.shade50],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+            // Success Animation Container
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [maroon, maroon.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: maroon.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Success Title
+            Text(
+              'Order Created Successfully!',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Success Message
+            Text(
+              'Your order has been placed and the supplier has been notified.',
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            
+            // Order Details Card
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: maroon.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: maroon.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Product Info
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.inventory, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Product',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _productNameController.text.trim(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                                     const SizedBox(height: 10),
+                   
+                   // Order ID
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.receipt, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Order ID',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              orderId,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: maroon,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                                     ),
+                   const SizedBox(height: 10),
+                   
+                   // Supplier Info
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.person, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Supplier',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _selectedSupplierName ?? 'Unknown',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                                     ),
+                   
+                   // Auto-order info if enabled
+                   if (_enableAutoOrder) ...[
+                     const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome, color: Colors.green, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Auto-ordering enabled',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/vendor-dashboard', arguments: widget.vendorEmail);
+                    },
+                    icon: const Icon(Icons.dashboard),
+                    label: const Text('Go to Dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: maroon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Another'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: maroon,
+                      side: BorderSide(color: maroon),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+);
   }
 } 
