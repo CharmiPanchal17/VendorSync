@@ -1005,6 +1005,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => CreateOrderScreen(vendorEmail: widget.vendorEmail),
+          ));
+        },
+        icon: const Icon(Icons.add_shopping_cart),
+        label: const Text('Create Order'),
+        backgroundColor: maroonVendor,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 
