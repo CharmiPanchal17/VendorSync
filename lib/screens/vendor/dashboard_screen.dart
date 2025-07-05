@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
 import 'analytics_screen.dart';
+import 'create_order_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -118,6 +119,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Dashboard',
                       onTap: () => Navigator.pop(context),
                       isSelected: true,
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.add_shopping_cart,
+                      title: 'Create Order',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => CreateOrderScreen(vendorEmail: widget.vendorEmail),
+                        ));
+                      },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
                     const SizedBox(height: 8),
