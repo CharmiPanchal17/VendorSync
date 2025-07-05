@@ -74,452 +74,99 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Card
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: maroon.withOpacity(0.2),
-                              child: Icon(Icons.add_shopping_cart, color: maroon),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Create New Order',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : Colors.black87,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Set up initial order and auto-ordering',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark ? Colors.white70 : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Product Information Section
-                _buildSectionHeader('Product Information', Icons.inventory, isDark),
-                const SizedBox(height: 16),
-                
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: _productNameController,
-                          decoration: _buildInputDecoration(
-                            'Product Name',
-                            Icons.inventory,
-                            isDark,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter product name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _quantityController,
-                          decoration: _buildInputDecoration(
-                            'Initial Quantity',
-                            Icons.format_list_numbered,
-                            isDark,
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter initial quantity';
-                            }
-                            final quantity = int.tryParse(value);
-                            if (quantity == null || quantity <= 0) {
-                              return 'Please enter a valid quantity';
-                            }
-                            return null;
-                          },
-                          onChanged: (value) {
-                            _updateAutoOrderQuantity();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Supplier Information Section
-                _buildSectionHeader('Supplier Information', Icons.person, isDark),
-                const SizedBox(height: 16),
-                
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('vendor_suppliers')
-                              .where('vendorEmail', isEqualTo: widget.vendorEmail)
-                              .snapshots(),
-                          builder: (context, vendorSuppliersSnapshot) {
-                            if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            
-                            if (vendorSuppliersSnapshot.hasError) {
-                              return Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.error_outline, color: Colors.red, size: 20),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Error loading suppliers',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            
-                            final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
-                            
-                            if (vendorSupplierDocs.isEmpty) {
-                              return Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.warning_amber, color: Colors.orange, size: 20),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            'No suppliers found',
-                                            style: TextStyle(
-                                              color: Colors.orange,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Please add suppliers from the "My Suppliers" page first.',
-                                      style: TextStyle(
-                                        color: Colors.orange.withOpacity(0.8),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            
-                            final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
-                            
-                            return StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('suppliers')
-                                  .where(FieldPath.documentId, whereIn: supplierIds)
-                                  .snapshots(),
-                              builder: (context, suppliersSnapshot) {
-                                if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
-                                  return const Center(child: CircularProgressIndicator());
-                                }
-                                
-                                final supplierDocs = suppliersSnapshot.data?.docs ?? [];
-                                
-                                if (supplierDocs.isEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.red.withOpacity(0.3)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.error_outline, color: Colors.red, size: 20),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            'No supplier data found',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                
-                                return Column(
-                                  children: [
-                                                                         // Supplier Selection Dropdown
-                                     DropdownButtonFormField<String>(
-                                       decoration: _buildInputDecoration(
-                                         'Select Supplier',
-                                         Icons.person,
-                                         isDark,
-                                       ),
-                                       value: _selectedSupplierId,
-                                       items: supplierDocs.map((doc) {
-                                         final data = doc.data() as Map<String, dynamic>;
-                                         return DropdownMenuItem<String>(
-                                           value: doc.id,
-                                           child: Row(
-                                             children: [
-                                               Expanded(
-                                                 child: Column(
-                                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                                   mainAxisSize: MainAxisSize.min,
-                                                   children: [
-                                                     Text(
-                                                       data['name'] ?? 'Unknown Supplier',
-                                                       style: TextStyle(
-                                                         fontWeight: FontWeight.w500,
-                                                         color: isDark ? Colors.white : Colors.black87,
-                                                         fontSize: 14,
-                                                       ),
-                                                       overflow: TextOverflow.ellipsis,
-                                                     ),
-                                                     Text(
-                                                       data['email'] ?? 'No email',
-                                                       style: TextStyle(
-                                                         fontSize: 11,
-                                                         color: isDark ? Colors.white70 : Colors.grey[600],
-                                                       ),
-                                                       overflow: TextOverflow.ellipsis,
-                                                     ),
-                                                   ],
-                                                 ),
-                                               ),
-                                             ],
-                                           ),
-                                         );
-                                       }).toList(),
-                                       onChanged: (value) {
-                                         if (value != null) {
-                                           final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == value);
-                                           final data = selectedDoc.data() as Map<String, dynamic>;
-                                           setState(() {
-                                             _selectedSupplierId = value;
-                                             _selectedSupplierName = data['name'] ?? 'Unknown Supplier';
-                                             _selectedSupplierEmail = data['email'] ?? '';
-                                           });
-                                         }
-                                       },
-                                       validator: (value) {
-                                         if (value == null) {
-                                           return 'Please select a supplier';
-                                         }
-                                         return null;
-                                       },
-                                       menuMaxHeight: 200,
-                                     ),
-                                    
-                                    if (_selectedSupplierName != null && _selectedSupplierEmail != null) ...[
-                                      const SizedBox(height: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: maroon.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: maroon.withOpacity(0.3)),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(Icons.check_circle, color: maroon, size: 20),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  'Selected Supplier',
-                                                  style: TextStyle(
-                                                    color: maroon,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Name: $_selectedSupplierName',
-                                              style: TextStyle(
-                                                color: isDark ? Colors.white : Colors.black87,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            Text(
-                                              'Email: $_selectedSupplierEmail',
-                                              style: TextStyle(
-                                                color: isDark ? Colors.white70 : Colors.grey[600],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Delivery Information Section
-                _buildSectionHeader('Delivery Information', Icons.local_shipping, isDark),
-                const SizedBox(height: 16),
-                
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: InkWell(
-                      onTap: () => _selectDeliveryDate(context, isDark),
-                      child: Row(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Card
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: maroon.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(Icons.calendar_today, color: maroon),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Preferred Delivery Date',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDark ? Colors.white70 : Colors.grey[600],
-                                  ),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: maroon.withOpacity(0.2),
+                                child: Icon(Icons.add_shopping_cart, color: maroon),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Create New Order',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Set up initial order and auto-ordering',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isDark ? Colors.white70 : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  DateFormat.yMMMd().format(_preferredDeliveryDate),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.white70 : Colors.grey[600]),
                         ],
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Auto-Order Settings Section
-                _buildSectionHeader('Auto-Order Settings', Icons.settings, isDark),
-                const SizedBox(height: 16),
-                
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          title: Text(
-                            'Enable Auto-Ordering',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white : Colors.black87,
+                  const SizedBox(height: 24),
+                  
+                  // Product Information Section
+                  _buildSectionHeader('Product Information', Icons.inventory, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _productNameController,
+                            decoration: _buildInputDecoration(
+                              'Product Name',
+                              Icons.inventory,
+                              isDark,
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter product name';
+                              }
+                              return null;
+                            },
                           ),
-                          subtitle: Text(
-                            'Automatically place orders when stock is low',
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.grey[600],
-                            ),
-                          ),
-                          value: _enableAutoOrder,
-                          onChanged: (value) {
-                            setState(() {
-                              _enableAutoOrder = value;
-                            });
-                          },
-                          activeColor: maroon,
-                        ),
-                        if (_enableAutoOrder) ...[
                           const SizedBox(height: 16),
                           TextFormField(
-                            controller: _thresholdController,
+                            controller: _quantityController,
                             decoration: _buildInputDecoration(
-                              'Low Stock Threshold (%)',
-                              Icons.warning,
+                              'Initial Quantity',
+                              Icons.format_list_numbered,
                               isDark,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) {
-                              if (!_enableAutoOrder) return null;
                               if (value == null || value.trim().isEmpty) {
-                                return 'Please enter threshold percentage';
+                                return 'Please enter initial quantity';
                               }
-                              final threshold = int.tryParse(value);
-                              if (threshold == null || threshold <= 0 || threshold >= 100) {
-                                return 'Please enter a valid percentage (1-99)';
+                              final quantity = int.tryParse(value);
+                              if (quantity == null || quantity <= 0) {
+                                return 'Please enter a valid quantity';
                               }
                               return null;
                             },
@@ -527,118 +174,867 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               _updateAutoOrderQuantity();
                             },
                           ),
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: maroon.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: maroon.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.info_outline, color: maroon, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity (${_autoOrderQuantity} units)',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: maroon,
-                                      fontWeight: FontWeight.w500,
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Supplier Information Section
+                  _buildSectionHeader('Supplier Information', Icons.person, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('vendor_suppliers')
+                                .where('vendorEmail', isEqualTo: widget.vendorEmail)
+                                .snapshots(),
+                            builder: (context, vendorSuppliersSnapshot) {
+                              if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  child: const Center(
+                                    child: Column(
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(height: 8),
+                                        Text('Loading suppliers...'),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
+                                );
+                              }
+                              
+                              if (vendorSuppliersSnapshot.hasError) {
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Error loading suppliers',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Error: ${vendorSuppliersSnapshot.error}',
+                                        style: TextStyle(color: Colors.red, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
+                              
+                              if (vendorSupplierDocs.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'No suppliers found',
+                                              style: TextStyle(
+                                                color: Colors.orange,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Please add suppliers from the "My Suppliers" page first.',
+                                        style: TextStyle(
+                                          color: Colors.orange.withOpacity(0.8),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).pushNamed('/vendor-suppliers', arguments: widget.vendorEmail);
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        label: const Text('Add Suppliers'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.orange,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
+                              
+                              return StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('suppliers')
+                                    .where(FieldPath.documentId, whereIn: supplierIds)
+                                    .snapshots(),
+                                builder: (context, suppliersSnapshot) {
+                                  if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: const Center(
+                                        child: Column(
+                                          children: [
+                                            CircularProgressIndicator(),
+                                            SizedBox(height: 8),
+                                            Text('Loading supplier details...'),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  
+                                  if (suppliersSnapshot.hasError) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  'Error loading supplier details',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Error: ${suppliersSnapshot.error}',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  final supplierDocs = suppliersSnapshot.data?.docs ?? [];
+                                  
+                                  if (supplierDocs.isEmpty) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  'No supplier data found',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Found ${supplierIds.length} supplier IDs but no supplier data.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Debug info (remove in production)
+                                      if (supplierDocs.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          margin: const EdgeInsets.only(bottom: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            'Found ${supplierDocs.length} suppliers',
+                                            style: TextStyle(fontSize: 12, color: Colors.blue),
+                                          ),
+                                        ),
+                                      
+                                      // Supplier Selection Dropdown
+                                      Container(
+                                        width: double.infinity,
+                                        child: DropdownButtonFormField<String>(
+                                          decoration: InputDecoration(
+                                            labelText: 'Select Supplier',
+                                            labelStyle: TextStyle(
+                                              color: isDark ? Colors.white70 : Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            prefixIcon: Container(
+                                              margin: const EdgeInsets.only(right: 8),
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: maroon.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Icon(Icons.person, color: maroon, size: 20),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: maroon, width: 2),
+                                            ),
+                                            filled: true,
+                                            fillColor: isDark ? Colors.white10 : Colors.white,
+                                          ),
+                                          value: _selectedSupplierId,
+                                          selectedItemBuilder: (BuildContext context) {
+                                            if (_selectedSupplierId == null) {
+                                              return [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(8),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.grey.withOpacity(0.2),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        'Choose a supplier...',
+                                                        style: TextStyle(
+                                                          color: isDark ? Colors.white70 : Colors.grey[600],
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ];
+                                            }
+                                            
+                                            try {
+                                              // Find the selected supplier data
+                                              final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == _selectedSupplierId);
+                                              final data = selectedDoc.data() as Map<String, dynamic>;
+                                              final supplierName = data['name'] ?? 'Unknown Supplier';
+                                              final supplierEmail = data['email'] ?? 'No email';
+                                              
+                                              return [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                                  child: Row(
+                                                    children: [
+                                                      // Supplier Avatar
+                                                      Container(
+                                                        width: 32,
+                                                        height: 32,
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.2),
+                                                          borderRadius: BorderRadius.circular(16),
+                                                        ),
+                                                        child: Center(
+                                                          child: Text(
+                                                            supplierName.isNotEmpty ? supplierName[0].toUpperCase() : 'S',
+                                                            style: TextStyle(
+                                                              color: maroon,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      // Supplier Details
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              supplierName,
+                                                              style: TextStyle(
+                                                                color: isDark ? Colors.white : Colors.black87,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 14,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                            Text(
+                                                              supplierEmail,
+                                                              style: TextStyle(
+                                                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                fontSize: 12,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      // Change indicator
+                                                      Container(
+                                                        padding: const EdgeInsets.all(4),
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.edit,
+                                                          color: maroon,
+                                                          size: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ];
+                                            } catch (e) {
+                                              // Fallback if supplier data is not found
+                                              return [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(8),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.red.withOpacity(0.2),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: Icon(Icons.error, color: Colors.red, size: 20),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        'Supplier not found',
+                                                        style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ];
+                                            }
+                                          },
+                                          items: [
+                                            // Add a placeholder item
+                                            DropdownMenuItem<String>(
+                                              value: null,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Text(
+                                                      'Choose a supplier...',
+                                                      style: TextStyle(
+                                                        color: isDark ? Colors.white70 : Colors.grey[600],
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            // Add actual supplier items
+                                            ...supplierDocs.map((doc) {
+                                              final data = doc.data() as Map<String, dynamic>;
+                                              final supplierName = data['name'] ?? 'Unknown Supplier';
+                                              final supplierEmail = data['email'] ?? 'No email';
+                                              final supplierPhone = data['phone'] ?? '';
+                                              
+                                              return DropdownMenuItem<String>(
+                                                value: doc.id,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      bottom: BorderSide(
+                                                        color: isDark ? Colors.white10 : Colors.grey.shade200,
+                                                        width: 0.5,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      // Supplier Avatar
+                                                      Container(
+                                                        width: 40,
+                                                        height: 40,
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.2),
+                                                          borderRadius: BorderRadius.circular(20),
+                                                        ),
+                                                        child: Center(
+                                                          child: Text(
+                                                            supplierName.isNotEmpty ? supplierName[0].toUpperCase() : 'S',
+                                                            style: TextStyle(
+                                                              color: maroon,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      // Supplier Details
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              supplierName,
+                                                              style: TextStyle(
+                                                                color: isDark ? Colors.white : Colors.black87,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 14,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                            const SizedBox(height: 2),
+                                                            Row(
+                                                              children: [
+                                                                Icon(
+                                                                  Icons.email_outlined,
+                                                                  size: 12,
+                                                                  color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                ),
+                                                                const SizedBox(width: 4),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    supplierEmail,
+                                                                    style: TextStyle(
+                                                                      color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                      fontSize: 12,
+                                                                    ),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            if (supplierPhone.isNotEmpty) ...[
+                                                              const SizedBox(height: 2),
+                                                              Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons.phone_outlined,
+                                                                    size: 12,
+                                                                    color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                  ),
+                                                                  const SizedBox(width: 4),
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      supplierPhone,
+                                                                      style: TextStyle(
+                                                                        color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                        fontSize: 12,
+                                                                      ),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      // Selection indicator
+                                                      Container(
+                                                        padding: const EdgeInsets.all(4),
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.check_circle_outline,
+                                                          color: maroon,
+                                                          size: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ],
+                                          onChanged: (value) {
+                                            print('Dropdown changed to: $value'); // Debug print
+                                            if (value != null) {
+                                              final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == value);
+                                              final data = selectedDoc.data() as Map<String, dynamic>;
+                                              setState(() {
+                                                _selectedSupplierId = value;
+                                                _selectedSupplierName = data['name'] ?? 'Unknown Supplier';
+                                                _selectedSupplierEmail = data['email'] ?? '';
+                                              });
+                                              print('Selected supplier: $_selectedSupplierName ($_selectedSupplierEmail)'); // Debug print
+                                            } else {
+                                              setState(() {
+                                                _selectedSupplierId = null;
+                                                _selectedSupplierName = null;
+                                                _selectedSupplierEmail = null;
+                                              });
+                                            }
+                                          },
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'Please select a supplier';
+                                            }
+                                            return null;
+                                          },
+                                          menuMaxHeight: 300,
+                                          isExpanded: true,
+                                          dropdownColor: isDark ? const Color(0xFF3D3D3D) : Colors.white,
+                                          icon: Icon(
+                                            Icons.arrow_drop_down,
+                                            color: maroon,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      if (_selectedSupplierName != null && _selectedSupplierEmail != null) ...[
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: maroon.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: maroon.withOpacity(0.3)),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.check_circle, color: maroon, size: 20),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    'Selected Supplier',
+                                                    style: TextStyle(
+                                                      color: maroon,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Name: $_selectedSupplierName',
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.white : Colors.black87,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Email: $_selectedSupplierEmail',
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.white70 : Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Delivery Information Section
+                  _buildSectionHeader('Delivery Information', Icons.local_shipping, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: InkWell(
+                        onTap: () => _selectDeliveryDate(context, isDark),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: maroon.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.calendar_today, color: maroon),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Preferred Delivery Date',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark ? Colors.white70 : Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat.yMMMd().format(_preferredDeliveryDate),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.white70 : Colors.grey[600]),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Auto-Order Settings Section
+                  _buildSectionHeader('Auto-Order Settings', Icons.settings, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            title: Text(
+                              'Enable Auto-Ordering',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Automatically place orders when stock is low',
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.grey[600],
+                              ),
+                            ),
+                            value: _enableAutoOrder,
+                            onChanged: (value) {
+                              setState(() {
+                                _enableAutoOrder = value;
+                              });
+                            },
+                            activeColor: maroon,
+                          ),
+                          if (_enableAutoOrder) ...[
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _thresholdController,
+                              decoration: _buildInputDecoration(
+                                'Low Stock Threshold (%)',
+                                Icons.warning,
+                                isDark,
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (!_enableAutoOrder) return null;
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter threshold percentage';
+                                }
+                                final threshold = int.tryParse(value);
+                                if (threshold == null || threshold <= 0 || threshold >= 100) {
+                                  return 'Please enter a valid percentage (1-99)';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                _updateAutoOrderQuantity();
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: maroon.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: maroon.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: maroon, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity (${_autoOrderQuantity} units)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: maroon,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Error/Success Messages
+                  if (_errorMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Error/Success Messages
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                if (_successMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _successMessage!,
-                            style: const TextStyle(color: Colors.green),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                const SizedBox(height: 24),
-                
-                // Create Order Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createOrder,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: maroon,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      elevation: 2,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            'Create Order',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                  
+                  if (_successMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _successMessage!,
+                              style: const TextStyle(color: Colors.green),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Create Order Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _createOrder,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: maroon,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Create Order',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 100), // Extra space for floating action button
+                ],
+              ),
             ),
           ),
         ),
