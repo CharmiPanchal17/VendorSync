@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification.dart';
 
@@ -128,7 +129,7 @@ class NotificationService {
       orderId: orderId,
     );
   }
-
+  
   // Create order confirmed notification for vendor
   static Future<void> notifyVendorOfOrderConfirmation({
     required String vendorEmail,
@@ -155,6 +156,17 @@ class NotificationService {
       recipientEmail: vendorEmail,
       senderEmail: supplierEmail,
       orderId: orderId,
+    );
+  }
+
+  // Show a simple notification (for delivery confirmation)
+  static void showNotification(BuildContext context, String title, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 } 
