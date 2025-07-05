@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'product_analytics_screen.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -97,7 +98,7 @@ class AnalyticsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Sales Data List
-            ...salesData.map((item) => _buildSalesCard(item, isDark)).toList(),
+            ...salesData.map((item) => _buildSalesCard(item, isDark, context)).toList(),
           ],
         ),
       ),
@@ -134,7 +135,7 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSalesCard(Map<String, dynamic> item, bool isDark) {
+  Widget _buildSalesCard(Map<String, dynamic> item, bool isDark, BuildContext context) {
     final percent = item['currentStock'] / item['lastDelivered'];
     final isLow = percent <= 0.3;
     
@@ -196,6 +197,17 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                 ),
                 Icon(trendIcon, color: trendColor),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.show_chart, color: maroon),
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ProductAnalyticsScreen(
+                        productName: item['product'],
+                      ),
+                    ));
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 12),

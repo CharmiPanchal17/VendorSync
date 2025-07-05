@@ -98,7 +98,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                         Expanded(
                           child: _buildMetricCard(
                             'Total Sales',
-                            dailySalesData.fold<int>(0, (sum, item) => sum + item['sales']).toString(),
+                            dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int)).toString(),
                             Icons.trending_up,
                             isDark,
                           ),
@@ -107,7 +107,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                         Expanded(
                           child: _buildMetricCard(
                             'Avg Daily',
-                            (dailySalesData.fold<int>(0, (sum, item) => sum + item['sales']) / dailySalesData.length).round().toString(),
+                            (dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int)) / dailySalesData.length).round().toString(),
                             Icons.analytics,
                             isDark,
                           ),
@@ -219,12 +219,12 @@ class ProductAnalyticsScreen extends StatelessWidget {
                           maxX: (dailySalesData.length - 1).toDouble(),
                           minY: 0,
                           maxY: dailySalesData.fold<int>(0, (max, item) => 
-                            item['sales'] > max ? item['sales'] : max
+                            (item['sales'] as int) > max ? (item['sales'] as int) : max
                           ).toDouble() + 2,
                           lineBarsData: [
                             LineChartBarData(
                               spots: dailySalesData.asMap().entries.map((entry) {
-                                return FlSpot(entry.key.toDouble(), entry.value['sales'].toDouble());
+                                return FlSpot(entry.key.toDouble(), (entry.value['sales'] as int).toDouble());
                               }).toList(),
                               isCurved: true,
                               gradient: LinearGradient(
