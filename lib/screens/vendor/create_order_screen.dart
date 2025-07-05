@@ -18,10 +18,13 @@ class CreateOrderScreen extends StatefulWidget {
 class _CreateOrderScreenState extends State<CreateOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _productNameController = TextEditingController();
-  final _supplierNameController = TextEditingController();
-  final _supplierEmailController = TextEditingController();
   final _quantityController = TextEditingController();
   final _thresholdController = TextEditingController();
+  
+  // Supplier selection
+  String? _selectedSupplierId;
+  String? _selectedSupplierName;
+  String? _selectedSupplierEmail;
   
   DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
   bool _isLoading = false;
@@ -42,8 +45,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   @override
   void dispose() {
     _productNameController.dispose();
-    _supplierNameController.dispose();
-    _supplierEmailController.dispose();
     _quantityController.dispose();
     _thresholdController.dispose();
     super.dispose();
@@ -188,37 +189,228 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        TextFormField(
-                          controller: _supplierNameController,
-                          decoration: _buildInputDecoration(
-                            'Supplier Name',
-                            Icons.business,
-                            isDark,
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter supplier name';
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('vendor_suppliers')
+                              .where('vendorEmail', isEqualTo: widget.vendorEmail)
+                              .snapshots(),
+                          builder: (context, vendorSuppliersSnapshot) {
+                            if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _supplierEmailController,
-                          decoration: _buildInputDecoration(
-                            'Supplier Email',
-                            Icons.email,
-                            isDark,
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter supplier email';
+                            
+                            if (vendorSuppliersSnapshot.hasError) {
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Error loading suppliers',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                              return 'Please enter a valid email address';
+                            
+                            final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
+                            
+                            if (vendorSupplierDocs.isEmpty) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'No suppliers found',
+                                            style: TextStyle(
+                                              color: Colors.orange,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Please add suppliers from the "My Suppliers" page first.',
+                                      style: TextStyle(
+                                        color: Colors.orange.withOpacity(0.8),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
-                            return null;
+                            
+                            final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
+                            
+                            return StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('suppliers')
+                                  .where(FieldPath.documentId, whereIn: supplierIds)
+                                  .snapshots(),
+                              builder: (context, suppliersSnapshot) {
+                                if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                
+                                final supplierDocs = suppliersSnapshot.data?.docs ?? [];
+                                
+                                if (supplierDocs.isEmpty) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'No supplier data found',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                                
+                                return Column(
+                                  children: [
+                                                                         // Supplier Selection Dropdown
+                                     DropdownButtonFormField<String>(
+                                       decoration: _buildInputDecoration(
+                                         'Select Supplier',
+                                         Icons.person,
+                                         isDark,
+                                       ),
+                                       value: _selectedSupplierId,
+                                       items: supplierDocs.map((doc) {
+                                         final data = doc.data() as Map<String, dynamic>;
+                                         return DropdownMenuItem<String>(
+                                           value: doc.id,
+                                           child: Row(
+                                             children: [
+                                               Expanded(
+                                                 child: Column(
+                                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                                   mainAxisSize: MainAxisSize.min,
+                                                   children: [
+                                                     Text(
+                                                       data['name'] ?? 'Unknown Supplier',
+                                                       style: TextStyle(
+                                                         fontWeight: FontWeight.w500,
+                                                         color: isDark ? Colors.white : Colors.black87,
+                                                         fontSize: 14,
+                                                       ),
+                                                       overflow: TextOverflow.ellipsis,
+                                                     ),
+                                                     Text(
+                                                       data['email'] ?? 'No email',
+                                                       style: TextStyle(
+                                                         fontSize: 11,
+                                                         color: isDark ? Colors.white70 : Colors.grey[600],
+                                                       ),
+                                                       overflow: TextOverflow.ellipsis,
+                                                     ),
+                                                   ],
+                                                 ),
+                                               ),
+                                             ],
+                                           ),
+                                         );
+                                       }).toList(),
+                                       onChanged: (value) {
+                                         if (value != null) {
+                                           final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == value);
+                                           final data = selectedDoc.data() as Map<String, dynamic>;
+                                           setState(() {
+                                             _selectedSupplierId = value;
+                                             _selectedSupplierName = data['name'] ?? 'Unknown Supplier';
+                                             _selectedSupplierEmail = data['email'] ?? '';
+                                           });
+                                         }
+                                       },
+                                       validator: (value) {
+                                         if (value == null) {
+                                           return 'Please select a supplier';
+                                         }
+                                         return null;
+                                       },
+                                       menuMaxHeight: 200,
+                                     ),
+                                    
+                                    if (_selectedSupplierName != null && _selectedSupplierEmail != null) ...[
+                                      const SizedBox(height: 16),
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: maroon.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: maroon.withOpacity(0.3)),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(Icons.check_circle, color: maroon, size: 20),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'Selected Supplier',
+                                                  style: TextStyle(
+                                                    color: maroon,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Name: $_selectedSupplierName',
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : Colors.black87,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Email: $_selectedSupplierEmail',
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white70 : Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              },
+                            );
                           },
                         ),
                       ],
@@ -565,8 +757,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'productName': _productNameController.text.trim(),
         'quantity': quantity,
-        'supplierName': _supplierNameController.text.trim(),
-        'supplierEmail': _supplierEmailController.text.trim(),
+        'supplierName': _selectedSupplierName,
+        'supplierEmail': _selectedSupplierEmail,
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': _preferredDeliveryDate,
@@ -577,8 +769,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       // Create product inventory record for auto-ordering
       await FirebaseFirestore.instance.collection('product_inventory').add({
         'productName': _productNameController.text.trim(),
-        'supplierName': _supplierNameController.text.trim(),
-        'supplierEmail': _supplierEmailController.text.trim(),
+        'supplierName': _selectedSupplierName,
+        'supplierEmail': _selectedSupplierEmail,
         'vendorEmail': widget.vendorEmail,
         'initialQuantity': quantity,
         'currentStock': quantity,
@@ -593,7 +785,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       // Send notification to supplier
       await NotificationService.notifySupplierOfNewOrder(
         vendorEmail: widget.vendorEmail,
-        supplierEmail: _supplierEmailController.text.trim(),
+        supplierEmail: _selectedSupplierEmail!,
         orderId: orderRef.id,
         productName: _productNameController.text.trim(),
         quantity: quantity,
@@ -607,13 +799,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       // Clear form after successful creation
       _formKey.currentState!.reset();
       _productNameController.clear();
-      _supplierNameController.clear();
-      _supplierEmailController.clear();
       _quantityController.clear();
       _thresholdController.text = '30';
       _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
       _enableAutoOrder = true;
       _autoOrderQuantity = 0;
+      _selectedSupplierId = null;
+      _selectedSupplierName = null;
+      _selectedSupplierEmail = null;
 
       // Show success dialog
       if (context.mounted) {
