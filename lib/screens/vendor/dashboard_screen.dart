@@ -140,7 +140,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const StockManagementScreen(),
+                          builder: (context) => StockManagementScreen(),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -983,6 +983,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                   id: orderId,
                                   productName: data['productName'] ?? 'Unknown Product',
                                   supplierName: data['supplierName'] ?? 'Unknown Supplier',
+                                  supplierEmail: data['supplierEmail'] ?? 'unknown@example.com',
                                   quantity: data['quantity'] ?? 0,
                                   status: data['status'] ?? 'Pending',
                                   preferredDeliveryDate: data['preferredDeliveryDate'] != null 

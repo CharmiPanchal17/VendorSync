@@ -545,6 +545,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                           id: orderId,
                                           productName: data['productName'] ?? 'Unknown Product',
                                           supplierName: data['supplierName'] ?? 'Unknown Supplier',
+                                          supplierEmail: data['supplierEmail'] ?? 'unknown@example.com',
                                           quantity: data['quantity'] ?? 0,
                                           status: data['status'] ?? 'Pending',
                                           preferredDeliveryDate: data['preferredDeliveryDate'] != null 

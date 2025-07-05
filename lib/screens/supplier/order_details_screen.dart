@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
+import 'delivery_confirmation_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -33,6 +34,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
       id: '',
       productName: 'Unknown Product',
       supplierName: 'Unknown Supplier',
+      supplierEmail: 'unknown@example.com',
       quantity: 0,
       status: 'Pending',
       preferredDeliveryDate: DateTime.now(),
@@ -399,6 +401,34 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                   ),
                 ),
                 
+                // Delivery Confirmation Button (for confirmed orders)
+                if (order.status == 'Confirmed') ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      onPressed: _isLoading ? null : () => _navigateToDeliveryConfirmation(order),
+                      icon: const Icon(Icons.local_shipping, size: 20),
+                      label: const Text(
+                        'Confirm Delivery',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                
                 // Error Message
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 16),
@@ -680,5 +710,13 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
       default:
         return Icons.info;
     }
+  }
+
+  void _navigateToDeliveryConfirmation(order_model.Order order) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DeliveryConfirmationScreen(order: order),
+      ),
+    );
   }
 }
