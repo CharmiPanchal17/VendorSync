@@ -125,7 +125,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     const SizedBox(height: 8),
                     _buildMenuItem(
                       icon: Icons.add_shopping_cart,
-                      title: 'Create Order',
+                      title: 'Create Initial Order',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
