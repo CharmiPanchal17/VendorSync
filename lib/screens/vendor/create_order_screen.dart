@@ -56,7 +56,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Order'),
+        title: const Text('Create Initial Order'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -102,7 +102,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Create New Order',
+                                      'Create Initial Order',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -875,7 +875,48 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _createOrder,
+                      onPressed: _isLoading ? null : () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return;
+                        }
+                        final productName = _productNameController.text.trim();
+                        final quantity = _quantityController.text.trim();
+                        final supplierName = _selectedSupplierName ?? '';
+                        final autoOrderEnabled = _enableAutoOrder;
+                        final threshold = _thresholdController.text.trim();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirm Order'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Product: $productName'),
+                                Text('Quantity: $quantity'),
+                                Text('Supplier: $supplierName'),
+                                Text('Auto Re-ordering: ${autoOrderEnabled ? 'Enabled' : 'Disabled'}'),
+                                if (autoOrderEnabled)
+                                  Text('Auto Order Threshold: $threshold'),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: maroon, foregroundColor: Colors.white),
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('Confirm'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          _createOrder();
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: maroon,
                         foregroundColor: Colors.white,
