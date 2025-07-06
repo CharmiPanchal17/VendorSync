@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';  
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 
@@ -38,14 +38,14 @@ class StockManagementScreen extends StatelessWidget {
           itemCount: mockStockItems.length,
           itemBuilder: (context, index) {
             final stockItem = mockStockItems[index];
-            return _buildStockCard(context, stockItem, isDark);
+            return _buildStockCard(context, stockItem, isDark, index);
           },
         ),
       ),
     );
   }
 
-  Widget _buildStockCard(BuildContext context, StockItem stockItem, bool isDark) {
+  Widget _buildStockCard(BuildContext context, StockItem stockItem, bool isDark, int index) {
     return Card(
       color: isDark ? Colors.white10 : Colors.white,
       margin: const EdgeInsets.only(bottom: 16),
@@ -66,7 +66,7 @@ class StockManagementScreen extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Stock: ${stockItem.currentStock} / ${stockItem.maximumStock}'),
+            Text('Stock:  {stockItem.currentStock} /  {stockItem.maximumStock}'),
             if (stockItem.isLowStock)
               Text(
                 'Low Stock Alert!',
@@ -87,13 +87,13 @@ class StockManagementScreen extends StatelessWidget {
           ],
         ),
         children: [
-          _buildStockDetails(context, stockItem, isDark),
+          _buildStockDetails(context, stockItem, isDark, index),
         ],
       ),
     );
   }
 
-  Widget _buildStockDetails(BuildContext context, StockItem stockItem, bool isDark) {
+  Widget _buildStockDetails(BuildContext context, StockItem stockItem, bool isDark, int index) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -115,7 +115,7 @@ class StockManagementScreen extends StatelessWidget {
           const SizedBox(height: 16),
           
           // Action Buttons
-          _buildActionButtons(context, stockItem, isDark),
+          _buildActionButtons(context, stockItem, isDark, index),
         ],
       ),
     );
@@ -387,13 +387,13 @@ class StockManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, StockItem stockItem, bool isDark) {
+  Widget _buildActionButtons(BuildContext context, StockItem stockItem, bool isDark, int index) {
     return Row(
       children: [
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              // TODO: Implement edit stock functionality
+              _showEditStockDialog(context, stockItem, index);
             },
             icon: Icon(Icons.edit, size: 16),
             label: const Text('Edit Stock'),
@@ -420,6 +420,55 @@ class StockManagementScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showEditStockDialog(BuildContext context, StockItem stockItem, int index) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Enter number of goods purchased'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(hintText: 'Quantity'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroon,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final qty = int.tryParse(controller.text) ?? 0;
+              if (qty > 0 && qty <= stockItem.currentStock) {
+                mockStockItems[index] = StockItem(
+                  id: stockItem.id,
+                  productName: stockItem.productName,
+                  currentStock: stockItem.currentStock - qty,
+                  minimumStock: stockItem.minimumStock,
+                  maximumStock: stockItem.maximumStock,
+                  deliveryHistory: stockItem.deliveryHistory,
+                  primarySupplier: stockItem.primarySupplier,
+                  primarySupplierEmail: stockItem.primarySupplierEmail,
+                  firstDeliveryDate: stockItem.firstDeliveryDate,
+                  lastDeliveryDate: stockItem.lastDeliveryDate,
+                  autoOrderEnabled: stockItem.autoOrderEnabled,
+                  averageUnitPrice: stockItem.averageUnitPrice,
+                );
+                (context as Element).markNeedsBuild();
+              }
+              Navigator.pop(context);
+            },
+            child: Text('Confirm'),
+          ),
+        ],
+      ),
     );
   }
 
