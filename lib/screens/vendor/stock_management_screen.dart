@@ -178,17 +178,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             value: stockItem.stockPercentage,
             backgroundColor: isDark ? Colors.white24 : Colors.grey.shade300,
             valueColor: AlwaysStoppedAnimation<Color>(
-              stockItem.isLowStock ? maroon : Colors.green,
+              _getStockProgressColor(stockItem, isDark),
             ),
           ),
           const SizedBox(height: 8),
-                      Text(
-              '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}% of total capacity',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white70 : Colors.grey[600],
-              ),
+          Text(
+            '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}% of total capacity',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white70 : Colors.grey[600],
             ),
+          ),
         ],
       ),
     );
@@ -490,5 +490,15 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Color _getStockProgressColor(StockItem stockItem, bool isDark) {
+    if (stockItem.isLowStock) {
+      return maroon; // Red for low stock
+    } else if (stockItem.stockPercentage < 0.7) { // Orange for approaching threshold
+      return Colors.orange;
+    } else {
+      return Colors.green; // Green for good stock
+    }
   }
 } 
