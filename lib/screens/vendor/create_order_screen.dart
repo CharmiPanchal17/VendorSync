@@ -598,7 +598,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                               setState(() {
                                                 _selectedSupplierId = value;
                                                 _selectedSupplierName = data['name'] ?? 'Unknown Supplier';
-                                                _selectedSupplierEmail = data['email'] ?? '';
+                                                _selectedSupplierEmail = data['email'] ?? 'No email';
                                               });
                                               print('Selected supplier: $_selectedSupplierName ($_selectedSupplierEmail)'); // Debug print
                                             } else {
@@ -882,6 +882,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                         final productName = _productNameController.text.trim();
                         final quantity = _quantityController.text.trim();
                         final supplierName = _selectedSupplierName ?? '';
+                        final supplierEmail = _selectedSupplierEmail ?? '';
                         final autoOrderEnabled = _enableAutoOrder;
                         final threshold = _thresholdController.text.trim();
                         final confirmed = await showDialog<bool>(
@@ -895,6 +896,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                 Text('Product: $productName'),
                                 Text('Quantity: $quantity'),
                                 Text('Supplier: $supplierName'),
+                                Text('Supplier Email: $supplierEmail'),
                                 Text('Auto Re-ordering: ${autoOrderEnabled ? 'Enabled' : 'Disabled'}'),
                                 if (autoOrderEnabled)
                                   Text('Auto Order Threshold: $threshold'),
@@ -1105,6 +1107,16 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         _successMessage = 'Order created successfully! Supplier has been notified.';
       });
 
+      // Show success dialog BEFORE clearing form fields
+      if (context.mounted) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _buildSuccessDialog(context, orderRef.id, isDark),
+        );
+      }
+
       // Clear form after successful creation
       _formKey.currentState!.reset();
       _productNameController.clear();
@@ -1116,16 +1128,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       _selectedSupplierId = null;
       _selectedSupplierName = null;
       _selectedSupplierEmail = null;
-
-      // Show success dialog
-      if (context.mounted) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _buildSuccessDialog(context, orderRef.id, isDark),
-        );
-      }
 
     } catch (e) {
       setState(() {
@@ -1340,11 +1342,19 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
+                            if (_selectedSupplierEmail != null && _selectedSupplierEmail!.isNotEmpty)
+                              Text(
+                                _selectedSupplierEmail!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.white60 : Colors.grey[600],
+                                ),
+                              ),
                           ],
                         ),
                       ),
                     ],
-                                     ),
+                  ),
                    
                    // Auto-order info if enabled
                    if (_enableAutoOrder) ...[
