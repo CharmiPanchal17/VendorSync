@@ -6,6 +6,7 @@ import 'suppliers_list_screen.dart';
 import 'create_order_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../../services/session_service.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key, this.vendorEmail = 'vendor@example.com'});
@@ -25,6 +26,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   void initState() {
     super.initState();
     _fetchVendorName();
+    _updateSessionActivity();
   }
 
   Future<void> _fetchVendorName() async {
@@ -38,6 +40,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         vendorName = vendorQuery.docs.first['name'];
       });
     }
+  }
+
+  Future<void> _updateSessionActivity() async {
+    // Update session activity to extend the session
+    await SessionService.updateLastActivity();
   }
 
   @override
@@ -199,21 +206,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          // Find and delete the vendor document by email
-                          final vendorQuery = await FirebaseFirestore.instance
-                              .collection('vendors')
-                              .where('email', isEqualTo: widget.vendorEmail)
-                              .limit(1)
-                              .get();
-                          if (vendorQuery.docs.isNotEmpty) {
-                            await FirebaseFirestore.instance
-                                .collection('vendors')
-                                .doc(vendorQuery.docs.first.id)
-                                .delete();
-                          }
-                          // Navigate to login page
+                          // Clear the session data
+                          await SessionService.clearSession();
+                          
+                          // Navigate to welcome screen
                           if (context.mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false, arguments: 'vendor');
+                            Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
                           }
                         }
                       },

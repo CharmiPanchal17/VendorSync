@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/session_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -36,19 +37,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (existingVendors.docs.isNotEmpty) {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'A vendor with trhis email already exists.';
+            _errorMessage = 'A vendor with this email already exists.';
           });
           return;
         }
 
         // Add new vendor to Firestore
-        await FirebaseFirestore.instance.collection('vendors').add({
+        final docRef = await FirebaseFirestore.instance.collection('vendors').add({
           'name': name,
           'email': email,
           'password': password, // Note: In production, this should be hashed
           'role': 'vendor',
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Save session data for automatic login
+        await SessionService.saveSession(
+          email: email,
+          role: 'vendor',
+          userId: docRef.id,
+        );
 
         setState(() => _isLoading = false);
         
@@ -61,8 +69,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           );
           
-          // Navigate to vendor dashboard
-          Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
+          // Navigate to vendor dashboard with email
+          Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
         }
       } catch (e) {
         setState(() {

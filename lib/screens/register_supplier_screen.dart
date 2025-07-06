@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/session_service.dart';
 
 class RegisterSupplierScreen extends StatefulWidget {
   const RegisterSupplierScreen({super.key});
@@ -165,13 +166,21 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                       _errorMessage = null;
                                     });
                                     try {
-                                      await FirebaseFirestore.instance.collection('suppliers').add({
+                                      final docRef = await FirebaseFirestore.instance.collection('suppliers').add({
                                         'name': name,
                                         'email': email,
                                         'password': password,
                                         'createdAt': FieldValue.serverTimestamp(),
                                         'vendorEmail': null,
                                       });
+                                      
+                                      // Save session data for automatic login
+                                      await SessionService.saveSession(
+                                        email: email,
+                                        role: 'supplier',
+                                        userId: docRef.id,
+                                      );
+                                      
                                       setState(() => _isLoading = false);
                                       Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
                                     } catch (e) {

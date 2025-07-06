@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/session_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -177,6 +178,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                         if (query.docs.isNotEmpty) {
                                           final user = query.docs.first.data();
                                           if (user['password'] == password) {
+                                            // Save session data for automatic login
+                                            await SessionService.saveSession(
+                                              email: email,
+                                              role: role,
+                                              userId: query.docs.first.id,
+                                            );
+                                            
+                                            // Update session activity
+                                            await SessionService.updateLastActivity();
+                                            
                                             setState(() => _isLoading = false);
                                             if (role == 'vendor') {
                                               Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);

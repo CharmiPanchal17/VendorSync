@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../models/order.dart' as order_model;
+import '../../services/session_service.dart';
 
 class SupplierDashboardScreen extends StatefulWidget {
   final String supplierEmail;
@@ -15,6 +16,17 @@ class SupplierDashboardScreen extends StatefulWidget {
 class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
   String selectedStatus = 'All';
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _updateSessionActivity();
+  }
+
+  Future<void> _updateSessionActivity() async {
+    // Update session activity to extend the session
+    await SessionService.updateLastActivity();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -745,23 +757,11 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () async {
-              // Delete supplier document and navigate to login
-              try {
-                final query = await FirebaseFirestore.instance
-                    .collection('suppliers')
-                    .where('email', isEqualTo: widget.supplierEmail)
-                    .limit(1)
-                    .get();
-                
-                if (query.docs.isNotEmpty) {
-                  await query.docs.first.reference.delete();
-                }
-              } catch (e) {
-                // Handle error silently
-              }
+              // Clear the session data
+              await SessionService.clearSession();
               
               Navigator.of(context).pop();
-              Navigator.of(context).pushReplacementNamed('/login');
+              Navigator.of(context).pushReplacementNamed('/welcome');
             },
             child: const Text('Logout'),
           ),
