@@ -5,10 +5,15 @@ import '../../mock_data/mock_orders.dart';
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
-class StockManagementScreen extends StatelessWidget {
+class StockManagementScreen extends StatefulWidget {
   // Remove const constructor to allow hot reload after class structure changes
   StockManagementScreen({Key? key}) : super(key: key);
 
+  @override
+  State<StockManagementScreen> createState() => _StockManagementScreenState();
+}
+
+class _StockManagementScreenState extends State<StockManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -158,14 +163,14 @@ class StockManagementScreen extends StatelessWidget {
                   isDark,
                 ),
               ),
-              Expanded(
-                child: _buildMetricItem(
-                  'Max Stock',
-                  '${stockItem.maximumStock}',
-                  Icons.storage,
-                  isDark,
-                ),
-              ),
+                                            Expanded(
+                                child: _buildMetricItem(
+                                  'Total Stock',
+                                  '${stockItem.maximumStock}',
+                                  Icons.storage,
+                                  isDark,
+                                ),
+                              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -177,13 +182,13 @@ class StockManagementScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}% of max capacity',
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.grey[600],
+                      Text(
+              '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}% of total capacity',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -432,21 +437,22 @@ class StockManagementScreen extends StatelessWidget {
             onPressed: () {
               final qty = int.tryParse(controller.text) ?? 0;
               if (qty > 0 && qty <= stockItem.currentStock) {
-                mockStockItems[index] = StockItem(
-                  id: stockItem.id,
-                  productName: stockItem.productName,
-                  currentStock: stockItem.currentStock - qty,
-                  minimumStock: stockItem.minimumStock,
-                  maximumStock: stockItem.maximumStock,
-                  deliveryHistory: stockItem.deliveryHistory,
-                  primarySupplier: stockItem.primarySupplier,
-                  primarySupplierEmail: stockItem.primarySupplierEmail,
-                  firstDeliveryDate: stockItem.firstDeliveryDate,
-                  lastDeliveryDate: stockItem.lastDeliveryDate,
-                  autoOrderEnabled: stockItem.autoOrderEnabled,
-                  averageUnitPrice: stockItem.averageUnitPrice,
-                );
-                (context as Element).markNeedsBuild();
+                setState(() {
+                  mockStockItems[index] = StockItem(
+                    id: stockItem.id,
+                    productName: stockItem.productName,
+                    currentStock: stockItem.currentStock - qty,
+                    minimumStock: stockItem.minimumStock,
+                    maximumStock: stockItem.maximumStock,
+                    deliveryHistory: stockItem.deliveryHistory,
+                    primarySupplier: stockItem.primarySupplier,
+                    primarySupplierEmail: stockItem.primarySupplierEmail,
+                    firstDeliveryDate: stockItem.firstDeliveryDate,
+                    lastDeliveryDate: stockItem.lastDeliveryDate,
+                    autoOrderEnabled: stockItem.autoOrderEnabled,
+                    averageUnitPrice: stockItem.averageUnitPrice,
+                  );
+                });
               }
               Navigator.pop(context);
             },

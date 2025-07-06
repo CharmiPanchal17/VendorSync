@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
+import '../../models/order.dart' show DeliveryRecord, StockItem;
 import '../../services/notification_service.dart';
 import 'suppliers_list_screen.dart';
 import 'settings_screen.dart';
@@ -1390,6 +1391,24 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   Future<void> _approveOrder(String orderId) async {
     try {
+      // First, get the order details before updating
+      final orderDoc = await FirebaseFirestore.instance
+          .collection('orders')
+          .doc(orderId)
+          .get();
+      
+      if (!orderDoc.exists) {
+        throw Exception('Order not found');
+      }
+      
+      final orderData = orderDoc.data()!;
+      final productName = orderData['productName'] as String;
+      final quantity = orderData['quantity'] as int;
+      final supplierName = orderData['supplierName'] as String;
+      final supplierEmail = orderData['supplierEmail'] as String;
+      final unitPrice = orderData['unitPrice'] as double?;
+      
+      // Update the order status
       await FirebaseFirestore.instance
           .collection('orders')
           .doc(orderId)
@@ -1398,10 +1417,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         'approvedAt': FieldValue.serverTimestamp(),
       });
 
+      // Update stock management data
+      await _updateStockAfterDelivery(productName, quantity, supplierName, supplierEmail, unitPrice, orderId);
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Order approved successfully!'),
+            content: const Text('Order approved successfully! Stock has been updated.'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1412,13 +1434,87 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to approve order. Please try again.'),
+            content: Text('Failed to approve order: ${e.toString()}'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
+    }
+  }
+
+  Future<void> _updateStockAfterDelivery(String productName, int quantity, String supplierName, String supplierEmail, double? unitPrice, String orderId) async {
+    try {
+      // Create a new delivery record
+      final deliveryRecord = DeliveryRecord(
+        id: 'del_${DateTime.now().millisecondsSinceEpoch}',
+        orderId: orderId,
+        productName: productName,
+        quantity: quantity,
+        supplierName: supplierName,
+        supplierEmail: supplierEmail,
+        deliveryDate: DateTime.now(),
+        unitPrice: unitPrice,
+        notes: 'Delivered and approved by vendor',
+        status: 'Completed',
+      );
+
+      // Find and update the corresponding stock item
+      final stockIndex = mockStockItems.indexWhere((item) => item.productName == productName);
+      
+      if (stockIndex != -1) {
+        final currentStockItem = mockStockItems[stockIndex];
+        final updatedDeliveryHistory = List<DeliveryRecord>.from(currentStockItem.deliveryHistory)
+          ..add(deliveryRecord);
+        
+        // Calculate new average unit price
+        final totalPrice = updatedDeliveryHistory
+            .where((record) => record.unitPrice != null)
+            .fold(0.0, (sum, record) => sum + (record.unitPrice ?? 0));
+        final totalDeliveries = updatedDeliveryHistory.length;
+        final newAveragePrice = totalDeliveries > 0 ? totalPrice / totalDeliveries : unitPrice;
+
+        // Update the stock item
+        mockStockItems[stockIndex] = StockItem(
+          id: currentStockItem.id,
+          productName: currentStockItem.productName,
+          currentStock: currentStockItem.currentStock + quantity,
+          minimumStock: currentStockItem.minimumStock,
+          maximumStock: currentStockItem.maximumStock,
+          deliveryHistory: updatedDeliveryHistory,
+          primarySupplier: currentStockItem.primarySupplier,
+          primarySupplierEmail: currentStockItem.primarySupplierEmail,
+          firstDeliveryDate: currentStockItem.firstDeliveryDate ?? DateTime.now(),
+          lastDeliveryDate: DateTime.now(),
+          autoOrderEnabled: currentStockItem.autoOrderEnabled,
+          averageUnitPrice: newAveragePrice,
+        );
+
+        // If using Firestore, you would also update the stock collection here
+        // For now, we're using mock data, so the UI will update when the stock management page is refreshed
+      } else {
+        // If stock item doesn't exist, create a new one
+        final newStockItem = StockItem(
+          id: 'stock_${DateTime.now().millisecondsSinceEpoch}',
+          productName: productName,
+          currentStock: quantity,
+          minimumStock: 20, // Default minimum stock
+          maximumStock: 250, // Default maximum stock
+          deliveryHistory: [deliveryRecord],
+          primarySupplier: supplierName,
+          primarySupplierEmail: supplierEmail,
+          firstDeliveryDate: DateTime.now(),
+          lastDeliveryDate: DateTime.now(),
+          autoOrderEnabled: false,
+          averageUnitPrice: unitPrice,
+        );
+        
+        mockStockItems.add(newStockItem);
+      }
+    } catch (e) {
+      print('Error updating stock: $e');
+      rethrow;
     }
   }
 
