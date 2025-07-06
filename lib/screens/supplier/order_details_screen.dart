@@ -402,32 +402,6 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                 ),
                 
                 // Delivery Confirmation Button (for confirmed orders)
-                if (order.status == 'Confirmed') ...[
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      onPressed: _isLoading ? null : () => _navigateToDeliveryConfirmation(order),
-                      icon: const Icon(Icons.local_shipping, size: 20),
-                      label: const Text(
-                        'Confirm Delivery',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 
                 // Error Message
                 if (_errorMessage != null) ...[
