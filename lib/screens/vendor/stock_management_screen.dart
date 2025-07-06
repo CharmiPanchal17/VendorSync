@@ -396,24 +396,9 @@ class StockManagementScreen extends StatelessWidget {
               _showEditStockDialog(context, stockItem, index);
             },
             icon: Icon(Icons.edit, size: 16),
-            label: const Text('Edit Stock'),
+            label: const Text('Update Stock'),
             style: ElevatedButton.styleFrom(
               backgroundColor: maroon,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Implement view analytics functionality
-            },
-            icon: Icon(Icons.analytics, size: 16),
-            label: const Text('Analytics'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
