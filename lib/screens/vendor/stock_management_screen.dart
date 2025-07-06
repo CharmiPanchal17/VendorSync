@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';  
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -14,6 +15,148 @@ class StockManagementScreen extends StatefulWidget {
 }
 
 class _StockManagementScreenState extends State<StockManagementScreen> {
+  List<StockItem> stockItems = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStockData();
+  }
+
+  Future<void> _loadStockData() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      // Try to load from Firestore first
+      final stockSnapshot = await FirebaseFirestore.instance
+          .collection('stock_items')
+          .get();
+
+      if (stockSnapshot.docs.isNotEmpty) {
+        // Load from Firestore
+        final loadedStockItems = stockSnapshot.docs.map((doc) {
+          final data = doc.data();
+          return StockItem(
+            id: doc.id,
+            productName: data['productName'] ?? '',
+            currentStock: data['currentStock'] ?? 0,
+            minimumStock: data['minimumStock'] ?? 0,
+            maximumStock: data['maximumStock'] ?? 0,
+            deliveryHistory: _parseDeliveryHistory(data['deliveryHistory'] ?? []),
+            primarySupplier: data['primarySupplier'],
+            primarySupplierEmail: data['primarySupplierEmail'],
+            firstDeliveryDate: data['firstDeliveryDate'] != null 
+                ? (data['firstDeliveryDate'] as Timestamp).toDate() 
+                : null,
+            lastDeliveryDate: data['lastDeliveryDate'] != null 
+                ? (data['lastDeliveryDate'] as Timestamp).toDate() 
+                : null,
+            autoOrderEnabled: data['autoOrderEnabled'] ?? false,
+            averageUnitPrice: data['averageUnitPrice']?.toDouble(),
+          );
+        }).toList();
+
+        setState(() {
+          stockItems = loadedStockItems;
+          isLoading = false;
+        });
+      } else {
+        // Use mock data if no Firestore data exists
+        setState(() {
+          stockItems = List.from(mockStockItems);
+          isLoading = false;
+        });
+        // Save mock data to Firestore for future persistence
+        await _saveStockDataToFirestore();
+      }
+    } catch (e) {
+      print('Error loading stock data: $e');
+      // Fallback to mock data
+      setState(() {
+        stockItems = List.from(mockStockItems);
+        isLoading = false;
+      });
+    }
+  }
+
+  List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> historyData) {
+    return historyData.map((record) {
+      return DeliveryRecord(
+        id: record['id'] ?? '',
+        orderId: record['orderId'] ?? '',
+        productName: record['productName'] ?? '',
+        quantity: record['quantity'] ?? 0,
+        supplierName: record['supplierName'] ?? '',
+        supplierEmail: record['supplierEmail'] ?? '',
+        deliveryDate: record['deliveryDate'] != null 
+            ? (record['deliveryDate'] as Timestamp).toDate() 
+            : DateTime.now(),
+        unitPrice: record['unitPrice']?.toDouble(),
+        notes: record['notes'],
+        status: record['status'] ?? 'Completed',
+      );
+    }).toList();
+  }
+
+  Future<void> _saveStockDataToFirestore() async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (final stockItem in stockItems) {
+        final docRef = FirebaseFirestore.instance
+            .collection('stock_items')
+            .doc(stockItem.id);
+        
+        batch.set(docRef, {
+          'productName': stockItem.productName,
+          'currentStock': stockItem.currentStock,
+          'minimumStock': stockItem.minimumStock,
+          'maximumStock': stockItem.maximumStock,
+          'deliveryHistory': stockItem.deliveryHistory.map((record) => {
+            'id': record.id,
+            'orderId': record.orderId,
+            'productName': record.productName,
+            'quantity': record.quantity,
+            'supplierName': record.supplierName,
+            'supplierEmail': record.supplierEmail,
+            'deliveryDate': Timestamp.fromDate(record.deliveryDate),
+            'unitPrice': record.unitPrice,
+            'notes': record.notes,
+            'status': record.status,
+          }).toList(),
+          'primarySupplier': stockItem.primarySupplier,
+          'primarySupplierEmail': stockItem.primarySupplierEmail,
+          'firstDeliveryDate': stockItem.firstDeliveryDate != null 
+              ? Timestamp.fromDate(stockItem.firstDeliveryDate!) 
+              : null,
+          'lastDeliveryDate': stockItem.lastDeliveryDate != null 
+              ? Timestamp.fromDate(stockItem.lastDeliveryDate!) 
+              : null,
+          'autoOrderEnabled': stockItem.autoOrderEnabled,
+          'averageUnitPrice': stockItem.averageUnitPrice,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      
+      await batch.commit();
+      print('Stock data saved to Firestore successfully');
+    } catch (e) {
+      print('Error saving stock data to Firestore: $e');
+    }
+  }
+
+  Future<void> _updateStockItem(int index, StockItem updatedStockItem) async {
+    setState(() {
+      stockItems[index] = updatedStockItem;
+    });
+    
+    // Save to Firestore
+    await _saveStockDataToFirestore();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -38,14 +181,20 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: mockStockItems.length,
-          itemBuilder: (context, index) {
-            final stockItem = mockStockItems[index];
-            return _buildStockCard(context, stockItem, isDark, index);
-          },
-        ),
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(maroon),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: stockItems.length,
+                itemBuilder: (context, index) {
+                  final stockItem = stockItems[index];
+                  return _buildStockCard(context, stockItem, isDark, index);
+                },
+              ),
       ),
     );
   }
@@ -434,25 +583,25 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               backgroundColor: maroon,
               foregroundColor: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
               final qty = int.tryParse(controller.text) ?? 0;
               if (qty > 0 && qty <= stockItem.currentStock) {
-                setState(() {
-                  mockStockItems[index] = StockItem(
-                    id: stockItem.id,
-                    productName: stockItem.productName,
-                    currentStock: stockItem.currentStock - qty,
-                    minimumStock: stockItem.minimumStock,
-                    maximumStock: stockItem.maximumStock,
-                    deliveryHistory: stockItem.deliveryHistory,
-                    primarySupplier: stockItem.primarySupplier,
-                    primarySupplierEmail: stockItem.primarySupplierEmail,
-                    firstDeliveryDate: stockItem.firstDeliveryDate,
-                    lastDeliveryDate: stockItem.lastDeliveryDate,
-                    autoOrderEnabled: stockItem.autoOrderEnabled,
-                    averageUnitPrice: stockItem.averageUnitPrice,
-                  );
-                });
+                final updatedStockItem = StockItem(
+                  id: stockItem.id,
+                  productName: stockItem.productName,
+                  currentStock: stockItem.currentStock - qty,
+                  minimumStock: stockItem.minimumStock,
+                  maximumStock: stockItem.maximumStock,
+                  deliveryHistory: stockItem.deliveryHistory,
+                  primarySupplier: stockItem.primarySupplier,
+                  primarySupplierEmail: stockItem.primarySupplierEmail,
+                  firstDeliveryDate: stockItem.firstDeliveryDate,
+                  lastDeliveryDate: stockItem.lastDeliveryDate,
+                  autoOrderEnabled: stockItem.autoOrderEnabled,
+                  averageUnitPrice: stockItem.averageUnitPrice,
+                );
+                
+                await _updateStockItem(index, updatedStockItem);
               }
               Navigator.pop(context);
             },
@@ -493,12 +642,15 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   Color _getStockProgressColor(StockItem stockItem, bool isDark) {
-    if (stockItem.isLowStock) {
-      return maroon; // Red for low stock
-    } else if (stockItem.stockPercentage < 0.7) { // Orange for approaching threshold
-      return Colors.orange;
+    // Calculate stock level relative to minimum stock
+    final stockToMinRatio = stockItem.currentStock / stockItem.minimumStock;
+    
+    if (stockItem.isLowStock || stockToMinRatio <= 1.0) {
+      return maroon; // Red for low stock (at or below minimum)
+    } else if (stockToMinRatio <= 1.5) {
+      return Colors.orange; // Orange for approaching threshold (1-1.5x minimum)
     } else {
-      return Colors.green; // Green for good stock
+      return Colors.green; // Green for good stock (above 1.5x minimum)
     }
   }
 } 
