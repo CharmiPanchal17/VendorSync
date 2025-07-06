@@ -64,16 +64,132 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        // Use mock data if no Firestore data exists
+        // If no stock data exists, create it from actual orders
+        await _createStockFromOrders();
+      }
+    } catch (e) {
+      print('Error loading stock data: $e');
+      // Fallback to mock data
+      setState(() {
+        stockItems = List.from(mockStockItems);
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _createStockFromOrders() async {
+    try {
+      // Get all delivered orders from Firestore
+      final ordersSnapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('status', isEqualTo: 'Delivered')
+          .get();
+
+      if (ordersSnapshot.docs.isEmpty) {
+        // No delivered orders, use mock data
         setState(() {
           stockItems = List.from(mockStockItems);
           isLoading = false;
         });
-        // Save mock data to Firestore for future persistence
         await _saveStockDataToFirestore();
+        return;
       }
+
+      // Group orders by product name
+      final Map<String, List<QueryDocumentSnapshot>> productGroups = {};
+      for (final doc in ordersSnapshot.docs) {
+        final data = doc.data();
+        final productName = data['productName'] as String? ?? 'Unknown Product';
+        productGroups.putIfAbsent(productName, () => []).add(doc);
+      }
+
+      // Create stock items from actual order data
+      final List<StockItem> realStockItems = [];
+      int stockId = 1;
+
+      for (final entry in productGroups.entries) {
+        final productName = entry.key;
+        final orders = entry.value;
+        
+        // Calculate stock metrics from actual orders
+        int totalDelivered = 0;
+        double totalPrice = 0;
+        int priceCount = 0;
+        DateTime? firstDelivery;
+        DateTime? lastDelivery;
+        final List<DeliveryRecord> deliveryHistory = [];
+
+        for (final orderDoc in orders) {
+          final data = orderDoc.data() as Map<String, dynamic>;
+          final quantity = data['quantity'] as int? ?? 0;
+          final unitPrice = data['unitPrice'] as double?;
+          final deliveryDate = data['approvedAt'] as Timestamp? ?? data['createdAt'] as Timestamp?;
+          
+          totalDelivered += quantity;
+          
+          if (unitPrice != null) {
+            totalPrice += unitPrice;
+            priceCount++;
+          }
+
+          if (deliveryDate != null) {
+            final date = deliveryDate.toDate();
+            if (firstDelivery == null || date.isBefore(firstDelivery)) {
+              firstDelivery = date;
+            }
+            if (lastDelivery == null || date.isAfter(lastDelivery)) {
+              lastDelivery = date;
+            }
+          }
+
+          // Create delivery record
+          deliveryHistory.add(DeliveryRecord(
+            id: 'del_${orderDoc.id}',
+            orderId: orderDoc.id,
+            productName: productName,
+            quantity: quantity,
+            supplierName: data['supplierName'] as String? ?? 'Unknown Supplier',
+            supplierEmail: data['supplierEmail'] as String? ?? 'unknown@example.com',
+            deliveryDate: deliveryDate?.toDate() ?? DateTime.now(),
+            unitPrice: unitPrice,
+            notes: 'Delivered from order',
+            status: 'Completed',
+          ));
+        }
+
+        // Calculate current stock (assuming some has been sold/used)
+        final currentStock = (totalDelivered * 0.7).round(); // Assume 70% of delivered is still in stock
+        final minimumStock = (totalDelivered * 0.1).round(); // 10% of total delivered as minimum
+        final averageUnitPrice = priceCount > 0 ? totalPrice / priceCount : null;
+
+        realStockItems.add(StockItem(
+          id: 'stock_$stockId',
+          productName: productName,
+          currentStock: currentStock,
+          minimumStock: minimumStock,
+          maximumStock: totalDelivered, // Total delivered as maximum capacity
+          deliveryHistory: deliveryHistory,
+          primarySupplier: (orders.first.data() as Map<String, dynamic>)['supplierName'] as String? ?? 'Unknown Supplier',
+          primarySupplierEmail: (orders.first.data() as Map<String, dynamic>)['supplierEmail'] as String? ?? 'unknown@example.com',
+          firstDeliveryDate: firstDelivery,
+          lastDeliveryDate: lastDelivery,
+          autoOrderEnabled: false,
+          averageUnitPrice: averageUnitPrice,
+        ));
+
+        stockId++;
+      }
+
+      setState(() {
+        stockItems = realStockItems;
+        isLoading = false;
+      });
+
+      // Save the real stock data to Firestore
+      await _saveStockDataToFirestore();
+
     } catch (e) {
-      print('Error loading stock data: $e');
+      print('Error creating stock from orders: $e');
       // Fallback to mock data
       setState(() {
         stockItems = List.from(mockStockItems);
@@ -201,7 +317,9 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   Widget _buildStockCard(BuildContext context, StockItem stockItem, bool isDark, int index) {
     return Card(
-      color: isDark ? Colors.white10 : Colors.white,
+      color: stockItem.isLowStock 
+          ? Colors.red.shade50 
+          : (isDark ? Colors.white10 : Colors.white),
       margin: const EdgeInsets.only(bottom: 16),
       child: ExpansionTile(
         leading: CircleAvatar(
@@ -220,10 +338,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Stock:  {stockItem.currentStock} /  {stockItem.maximumStock}'),
+            Text('Stock: 	${stockItem.currentStock} / ${stockItem.maximumStock}'),
             if (stockItem.isLowStock)
               Text(
-                'Low Stock Alert!',
+                'Low Stock',
                 style: TextStyle(
                   color: maroon,
                   fontWeight: FontWeight.bold,

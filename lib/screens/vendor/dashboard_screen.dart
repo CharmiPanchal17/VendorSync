@@ -1447,7 +1447,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   Future<void> _updateStockAfterDelivery(String productName, int quantity, String supplierName, String supplierEmail, double? unitPrice, String orderId) async {
     try {
       // Create a new delivery record
-      final deliveryRecord = DeliveryRecord(
+      final deliveryRecord = order_model.DeliveryRecord(
         id: 'del_${DateTime.now().millisecondsSinceEpoch}',
         orderId: orderId,
         productName: productName,
@@ -1465,7 +1465,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       
       if (stockIndex != -1) {
         final currentStockItem = mockStockItems[stockIndex];
-        final updatedDeliveryHistory = List<DeliveryRecord>.from(currentStockItem.deliveryHistory)
+        final updatedDeliveryHistory = List<order_model.DeliveryRecord>.from(currentStockItem.deliveryHistory)
           ..add(deliveryRecord);
         
         // Calculate new average unit price
@@ -1480,7 +1480,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         final newTotalStock = quantity + currentStockItem.currentStock; // Total = delivered + current stock at delivery time
 
         // Update the stock item
-        mockStockItems[stockIndex] = StockItem(
+        mockStockItems[stockIndex] = order_model.StockItem(
           id: currentStockItem.id,
           productName: currentStockItem.productName,
           currentStock: newCurrentStock,
@@ -1499,7 +1499,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         // For now, we're using mock data, so the UI will update when the stock management page is refreshed
       } else {
         // If stock item doesn't exist, create a new one
-        final newStockItem = StockItem(
+        final newStockItem = order_model.StockItem(
           id: 'stock_${DateTime.now().millisecondsSinceEpoch}',
           productName: productName,
           currentStock: quantity,
