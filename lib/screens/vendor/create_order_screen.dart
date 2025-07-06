@@ -1028,6 +1028,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': _preferredDeliveryDate,
+        'autoOrderEnabled': _enableAutoOrder,
+        'autoOrderThreshold': threshold,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
