@@ -1475,13 +1475,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         final totalDeliveries = updatedDeliveryHistory.length;
         final newAveragePrice = totalDeliveries > 0 ? totalPrice / totalDeliveries : unitPrice;
 
+        // Calculate new total stock: quantity delivered + current stock at time of delivery
+        final newCurrentStock = currentStockItem.currentStock + quantity;
+        final newTotalStock = quantity + currentStockItem.currentStock; // Total = delivered + current stock at delivery time
+
         // Update the stock item
         mockStockItems[stockIndex] = StockItem(
           id: currentStockItem.id,
           productName: currentStockItem.productName,
-          currentStock: currentStockItem.currentStock + quantity,
+          currentStock: newCurrentStock,
           minimumStock: currentStockItem.minimumStock,
-          maximumStock: currentStockItem.maximumStock,
+          maximumStock: newTotalStock, // Update total stock with new calculation
           deliveryHistory: updatedDeliveryHistory,
           primarySupplier: currentStockItem.primarySupplier,
           primarySupplierEmail: currentStockItem.primarySupplierEmail,
@@ -1500,7 +1504,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           productName: productName,
           currentStock: quantity,
           minimumStock: 20, // Default minimum stock
-          maximumStock: 250, // Default maximum stock
+          maximumStock: quantity, // Total stock = quantity delivered (since no previous stock)
           deliveryHistory: [deliveryRecord],
           primarySupplier: supplierName,
           primarySupplierEmail: supplierEmail,
