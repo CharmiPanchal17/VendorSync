@@ -10,3 +10,4 @@ Excel upload UI
 Loading spinner for uploads
 Backend Excel parser
 Fixed duplicate rows issue
+Success message modal
