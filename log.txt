@@ -18,3 +18,4 @@ Fixed duplicate rows issue
 Success message modal
 Improved Excel UX
 Upload history export option
+Integrated CSV upload module
