@@ -116,3 +116,4 @@ Fixed duplicate rows issue
 Added vendor section
 Initial homepage layout
 Styled header and footer
+Integrated CSV upload module
