@@ -20,3 +20,4 @@ Improved Excel UX
 Upload history export option
 Integrated CSV upload module
 Validated CSV data format
+Created upload history view
