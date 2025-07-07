@@ -54,3 +54,4 @@ Created upload history view
 Error handling for CSV
 Refactored CSV controller
 Implemented Excel upload support
+Excel template download
