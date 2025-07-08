@@ -17,7 +17,7 @@ class AppNotification {
   final String? senderEmail;
   final String? orderId;
   final DateTime createdAt;
-  final bool isRead;
+  bool isRead; // Removed final to make it mutable
 
   AppNotification({
     required this.id,
@@ -45,6 +45,15 @@ class AppNotification {
   }
 
   factory AppNotification.fromMap(String id, Map<String, dynamic> map) {
+    DateTime createdAt;
+    if (map['createdAt'] is Timestamp) {
+      createdAt = (map['createdAt'] as Timestamp).toDate();
+    } else if (map['createdAt'] is DateTime) {
+      createdAt = map['createdAt'] as DateTime;
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return AppNotification(
       id: id,
       title: map['title'] ?? '',
@@ -56,7 +65,7 @@ class AppNotification {
       recipientEmail: map['recipientEmail'] ?? '',
       senderEmail: map['senderEmail'],
       orderId: map['orderId'],
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      createdAt: createdAt,
       isRead: map['isRead'] ?? false,
     );
   }

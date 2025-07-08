@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 
 // Add color constant at the top-level for use throughout the file
 const maroonPopup = Color(0xFF800000);
@@ -14,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   String name = '';
   String email = '';
   String password = '';
@@ -30,42 +31,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       try {
-        // Check if vendor with this email already exists
-        final existingVendors = await FirebaseFirestore.instance
-            .collection('vendors')
-            .where('email', isEqualTo: email)
-            .get();
-
-        if (existingVendors.docs.isNotEmpty) {
+        final success = await _authService.register(name, email, password, 'vendor');
+        
+        if (success) {
+          setState(() => _isLoading = false);
+          
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Registration successful! Welcome to VendorSync.'),
+                backgroundColor: maroonPopup,
+              ),
+            );
+            
+            // Navigate to vendor dashboard
+            Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
+          }
+        } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'A vendor with trhis email already exists.';
+            _errorMessage = 'A vendor with this email already exists.';
           });
-          return;
-        }
-
-        // Add new vendor to Firestore
-        await FirebaseFirestore.instance.collection('vendors').add({
-          'name': name,
-          'email': email,
-          'password': password, // Note: In production, this should be hashed
-          'role': 'vendor',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        setState(() => _isLoading = false);
-        
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Registration successful! Welcome to VendorSync.'),
-              backgroundColor: maroonPopup,
-            ),
-          );
-          
-          // Navigate to vendor dashboard
-          Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
         }
       } catch (e) {
         setState(() {

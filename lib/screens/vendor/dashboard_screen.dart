@@ -11,6 +11,10 @@ import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
 import 'analytics_screen.dart';
 import 'create_order_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../services/auth_service.dart';
+import 'available_suppliers_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -36,14 +40,19 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   }
 
   Future<void> _fetchVendorName() async {
-    final vendorQuery = await FirebaseFirestore.instance
-        .collection('vendors')
-        .where('email', isEqualTo: widget.vendorEmail)
-        .limit(1)
-        .get();
-    if (vendorQuery.docs.isNotEmpty) {
+    try {
+      // Use mock data instead of Firebase
+      final authService = AuthService();
+      final vendor = authService.mockUsers[widget.vendorEmail];
+      if (vendor != null) {
+        setState(() {
+          vendorName = vendor['name'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching vendor name: $e');
       setState(() {
-        vendorName = vendorQuery.docs.first['name'];
+        vendorName = 'Vendor';
       });
     }
   }

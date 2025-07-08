@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/vendor/edit_profile_screen.dart';
 import 'screens/supplier/edit_profile_screen.dart';
 import 'screens/vendor/settings_screen.dart';
@@ -11,7 +12,18 @@ import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  
+  // Initialize Firebase with proper error handling
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Firebase initialization failed: $e');
+    print('App will run with mock data');
+  }
+  
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
