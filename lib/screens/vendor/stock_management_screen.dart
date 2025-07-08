@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -30,10 +31,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         isLoading = true;
       });
 
+      // Get the current vendor's email from FirebaseAuth
+      final currentVendorEmail = FirebaseAuth.instance.currentUser?.email;
+      if (currentVendorEmail == null) {
+        throw Exception('No vendor is currently logged in.');
+      }
+
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
-          .where('vendorEmail', isEqualTo: 'CURRENT_VENDOR_EMAIL') // TODO: Replace with actual vendor email
+          .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
 
       if (stockSnapshot.docs.isNotEmpty) {
@@ -57,6 +64,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 : null,
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
+            vendorEmail: currentVendorEmail,
           );
         }).toList();
 
@@ -80,10 +88,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   Future<void> _createStockFromOrders() async {
     try {
+      // Get the current vendor's email from FirebaseAuth
+      final currentVendorEmail = FirebaseAuth.instance.currentUser?.email;
+      if (currentVendorEmail == null) {
+        throw Exception('No vendor is currently logged in.');
+      }
       // Get all delivered orders from Firestore
       final ordersSnapshot = await FirebaseFirestore.instance
           .collection('orders')
           .where('status', isEqualTo: 'Delivered')
+          .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
 
       if (ordersSnapshot.docs.isEmpty) {
@@ -155,6 +169,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             unitPrice: unitPrice,
             notes: 'Delivered from order',
             status: 'Completed',
+            vendorEmail: currentVendorEmail,
           ));
         }
 
@@ -176,6 +191,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           lastDeliveryDate: lastDelivery,
           autoOrderEnabled: false,
           averageUnitPrice: averageUnitPrice,
+          vendorEmail: currentVendorEmail,
         ));
 
         stockId++;
@@ -214,6 +230,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         unitPrice: record['unitPrice']?.toDouble(),
         notes: record['notes'],
         status: record['status'] ?? 'Completed',
+        vendorEmail: 'CURRENT_VENDOR_EMAIL',
       );
     }).toList();
   }
@@ -718,6 +735,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   lastDeliveryDate: stockItem.lastDeliveryDate,
                   autoOrderEnabled: stockItem.autoOrderEnabled,
                   averageUnitPrice: stockItem.averageUnitPrice,
+                  vendorEmail: 'CURRENT_VENDOR_EMAIL',
                 );
                 
                 await _updateStockItem(index, updatedStockItem);
