@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification.dart';
+import '../services/auth_service.dart'; // Added missing import for AuthService
 
 class NotificationService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Mock notifications data
+  static final Map<String, List<AppNotification>> _mockNotifications = {};
 
   // Create a new notification
   static Future<void> createNotification({
@@ -15,89 +17,76 @@ class NotificationService {
     String? orderId,
   }) async {
     try {
-      await _firestore.collection('notifications').add({
-        'title': title,
-        'message': message,
-        'type': type.toString().split('.').last,
-        'recipientEmail': recipientEmail,
-        'senderEmail': senderEmail,
-        'orderId': orderId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isRead': false,
-      });
+      final notification = AppNotification(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: title,
+        message: message,
+        type: type,
+        recipientEmail: recipientEmail,
+        senderEmail: senderEmail,
+        orderId: orderId,
+        createdAt: DateTime.now(),
+        isRead: false,
+      );
+
+      if (!_mockNotifications.containsKey(recipientEmail)) {
+        _mockNotifications[recipientEmail] = [];
+      }
+      _mockNotifications[recipientEmail]!.add(notification);
     } catch (e) {
       print('Error creating notification: $e');
-      rethrow;
     }
   }
 
   // Get notifications for a specific user
   static Stream<List<AppNotification>> getNotificationsForUser(String userEmail) {
-    return _firestore
-        .collection('notifications')
-        .where('recipientEmail', isEqualTo: userEmail)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return AppNotification.fromMap(doc.id, doc.data());
-      }).toList();
-    });
+    return Stream.value(_mockNotifications[userEmail] ?? []);
   }
 
   // Mark notification as read
   static Future<void> markNotificationAsRead(String notificationId) async {
     try {
-      await _firestore
-          .collection('notifications')
-          .doc(notificationId)
-          .update({'isRead': true});
+      for (var notifications in _mockNotifications.values) {
+        for (var notification in notifications) {
+          if (notification.id == notificationId) {
+            notification.isRead = true;
+            break;
+          }
+        }
+      }
     } catch (e) {
       print('Error marking notification as read: $e');
-      rethrow;
     }
   }
 
   // Mark all notifications as read for a user
   static Future<void> markAllNotificationsAsRead(String userEmail) async {
     try {
-      final notifications = await _firestore
-          .collection('notifications')
-          .where('recipientEmail', isEqualTo: userEmail)
-          .where('isRead', isEqualTo: false)
-          .get();
-
-      final batch = _firestore.batch();
-      for (var doc in notifications.docs) {
-        batch.update(doc.reference, {'isRead': true});
+      if (_mockNotifications.containsKey(userEmail)) {
+        for (var notification in _mockNotifications[userEmail]!) {
+          notification.isRead = true;
+        }
       }
-      await batch.commit();
     } catch (e) {
       print('Error marking all notifications as read: $e');
-      rethrow;
     }
   }
 
   // Get unread notification count
   static Stream<int> getUnreadNotificationCount(String userEmail) {
-    return _firestore
-        .collection('notifications')
-        .where('recipientEmail', isEqualTo: userEmail)
-        .where('isRead', isEqualTo: false)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    final notifications = _mockNotifications[userEmail] ?? [];
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+    return Stream.value(unreadCount);
   }
 
   // Delete a notification
   static Future<void> deleteNotification(String notificationId) async {
     try {
-      await _firestore
-          .collection('notifications')
-          .doc(notificationId)
-          .delete();
+      for (var notifications in _mockNotifications.values) {
+        notifications.removeWhere((n) => n.id == notificationId);
+      }
     } catch (e) {
       print('Error deleting notification: $e');
-      rethrow;
     }
   }
 
@@ -109,15 +98,12 @@ class NotificationService {
     required String productName,
     required int quantity,
   }) async {
-    final vendorQuery = await _firestore
-        .collection('vendors')
-        .where('email', isEqualTo: vendorEmail)
-        .limit(1)
-        .get();
-
     String vendorName = 'A vendor';
-    if (vendorQuery.docs.isNotEmpty) {
-      vendorName = vendorQuery.docs.first['name'] ?? 'A vendor';
+    // Get vendor name from mock data
+    final authService = AuthService();
+    final vendor = authService.mockUsers[vendorEmail];
+    if (vendor != null) {
+      vendorName = vendor['name'] ?? 'A vendor';
     }
 
     await createNotification(
@@ -138,15 +124,12 @@ class NotificationService {
     required String productName,
     required int quantity,
   }) async {
-    final supplierQuery = await _firestore
-        .collection('suppliers')
-        .where('email', isEqualTo: supplierEmail)
-        .limit(1)
-        .get();
-
     String supplierName = 'A supplier';
-    if (supplierQuery.docs.isNotEmpty) {
-      supplierName = supplierQuery.docs.first['name'] ?? 'A supplier';
+    // Get supplier name from mock data
+    final authService = AuthService();
+    final supplier = authService.mockUsers[supplierEmail];
+    if (supplier != null) {
+      supplierName = supplier['name'] ?? 'A supplier';
     }
 
     await createNotification(

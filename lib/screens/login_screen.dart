@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +10,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   String email = '';
   String password = '';
   String role = 'vendor';
@@ -22,6 +23,39 @@ class _LoginScreenState extends State<LoginScreen> {
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is String && (arg == 'vendor' || arg == 'supplier')) {
       role = arg;
+    }
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        final user = await _authService.login(email, password, role);
+        
+        if (user != null) {
+          setState(() => _isLoading = false);
+          if (role == 'vendor') {
+            Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
+          } else {
+            Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+          }
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Invalid email or password.';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Login failed. Please try again.';
+        });
+        print('Login error: $e');
+      }
     }
   }
 
@@ -152,49 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     elevation: 2,
                                     overlayColor: Color(0xFF0D1333),
                                   ),
-                                  onPressed: _isLoading ? null : () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      setState(() {
-                                        _isLoading = true;
-                                        _errorMessage = null;
-                                      });
-                                      try {
-                                        final collection = role == 'vendor' ? 'vendors' : 'suppliers';
-                                        final dashboardRoute = role == 'vendor' ? '/vendor-dashboard' : '/supplier-dashboard';
-                                        final query = await FirebaseFirestore.instance
-                                          .collection(collection)
-                                          .where('email', isEqualTo: email)
-                                          .limit(1)
-                                          .get();
-                                        if (query.docs.isNotEmpty) {
-                                          final user = query.docs.first.data();
-                                          if (user['password'] == password) {
-                                            setState(() => _isLoading = false);
-                                            if (role == 'vendor') {
-                                              Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
-                                            } else {
-                                              Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
-                                            }
-                                          } else {
-                                            setState(() {
-                                              _isLoading = false;
-                                              _errorMessage = 'Incorrect password.';
-                                            });
-                                          }
-                                        } else {
-                                          setState(() {
-                                            _isLoading = false;
-                                            _errorMessage = 'No account found with this email.';
-                                          });
-                                        }
-                                      } catch (e) {
-                                        setState(() {
-                                          _isLoading = false;
-                                          _errorMessage = 'Login failed. Please try again.';
-                                        });
-                                      }
-                                    }
-                                  },
+                                  onPressed: _isLoading ? null : _login,
                                 ),
                                 if (_errorMessage != null) ...[
                                   const SizedBox(height: 8),

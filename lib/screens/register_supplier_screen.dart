@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 
 class RegisterSupplierScreen extends StatefulWidget {
   const RegisterSupplierScreen({super.key});
@@ -10,12 +10,42 @@ class RegisterSupplierScreen extends StatefulWidget {
 
 class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   String name = '';
   String email = '';
   String password = '';
   String confirmPassword = '';
   bool _isLoading = false;
   String? _errorMessage;
+
+  Future<void> _registerSupplier() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        final success = await _authService.register(name, email, password, 'supplier');
+        
+        if (success) {
+          setState(() => _isLoading = false);
+          Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'A supplier with this email already exists.';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to register. Please try again.';
+        });
+        print('Registration error: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,28 +183,7 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                   overlayColor: Color(0xFF0D1333), // Dark blue on press
                                 ),
                                 onPressed: _isLoading ? null : () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    setState(() {
-                                      _isLoading = true;
-                                      _errorMessage = null;
-                                    });
-                                    try {
-                                      await FirebaseFirestore.instance.collection('suppliers').add({
-                                        'name': name,
-                                        'email': email,
-                                        'password': password,
-                                        'createdAt': FieldValue.serverTimestamp(),
-                                        'vendorEmail': null,
-                                      });
-                                      setState(() => _isLoading = false);
-                                      Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
-                                    } catch (e) {
-                                      setState(() {
-                                        _isLoading = false;
-                                        _errorMessage = 'Failed to register. Please try again.';
-                                      });
-                                    }
-                                  }
+                                  await _registerSupplier();
                                 },
                               ),
                               if (_errorMessage != null) ...[

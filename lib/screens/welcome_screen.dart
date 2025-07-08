@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -94,7 +95,37 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                               ),
                             ),
                           ),
-                          const SizedBox(height: 40),
+                          // Test credentials info
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              border: Border.all(color: Colors.orange),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Test Credentials',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Vendor: vendor@test.com / password123\nSupplier: supplier@test.com / password123',
+                                  style: TextStyle(
+                                    color: Colors.orange.shade700,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
                           SlideTransition(
                             position: _slideAnimation,
                             child: Column(
@@ -130,6 +161,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                                       overlayColor: Color(0xFF0D1333), // Dark blue on press
                                     ),
                                     onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton(
+                                    child: const Text('Login', style: TextStyle(fontSize: 18)),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(48),
+                                      side: const BorderSide(color: Color(0xFF800000)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    onPressed: () => Navigator.of(context).pushNamed('/role-selection'),
                                   ),
                                 ),
                               ],
