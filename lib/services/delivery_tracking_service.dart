@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/order.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeliveryTrackingService {
   // This service handles tracking deliveries and updating stock information
@@ -15,13 +16,58 @@ class DeliveryTrackingService {
     double? unitPrice,
     String? notes,
   }) async {
-    // TODO: Implement Firestore integration
-    // This would:
-    // 1. Create a DeliveryRecord
-    // 2. Update the corresponding StockItem
+    // 1. Create a DeliveryRecord (optional: you can store delivery history in stock_items or a separate collection)
+    // 2. Update the corresponding StockItem (add or update)
     // 3. Update order status to 'Delivered'
-    // 4. Trigger notifications if needed
-    
+    // 4. Trigger notifications if needed (not implemented here)
+
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName);
+    final orderRef = FirebaseFirestore.instance.collection('orders').doc(orderId);
+
+    // Use a transaction to ensure consistency
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final stockSnapshot = await transaction.get(stockRef);
+      if (stockSnapshot.exists) {
+        // Update existing stock item
+        final currentStock = stockSnapshot['currentStock'] ?? 0;
+        final deliveryHistory = List.from(stockSnapshot['deliveryHistory'] ?? []);
+        deliveryHistory.add({
+          'quantity': quantity,
+          'deliveryDate': Timestamp.fromDate(deliveryDate),
+          'supplierName': supplierName,
+          'notes': notes ?? '',
+        });
+        transaction.update(stockRef, {
+          'currentStock': currentStock + quantity,
+          'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + quantity,
+          'lastDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'deliveryHistory': deliveryHistory,
+        });
+      } else {
+        // Create new stock item
+        transaction.set(stockRef, {
+          'productName': productName,
+          'currentStock': quantity,
+          'minimumStock': (quantity * 0.1).round(),
+          'maximumStock': quantity,
+          'firstDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'lastDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'deliveryHistory': [
+            {
+              'quantity': quantity,
+              'deliveryDate': Timestamp.fromDate(deliveryDate),
+              'supplierName': supplierName,
+              'notes': notes ?? '',
+            }
+          ],
+        });
+      }
+      // Update order status to 'Delivered'
+      transaction.update(orderRef, {
+        'status': 'Delivered',
+        'deliveredAt': Timestamp.fromDate(deliveryDate),
+      });
+    });
     print('Delivery recorded: $productName - $quantity units from $supplierName');
   }
   
@@ -29,13 +75,34 @@ class DeliveryTrackingService {
     required String productName,
     required int deliveredQuantity,
   }) async {
-    // TODO: Implement stock level updates
-    // This would:
-    // 1. Find the StockItem for the product
-    // 2. Add delivered quantity to current stock
-    // 3. Update delivery history
-    // 4. Check if auto-order should be triggered
-    
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName);
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final stockSnapshot = await transaction.get(stockRef);
+      if (stockSnapshot.exists) {
+        final currentStock = stockSnapshot['currentStock'] ?? 0;
+        transaction.update(stockRef, {
+          'currentStock': currentStock + deliveredQuantity,
+          'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
+        });
+      } else {
+        transaction.set(stockRef, {
+          'productName': productName,
+          'currentStock': deliveredQuantity,
+          'minimumStock': (deliveredQuantity * 0.1).round(),
+          'maximumStock': deliveredQuantity,
+          'firstDeliveryDate': Timestamp.now(),
+          'lastDeliveryDate': Timestamp.now(),
+          'deliveryHistory': [
+            {
+              'quantity': deliveredQuantity,
+              'deliveryDate': Timestamp.now(),
+              'supplierName': '',
+              'notes': '',
+            }
+          ],
+        });
+      }
+    });
     print('Stock updated: $productName - Added $deliveredQuantity units');
   }
   
