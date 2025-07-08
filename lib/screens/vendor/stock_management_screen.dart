@@ -33,6 +33,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
+          .where('vendorEmail', isEqualTo: 'CURRENT_VENDOR_EMAIL') // TODO: Replace with actual vendor email
           .get();
 
       if (stockSnapshot.docs.isNotEmpty) {

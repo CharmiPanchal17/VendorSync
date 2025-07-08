@@ -39,6 +39,7 @@ class StockItem {
   final DateTime? lastDeliveryDate;
   final bool autoOrderEnabled;
   final double? averageUnitPrice;
+  final String vendorEmail;
 
   StockItem({
     required this.id,
@@ -53,6 +54,7 @@ class StockItem {
     this.lastDeliveryDate,
     this.autoOrderEnabled = false,
     this.averageUnitPrice,
+    required this.vendorEmail,
   });
 
   bool get isLowStock => currentStock <= minimumStock;
@@ -74,6 +76,7 @@ class DeliveryRecord {
   final double? unitPrice;
   final String? notes;
   final String status;
+  final String vendorEmail;
 
   DeliveryRecord({
     required this.id,
@@ -86,5 +89,6 @@ class DeliveryRecord {
     this.unitPrice,
     this.notes,
     required this.status,
+    required this.vendorEmail,
   });
 } 

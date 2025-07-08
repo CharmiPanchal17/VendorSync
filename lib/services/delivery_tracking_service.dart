@@ -13,6 +13,7 @@ class DeliveryTrackingService {
     required String supplierName,
     required String supplierEmail,
     required DateTime deliveryDate,
+    required String vendorEmail, // NEW PARAM
     double? unitPrice,
     String? notes,
   }) async {
@@ -21,7 +22,7 @@ class DeliveryTrackingService {
     // 3. Update order status to 'Delivered'
     // 4. Trigger notifications if needed (not implemented here)
 
-    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName);
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
     final orderRef = FirebaseFirestore.instance.collection('orders').doc(orderId);
 
     // Use a transaction to ensure consistency
@@ -35,6 +36,8 @@ class DeliveryTrackingService {
           'quantity': quantity,
           'deliveryDate': Timestamp.fromDate(deliveryDate),
           'supplierName': supplierName,
+          'supplierEmail': supplierEmail,
+          'vendorEmail': vendorEmail, // NEW FIELD
           'notes': notes ?? '',
         });
         transaction.update(stockRef, {
@@ -42,6 +45,7 @@ class DeliveryTrackingService {
           'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + quantity,
           'lastDeliveryDate': Timestamp.fromDate(deliveryDate),
           'deliveryHistory': deliveryHistory,
+          'vendorEmail': vendorEmail, // NEW FIELD
         });
       } else {
         // Create new stock item
@@ -57,9 +61,12 @@ class DeliveryTrackingService {
               'quantity': quantity,
               'deliveryDate': Timestamp.fromDate(deliveryDate),
               'supplierName': supplierName,
+              'supplierEmail': supplierEmail,
+              'vendorEmail': vendorEmail, // NEW FIELD
               'notes': notes ?? '',
             }
           ],
+          'vendorEmail': vendorEmail, // NEW FIELD
         });
       }
       // Update order status to 'Delivered'
@@ -74,8 +81,9 @@ class DeliveryTrackingService {
   static Future<void> updateStockLevels({
     required String productName,
     required int deliveredQuantity,
+    required String vendorEmail, // NEW PARAM
   }) async {
-    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName);
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final stockSnapshot = await transaction.get(stockRef);
       if (stockSnapshot.exists) {
@@ -83,6 +91,7 @@ class DeliveryTrackingService {
         transaction.update(stockRef, {
           'currentStock': currentStock + deliveredQuantity,
           'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
+          'vendorEmail': vendorEmail, // NEW FIELD
         });
       } else {
         transaction.set(stockRef, {
@@ -97,9 +106,12 @@ class DeliveryTrackingService {
               'quantity': deliveredQuantity,
               'deliveryDate': Timestamp.now(),
               'supplierName': '',
+              'supplierEmail': '',
+              'vendorEmail': vendorEmail, // NEW FIELD
               'notes': '',
             }
           ],
+          'vendorEmail': vendorEmail, // NEW FIELD
         });
       }
     });
