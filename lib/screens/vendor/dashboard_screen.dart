@@ -1458,6 +1458,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         unitPrice: unitPrice,
         notes: 'Delivered and approved by vendor',
         status: 'Completed',
+        vendorEmail: widget.vendorEmail,
       );
 
       // Find and update the corresponding stock item
@@ -1493,6 +1494,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           lastDeliveryDate: DateTime.now(),
           autoOrderEnabled: currentStockItem.autoOrderEnabled,
           averageUnitPrice: newAveragePrice,
+          vendorEmail: widget.vendorEmail,
         );
 
         // If using Firestore, you would also update the stock collection here
@@ -1512,6 +1514,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           lastDeliveryDate: DateTime.now(),
           autoOrderEnabled: false,
           averageUnitPrice: unitPrice,
+          vendorEmail: widget.vendorEmail,
         );
         
         mockStockItems.add(newStockItem);
