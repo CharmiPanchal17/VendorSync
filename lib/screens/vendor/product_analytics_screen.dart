@@ -1,31 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class ProductAnalyticsScreen extends StatelessWidget {
   final String productName;
+  final String vendorEmail;
   
-  const ProductAnalyticsScreen({super.key, required this.productName});
+  const ProductAnalyticsScreen({super.key, required this.productName, required this.vendorEmail});
 
-  // Sample daily sales data - replace with your actual Firestore data
-  List<Map<String, dynamic>> get dailySalesData => [
-    {'date': '2024-06-01', 'sales': 5, 'stock': 100},
-    {'date': '2024-06-02', 'sales': 8, 'stock': 95},
-    {'date': '2024-06-03', 'sales': 12, 'stock': 87},
-    {'date': '2024-06-04', 'sales': 6, 'stock': 81},
-    {'date': '2024-06-05', 'sales': 15, 'stock': 75},
-    {'date': '2024-06-06', 'sales': 9, 'stock': 66},
-    {'date': '2024-06-07', 'sales': 11, 'stock': 57},
-    {'date': '2024-06-08', 'sales': 7, 'stock': 50},
-    {'date': '2024-06-09', 'sales': 13, 'stock': 43},
-    {'date': '2024-06-10', 'sales': 10, 'stock': 33},
-    {'date': '2024-06-11', 'sales': 8, 'stock': 25},
-    {'date': '2024-06-12', 'sales': 14, 'stock': 17},
-    {'date': '2024-06-13', 'sales': 6, 'stock': 11},
-    {'date': '2024-06-14', 'sales': 9, 'stock': 5},
-  ];
+  Future<List<Map<String, dynamic>>> _fetchDailySalesData() async {
+    // Example: Fetch delivery history for this product and vendor
+    final stockDocId = '${productName}_$vendorEmail';
+    final doc = await FirebaseFirestore.instance.collection('stock_items').doc(stockDocId).get();
+    if (!doc.exists) return [];
+    final deliveryHistory = List<Map<String, dynamic>>.from(doc['deliveryHistory'] ?? []);
+    // You may want to process deliveryHistory into daily sales data here
+    // For now, just return the deliveryHistory as a placeholder
+    return deliveryHistory;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +93,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                         Expanded(
                           child: _buildMetricCard(
                             'Total Sales',
-                            dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int)).toString(),
+                            'Loading...', // Will be updated with actual data
                             Icons.trending_up,
                             isDark,
                           ),
@@ -107,7 +102,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                         Expanded(
                           child: _buildMetricCard(
                             'Avg Daily',
-                            (dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int)) / dailySalesData.length).round().toString(),
+                            'Loading...', // Will be updated with actual data
                             Icons.analytics,
                             isDark,
                           ),
