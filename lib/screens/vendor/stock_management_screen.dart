@@ -8,8 +8,8 @@ const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class StockManagementScreen extends StatefulWidget {
-  // Remove const constructor to allow hot reload after class structure changes
-  StockManagementScreen({Key? key}) : super(key: key);
+  final String vendorEmail;
+  StockManagementScreen({Key? key, required this.vendorEmail}) : super(key: key);
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -31,17 +31,20 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         isLoading = true;
       });
 
-      // Get the current vendor's email from FirebaseAuth
-      final currentVendorEmail = FirebaseAuth.instance.currentUser?.email;
-      if (currentVendorEmail == null) {
-        throw Exception('No vendor is currently logged in.');
-      }
+      final currentVendorEmail = widget.vendorEmail;
+      print('DEBUG: Current vendor email: ' + (currentVendorEmail));
 
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
           .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
+
+      print('DEBUG: Firestore stock_items found: \'${stockSnapshot.docs.length}\'');
+      for (final doc in stockSnapshot.docs) {
+        final data = doc.data();
+        print('DEBUG: StockItem docId: ' + doc.id + ', vendorEmail: ' + (data['vendorEmail']?.toString() ?? 'NULL'));
+      }
 
       if (stockSnapshot.docs.isNotEmpty) {
         // Load from Firestore
@@ -88,8 +91,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   Future<void> _createStockFromOrders() async {
     try {
-      // Get the current vendor's email from FirebaseAuth
-      final currentVendorEmail = FirebaseAuth.instance.currentUser?.email;
+      final currentVendorEmail = widget.vendorEmail;
       if (currentVendorEmail == null) {
         throw Exception('No vendor is currently logged in.');
       }

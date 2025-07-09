@@ -141,7 +141,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => StockManagementScreen(),
+                          builder: (context) => StockManagementScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -153,7 +153,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const AnalyticsScreen(),
+                          builder: (context) => AnalyticsScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -1010,7 +1010,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => StockManagementScreen(),
+            builder: (context) => StockManagementScreen(vendorEmail: widget.vendorEmail),
           ));
         },
         icon: const Icon(Icons.inventory),
