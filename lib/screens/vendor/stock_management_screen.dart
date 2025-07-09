@@ -705,28 +705,46 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   void _showEditStockDialog(BuildContext context, StockItem stockItem, int index) {
     final controller = TextEditingController();
+    String? errorText;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Enter number of goods purchased'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(hintText: 'Quantity'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Enter number of goods purchased'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(hintText: 'Quantity', errorText: errorText),
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: maroon,
-              foregroundColor: Colors.white,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
             ),
-            onPressed: () async {
-              final qty = int.tryParse(controller.text) ?? 0;
-              if (qty > 0 && qty <= stockItem.currentStock) {
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: maroon,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                final qty = int.tryParse(controller.text) ?? 0;
+                if (qty <= 0) {
+                  setState(() {
+                    errorText = 'Please enter a positive quantity.';
+                  });
+                  return;
+                }
+                if (qty > stockItem.currentStock) {
+                  setState(() {
+                    errorText = 'Cannot purchase more than current stock.';
+                  });
+                  return;
+                }
                 final updatedStockItem = StockItem(
                   id: stockItem.id,
                   productName: stockItem.productName,
@@ -740,16 +758,15 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   lastDeliveryDate: stockItem.lastDeliveryDate,
                   autoOrderEnabled: stockItem.autoOrderEnabled,
                   averageUnitPrice: stockItem.averageUnitPrice,
-                  vendorEmail: 'CURRENT_VENDOR_EMAIL',
+                  vendorEmail: stockItem.vendorEmail,
                 );
-                
                 await _updateStockItem(index, updatedStockItem);
-              }
-              Navigator.pop(context);
-            },
-            child: Text('Confirm'),
-          ),
-        ],
+                Navigator.pop(context);
+              },
+              child: Text('Confirm'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,14 +6,10 @@ const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class AnalyticsScreen extends StatelessWidget {
-  final String vendorEmail;
-  const AnalyticsScreen({super.key, required this.vendorEmail});
+  const AnalyticsScreen({super.key});
 
   Future<List<Map<String, dynamic>>> _fetchStockData() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('stock_items')
-        .where('vendorEmail', isEqualTo: vendorEmail)
-        .get();
+    final snapshot = await FirebaseFirestore.instance.collection('stock_items').get();
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
@@ -126,7 +122,6 @@ class AnalyticsScreen extends StatelessWidget {
                                   Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => ProductAnalyticsScreen(
                                       productName: item['productName'] ?? 'Unknown Product',
-                                      vendorEmail: vendorEmail,
                                     ),
                                   ));
                                 },
