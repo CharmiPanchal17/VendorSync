@@ -178,8 +178,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         final minimumStock = (totalDelivered * 0.1).round(); // 10% of total delivered as minimum
         final averageUnitPrice = priceCount > 0 ? totalPrice / priceCount : null;
 
+        // Use consistent document ID: productName_vendorEmail
+        final stockDocId = '${productName}_$currentVendorEmail';
+
         realStockItems.add(StockItem(
-          id: 'stock_$stockId',
+          id: stockDocId,
           productName: productName,
           currentStock: currentStock,
           minimumStock: minimumStock,
@@ -194,7 +197,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           vendorEmail: currentVendorEmail,
         ));
 
-        stockId++;
+        // stockId++; // No longer needed
       }
 
       setState(() {
