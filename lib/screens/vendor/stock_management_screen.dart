@@ -3,6 +3,7 @@ import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/notification_service.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -294,6 +295,61 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     
     // Save to Firestore
     await _saveStockDataToFirestore();
+
+    // --- AUTO-ORDER LOGIC ---
+    // Fetch product inventory settings for this product and vendor
+    final inventoryQuery = await FirebaseFirestore.instance
+        .collection('product_inventory')
+        .where('productName', isEqualTo: updatedStockItem.productName)
+        .where('vendorEmail', isEqualTo: updatedStockItem.vendorEmail)
+        .limit(1)
+        .get();
+    if (inventoryQuery.docs.isEmpty) return;
+    final inventory = inventoryQuery.docs.first;
+    final data = inventory.data();
+    final bool autoOrderEnabled = data['autoOrderEnabled'] ?? false;
+    final int lowStockThreshold = data['lowStockThreshold'] ?? 0;
+    final int autoOrderQuantity = data['autoOrderQuantity'] ?? 0;
+    final String? supplierName = data['supplierName'];
+    final String? supplierEmail = data['supplierEmail'];
+    final bool autoOrderPending = data['autoOrderPending'] ?? false;
+
+    // Only trigger if enabled, not already pending, and threshold reached
+    if (autoOrderEnabled && !autoOrderPending && updatedStockItem.currentStock <= lowStockThreshold && autoOrderQuantity > 0 && supplierEmail != null && supplierName != null) {
+      // Create a new order
+      final orderRef = await FirebaseFirestore.instance.collection('orders').add({
+        'productName': updatedStockItem.productName,
+        'quantity': autoOrderQuantity,
+        'supplierName': supplierName,
+        'supplierEmail': supplierEmail,
+        'vendorEmail': updatedStockItem.vendorEmail,
+        'status': 'Pending',
+        'preferredDeliveryDate': DateTime.now().add(const Duration(days: 7)),
+        'autoOrderEnabled': true,
+        'autoOrderThreshold': lowStockThreshold,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isAutoOrder': true,
+      });
+      // Mark auto-order as pending to prevent duplicates
+      await inventory.reference.update({'autoOrderPending': true, 'lastOrderId': orderRef.id});
+      // Notify supplier
+      await NotificationService.notifySupplierOfNewOrder(
+        vendorEmail: updatedStockItem.vendorEmail,
+        supplierEmail: supplierEmail,
+        orderId: orderRef.id,
+        productName: updatedStockItem.productName,
+        quantity: autoOrderQuantity,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auto-order placed for ${updatedStockItem.productName} (${autoOrderQuantity} units). Supplier notified.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
   }
 
   @override
