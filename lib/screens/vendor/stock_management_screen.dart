@@ -296,6 +296,26 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     // Save to Firestore
     await _saveStockDataToFirestore();
 
+    // --- SALES RECORDING LOGIC ---
+    // If stock was reduced (i.e., a sale/purchase), record it in sales_history
+    final oldStock = stockItems[index].currentStock;
+    final newStock = updatedStockItem.currentStock;
+    if (newStock < oldStock) {
+      final quantitySold = oldStock - newStock;
+      print('DEBUG: Attempting to write sales record for ${updatedStockItem.productName}, qty: $quantitySold');
+      try {
+        await FirebaseFirestore.instance.collection('sales_history').add({
+          'productName': updatedStockItem.productName,
+          'vendorEmail': updatedStockItem.vendorEmail,
+          'quantity': quantitySold,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        print('DEBUG: Sales record written for ${updatedStockItem.productName}, qty: $quantitySold');
+      } catch (e) {
+        print('ERROR: Failed to write sales record: $e');
+      }
+    }
+
     // --- AUTO-ORDER LOGIC ---
     // Fetch product inventory settings for this product and vendor
     final inventoryQuery = await FirebaseFirestore.instance
