@@ -243,10 +243,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     ),
                                     const SizedBox(height: 24),
                                     TextFormField(
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         labelText: 'Email',
                                         labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                         prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                        ),
                                       ),
                                       keyboardType: TextInputType.emailAddress,
                                       onChanged: (val) {
