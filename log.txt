@@ -169,3 +169,4 @@ Added vendor section
 Vendor dashboard template
 Bug fix in auth flow
 Setup login validation
+Improved responsive design
