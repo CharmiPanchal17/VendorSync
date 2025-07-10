@@ -47,7 +47,7 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier C',
     supplierEmail: 'supplierC@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 1)),
-    unitPrice: 12.75,
+    unitPrice: null, // Removed price
     notes: 'First delivery - excellent quality',
     status: 'Completed',
     vendorEmail: 'demo@vendor.com',
@@ -60,7 +60,7 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier A',
     supplierEmail: 'supplierA@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 5)),
-    unitPrice: 15.50,
+    unitPrice: null, // Removed price
     notes: 'Second delivery - good condition',
     status: 'Completed',
     vendorEmail: 'demo@vendor.com',
@@ -73,7 +73,7 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier B',
     supplierEmail: 'supplierB@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 8)),
-    unitPrice: 25.00,
+    unitPrice: null, // Removed price
     notes: 'First delivery - premium quality',
     status: 'Completed',
     vendorEmail: 'demo@vendor.com',
@@ -86,7 +86,7 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier A',
     supplierEmail: 'supplierA@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 12)),
-    unitPrice: 15.50,
+    unitPrice: null, // Removed price
     notes: 'First delivery - standard quality',
     status: 'Completed',
     vendorEmail: 'demo@vendor.com',
@@ -107,7 +107,7 @@ final List<StockItem> mockStockItems = [
     firstDeliveryDate: DateTime.now().subtract(Duration(days: 12)),
     lastDeliveryDate: DateTime.now().subtract(Duration(days: 5)),
     autoOrderEnabled: true,
-    averageUnitPrice: 15.50,
+    averageUnitPrice: null, // Removed price
     vendorEmail: 'demo@vendor.com',
   ),
 ]; 

@@ -833,6 +833,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 );
                 await _updateStockItem(index, updatedStockItem);
                 Navigator.pop(context);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$qty units of ${stockItem.productName} have been sold.'),
+                      backgroundColor: maroon, // Use maroon color for confirmation
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  );
+                }
               },
               child: Text('Confirm'),
             ),
