@@ -69,223 +69,249 @@ class ProductAnalyticsScreen extends StatelessWidget {
             }).toList();
             final totalSales = dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int));
             final avgSales = dailySalesData.isNotEmpty ? (totalSales / dailySalesData.length).round() : 0;
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Product Summary Card
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+            // Fetch current stock for this product
+            return FutureBuilder<QuerySnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('stock_items')
+                  .where('productName', isEqualTo: productName)
+                  .limit(1)
+                  .get(),
+              builder: (context, stockSnapshot) {
+                int? currentStock;
+                if (stockSnapshot.hasData && stockSnapshot.data!.docs.isNotEmpty) {
+                  final data = stockSnapshot.data!.docs.first.data() as Map<String, dynamic>;
+                  currentStock = data['currentStock'] as int?;
+                }
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // Product Summary Card
+                    Card(
+                      color: isDark ? Colors.white10 : Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircleAvatar(
-                              backgroundColor: maroon.withOpacity(0.2),
-                              child: Icon(Icons.inventory, color: maroon),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    productName,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Daily Sales Analytics',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark ? Colors.white70 : Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildMetricCard(
-                                'Total Sales',
-                                totalSales.toString(),
-                                Icons.trending_up,
-                                isDark,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildMetricCard(
-                                'Avg Daily',
-                                avgSales.toString(),
-                                Icons.analytics,
-                                isDark,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Sales Graph
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Sales Trend (Last 7 Days)',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 200,
-                          child: LineChart(
-                            LineChartData(
-                              gridData: FlGridData(
-                                show: true,
-                                drawVerticalLine: true,
-                                horizontalInterval: 5,
-                                verticalInterval: 1,
-                                getDrawingHorizontalLine: (value) {
-                                  return FlLine(
-                                    color: isDark ? Colors.white24 : Colors.grey.shade300,
-                                    strokeWidth: 1,
-                                  );
-                                },
-                                getDrawingVerticalLine: (value) {
-                                  return FlLine(
-                                    color: isDark ? Colors.white24 : Colors.grey.shade300,
-                                    strokeWidth: 1,
-                                  );
-                                },
-                              ),
-                              titlesData: FlTitlesData(
-                                show: true,
-                                rightTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: maroon.withOpacity(0.2),
+                                  child: Icon(Icons.inventory, color: maroon),
                                 ),
-                                topTitles: AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 30,
-                                    interval: 1,
-                                    getTitlesWidget: (double value, TitleMeta meta) {
-                                      if (value.toInt() >= 0 && value.toInt() < dailySalesData.length) {
-                                        final dateObj = dailySalesData[value.toInt()]['date'];
-                                        final dateStr = dateObj is String ? dateObj : dateObj.toString();
-                                        return SideTitleWidget(
-                                          axisSide: meta.axisSide,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        productName,
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Daily Sales Analytics',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: isDark ? Colors.white70 : Colors.grey[600],
+                                        ),
+                                      ),
+                                      if (currentStock != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
                                           child: Text(
-                                            dateStr.substring(5), // Show MM-DD format
+                                            'Current Stock: $currentStock',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.green.shade700,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Total Sales',
+                                    totalSales.toString(),
+                                    Icons.trending_up,
+                                    isDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _buildMetricCard(
+                                    'Avg Daily',
+                                    avgSales.toString(),
+                                    Icons.analytics,
+                                    isDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Sales Graph
+                    Card(
+                      color: isDark ? Colors.white10 : Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Daily Sales Trend (Last 7 Days)',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 200,
+                              child: LineChart(
+                                LineChartData(
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawVerticalLine: true,
+                                    horizontalInterval: 5,
+                                    verticalInterval: 1,
+                                    getDrawingHorizontalLine: (value) {
+                                      return FlLine(
+                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                                        strokeWidth: 1,
+                                      );
+                                    },
+                                    getDrawingVerticalLine: (value) {
+                                      return FlLine(
+                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                                        strokeWidth: 1,
+                                      );
+                                    },
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    show: true,
+                                    rightTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    topTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 30,
+                                        interval: 1,
+                                        getTitlesWidget: (double value, TitleMeta meta) {
+                                          if (value.toInt() >= 0 && value.toInt() < dailySalesData.length) {
+                                            final dateObj = dailySalesData[value.toInt()]['date'];
+                                            final dateStr = dateObj is String ? dateObj : dateObj.toString();
+                                            return SideTitleWidget(
+                                              axisSide: meta.axisSide,
+                                              child: Text(
+                                                dateStr.substring(5), // Show MM-DD format
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.white70 : Colors.grey[600],
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return const Text('');
+                                        },
+                                      ),
+                                    ),
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        interval: 5,
+                                        getTitlesWidget: (double value, TitleMeta meta) {
+                                          return Text(
+                                            value.toInt().toString(),
                                             style: TextStyle(
                                               color: isDark ? Colors.white70 : Colors.grey[600],
                                               fontWeight: FontWeight.bold,
                                               fontSize: 10,
                                             ),
-                                          ),
-                                        );
-                                      }
-                                      return const Text('');
-                                    },
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    interval: 5,
-                                    getTitlesWidget: (double value, TitleMeta meta) {
-                                      return Text(
-                                        value.toInt().toString(),
-                                        style: TextStyle(
-                                          color: isDark ? Colors.white70 : Colors.grey[600],
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 10,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              minX: 0,
-                              maxX: (dailySalesData.length - 1).toDouble(),
-                              minY: 0,
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: [
-                                    for (int i = 0; i < dailySalesData.length; i++)
-                                      FlSpot(i.toDouble(), (dailySalesData[i]['sales'] as int).toDouble()),
+                                  minX: 0,
+                                  maxX: (dailySalesData.length - 1).toDouble(),
+                                  minY: 0,
+                                  lineBarsData: [
+                                    LineChartBarData(
+                                      spots: [
+                                        for (int i = 0; i < dailySalesData.length; i++)
+                                          FlSpot(i.toDouble(), (dailySalesData[i]['sales'] as int).toDouble()),
+                                      ],
+                                      isCurved: true,
+                                      color: maroon,
+                                      barWidth: 3,
+                                      dotData: FlDotData(show: true),
+                                    ),
                                   ],
-                                  isCurved: true,
-                                  color: maroon,
-                                  barWidth: 3,
-                                  dotData: FlDotData(show: true),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (totalSales == 0)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16.0),
-                            child: Center(
-                              child: Text(
-                                'No sales in the last 7 days',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.grey[600],
-                                  fontStyle: FontStyle.italic,
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Daily Sales Table
-                Card(
-                  color: isDark ? Colors.white10 : Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Sales Breakdown',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
+                            if (totalSales == 0)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Center(
+                                  child: Text(
+                                    'No sales in the last 7 days',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white70 : Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        ...dailySalesData.map((item) => _buildDailySalesRow(item, isDark)).toList(),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                    const SizedBox(height: 24),
+                    // Daily Sales Table
+                    Card(
+                      color: isDark ? Colors.white10 : Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Daily Sales Breakdown',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ...dailySalesData.map((item) => _buildDailySalesRow({...item, 'stock': currentStock}, isDark)).toList(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             );
           },
         ),
