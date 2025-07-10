@@ -289,19 +289,14 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   Future<void> _updateStockItem(int index, StockItem updatedStockItem) async {
+    final oldStock = stockItems[index].currentStock; // capture BEFORE setState
     setState(() {
       stockItems[index] = updatedStockItem;
     });
-    
-    // Save to Firestore
-    await _saveStockDataToFirestore();
-
-    // --- SALES RECORDING LOGIC ---
-    // If stock was reduced (i.e., a sale/purchase), record it in sales_history
-    final oldStock = stockItems[index].currentStock;
     final newStock = updatedStockItem.currentStock;
+    final quantitySold = oldStock - newStock;
+    print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
     if (newStock < oldStock) {
-      final quantitySold = oldStock - newStock;
       print('DEBUG: Attempting to write sales record for ${updatedStockItem.productName}, qty: $quantitySold');
       try {
         await FirebaseFirestore.instance.collection('sales_history').add({
