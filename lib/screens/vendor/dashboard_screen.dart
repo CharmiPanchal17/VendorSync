@@ -153,7 +153,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const AnalyticsScreen(),
+                          builder: (context) => AnalyticsScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
