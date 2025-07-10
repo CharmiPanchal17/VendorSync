@@ -171,3 +171,4 @@ Bug fix in auth flow
 Setup login validation
 Improved responsive design
 UI enhancements
+Added forgot password page
