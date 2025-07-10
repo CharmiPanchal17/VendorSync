@@ -92,6 +92,10 @@ class VendorSyncApp extends StatelessWidget {
               final email = ModalRoute.of(context)?.settings.arguments as String?;
               return SupplierSettingsScreen(supplierEmail: email ?? '');
             },
+            '/vendor-suppliers': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return SuppliersListScreen(vendorEmail: email ?? '');
+            },
           },
           debugShowCheckedModeBanner: false,
         );
