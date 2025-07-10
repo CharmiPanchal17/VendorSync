@@ -37,8 +37,8 @@ class AnalyticsScreen extends StatelessWidget {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _fetchStockData(),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('stock_items').snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -46,7 +46,7 @@ class AnalyticsScreen extends StatelessWidget {
             if (snapshot.hasError) {
               return Center(child: Text('Error loading analytics'));
             }
-            final stockData = snapshot.data ?? [];
+            final stockData = snapshot.data?.docs.map((doc) => doc.data() as Map<String, dynamic>).toList() ?? [];
             final lowStockCount = stockData.where((item) => (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0)).length;
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -96,7 +96,7 @@ class AnalyticsScreen extends StatelessWidget {
                                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      'Stock: ${item['currentStock']} / ${item['maximumStock']}',
+                                      "Stock:  ${item['currentStock']} / ${item['maximumStock']}",
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: isDark ? Colors.white70 : Colors.grey[600],
