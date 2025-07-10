@@ -166,3 +166,4 @@ Styled header and footer
 Initial homepage layout
 Added vendor section
 Added vendor section
+Vendor dashboard template
