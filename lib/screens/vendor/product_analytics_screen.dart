@@ -69,6 +69,8 @@ class ProductAnalyticsScreen extends StatelessWidget {
             }).toList();
             final totalSales = dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int));
             final avgSales = dailySalesData.isNotEmpty ? (totalSales / dailySalesData.length).round() : 0;
+            // Debug print to check for negative sales data
+            print('Daily sales data: ' + dailySalesData.map((e) => e['sales']).toList().toString());
             // Fetch current stock for this product
             return FutureBuilder<QuerySnapshot>(
               future: FirebaseFirestore.instance
