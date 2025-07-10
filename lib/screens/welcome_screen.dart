@@ -118,7 +118,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                               minimumSize: MaterialStateProperty.all(const Size.fromHeight(48)),
                               backgroundColor: MaterialStateProperty.all(const Color(0xFF800000)), // Maroon
                               foregroundColor: MaterialStateProperty.all(Colors.white),
-                              shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                              shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                               textStyle: MaterialStateProperty.all(const TextStyle(fontWeight: FontWeight.bold)),
                               elevation: MaterialStateProperty.all(2),
                               overlayColor: MaterialStateProperty.all(Color(0xFF0D1333)),
