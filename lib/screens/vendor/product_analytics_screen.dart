@@ -239,16 +239,21 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                     leftTitles: AxisTitles(
                                       sideTitles: SideTitles(
                                         showTitles: true,
-                                        interval: 5,
+                                        interval: 5, // You can adjust this as needed
                                         getTitlesWidget: (double value, TitleMeta meta) {
-                                          return Text(
-                                            value.toInt().toString(),
-                                            style: TextStyle(
-                                              color: isDark ? Colors.white70 : Colors.grey[600],
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 10,
-                                            ),
-                                          );
+                                          // Only show every 2nd label
+                                          if (value % 2 == 0) {
+                                            return Text(
+                                              value.toInt().toString(),
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white70 : Colors.grey[600],
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 10,
+                                              ),
+                                            );
+                                          } else {
+                                            return const SizedBox.shrink();
+                                          }
                                         },
                                       ),
                                     ),
