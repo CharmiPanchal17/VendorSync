@@ -21,6 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final UserRole role = UserRole.vendor;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
   Future<void> _registerVendor() async {
     if (_formKey.currentState!.validate()) {
@@ -189,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
@@ -207,8 +209,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     borderRadius: BorderRadius.all(Radius.circular(12)),
                                     borderSide: BorderSide(color: Color(0xFF800000), width: 2),
                                   ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _passwordVisible = !_passwordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_passwordVisible,
                                 onChanged: (val) => password = val,
                                 validator: (val) {
                                   if (val == null || val.isEmpty) {
@@ -222,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Confirm Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
@@ -240,8 +250,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     borderRadius: BorderRadius.all(Radius.circular(12)),
                                     borderSide: BorderSide(color: Color(0xFF800000), width: 2),
                                   ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_confirmPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _confirmPasswordVisible = !_confirmPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_confirmPasswordVisible,
                                 onChanged: (val) => confirmPassword = val,
                                 validator: (val) {
                                   if (val == null || val.isEmpty) {
