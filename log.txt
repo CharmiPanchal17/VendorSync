@@ -167,3 +167,4 @@ Initial homepage layout
 Added vendor section
 Added vendor section
 Vendor dashboard template
+Bug fix in auth flow
