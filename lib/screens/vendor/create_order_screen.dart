@@ -286,7 +286,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                         icon: const Icon(Icons.add),
                                         label: const Text('Add Suppliers'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.orange,
+                                          backgroundColor: maroon,
                                           foregroundColor: Colors.white,
                                         ),
                                       ),

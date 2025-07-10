@@ -365,6 +365,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         );
       }
     }
+    await _saveStockDataToFirestore();
   }
 
   @override
