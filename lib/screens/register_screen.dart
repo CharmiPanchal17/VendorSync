@@ -136,6 +136,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   labelText: 'Vendor Name',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.person_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 onChanged: (val) => name = val,
                                 validator: (val) => val == null || val.isEmpty ? 'Enter vendor name' : null,
@@ -146,6 +160,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   labelText: 'Email',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 onChanged: (val) => email = val,
@@ -165,6 +193,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   labelText: 'Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => password = val,
@@ -184,6 +226,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   labelText: 'Confirm Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 obscureText: true,
                                 onChanged: (val) => confirmPassword = val,
