@@ -12,6 +12,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  final List<String> _welcomeWords = ['Welcome', 'to', 'VendorSync'];
+  int _visibleWordCount = 1;
+  String _displayedText = '';
+  int _selectedRegisterIndex = -1;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +36,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
       curve: Curves.easeOut,
     ));
     _controller.forward();
+    _typeWriterEffect();
+  }
+
+  Future<void> _typeWriterEffect() async {
+    const String fullText = 'Welcome to VendorSync';
+    for (int i = 1; i <= fullText.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 80));
+      if (mounted) {
+        setState(() => _displayedText = fullText.substring(0, i));
+        print('Typewriter: 			' + _displayedText);
+      }
+    }
   }
 
   @override
@@ -67,7 +84,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Text(
-                            'Welcome to VendorSync',
+                            _displayedText.isNotEmpty ? _displayedText : 'Welcome to VendorSync',
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF800000),
@@ -95,46 +112,87 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                             ),
                           ),
                           const SizedBox(height: 40),
-                          SlideTransition(
-                            position: _slideAnimation,
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    child: const Text('Vendor Register', style: TextStyle(fontSize: 18)),
-                                    style: FilledButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(48),
-                                      backgroundColor: const Color(0xFF800000), // Maroon
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                      elevation: 2,
-                                      overlayColor: Color(0xFF0D1333), // Dark blue on press
-                                    ),
-                                    onPressed: () => Navigator.of(context).pushNamed('/register'),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton(
-                                    child: const Text('Supplier Register', style: TextStyle(fontSize: 18)),
-                                    style: FilledButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(48),
-                                      backgroundColor: const Color(0xFF800000), // Maroon
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                                      elevation: 2,
-                                      overlayColor: Color(0xFF0D1333), // Dark blue on press
-                                    ),
-                                    onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
-                                  ),
-                                ),
-                              ],
+                          FilledButton(
+                            child: const Text('Register As', style: TextStyle(fontSize: 18)),
+                            style: ButtonStyle(
+                              minimumSize: MaterialStateProperty.all(const Size.fromHeight(48)),
+                              backgroundColor: MaterialStateProperty.all(const Color(0xFF800000)), // Maroon
+                              foregroundColor: MaterialStateProperty.all(Colors.white),
+                              shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                              textStyle: MaterialStateProperty.all(const TextStyle(fontWeight: FontWeight.bold)),
+                              elevation: MaterialStateProperty.all(2),
+                              overlayColor: MaterialStateProperty.all(Color(0xFF0D1333)),
                             ),
+                            onPressed: null, // No action, just a label
                           ),
+                          const SizedBox(height: 16),
+                          // Replace the Row with two buttons with a segmented control
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() => _selectedRegisterIndex = 0);
+                                    Navigator.of(context).pushNamed('/register');
+                                  },
+                                  child: Container(
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: _selectedRegisterIndex == 0 ? const Color(0xFF800000) : Colors.white,
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(_selectedRegisterIndex == 0 ? 20 : 12),
+                                        bottomLeft: Radius.circular(_selectedRegisterIndex == 0 ? 20 : 12),
+                                        topRight: Radius.circular(_selectedRegisterIndex == 0 ? 4 : 0),
+                                        bottomRight: Radius.circular(_selectedRegisterIndex == 0 ? 4 : 0),
+                                      ),
+                                      border: Border.all(color: const Color(0xFF800000), width: 2),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'Vendor',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: _selectedRegisterIndex == 0 ? Colors.white : const Color(0xFF800000),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() => _selectedRegisterIndex = 1);
+                                    Navigator.of(context).pushNamed('/register-supplier');
+                                  },
+                                  child: Container(
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: _selectedRegisterIndex == 1 ? const Color(0xFF800000) : Colors.white,
+                                      borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(_selectedRegisterIndex == 1 ? 20 : 12),
+                                        bottomRight: Radius.circular(_selectedRegisterIndex == 1 ? 20 : 12),
+                                        topLeft: Radius.circular(_selectedRegisterIndex == 1 ? 4 : 0),
+                                        bottomLeft: Radius.circular(_selectedRegisterIndex == 1 ? 4 : 0),
+                                      ),
+                                      border: Border.all(color: const Color(0xFF800000), width: 2),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'Supplier',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: _selectedRegisterIndex == 1 ? Colors.white : const Color(0xFF800000),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
