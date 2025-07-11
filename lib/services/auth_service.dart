@@ -1,36 +1,23 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  // Mock users for testing
-  static final Map<String, Map<String, dynamic>> _mockUsers = {
-    'vendor@test.com': {
-      'name': 'Test Vendor',
-      'email': 'vendor@test.com',
-      'password': 'password123',
-      'role': 'vendor',
-      'createdAt': DateTime.now(),
-    },
-    'supplier@test.com': {
-      'name': 'Test Supplier',
-      'email': 'supplier@test.com',
-      'password': 'password123',
-      'role': 'supplier',
-      'createdAt': DateTime.now(),
-    },
-  };
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<Map<String, dynamic>?> login(String email, String password, String role) async {
     try {
-      // Use mock authentication only (Firebase disabled)
-      final user = _mockUsers[email];
-      if (user != null && user['password'] == password && user['role'] == role) {
-        return user;
+      // Query Firestore for user
+      final query = await _firestore.collection(role == 'vendor' ? 'vendors' : 'suppliers')
+        .where('email', isEqualTo: email)
+        .where('password', isEqualTo: password)
+        .limit(1)
+        .get();
+      if (query.docs.isNotEmpty) {
+        return query.docs.first.data();
       }
-      
       return null;
     } catch (e) {
       print('Login error: $e');
@@ -40,29 +27,27 @@ class AuthService {
 
   Future<bool> register(String name, String email, String password, String role) async {
     try {
-      // Use mock registration only (Firebase disabled)
-      if (_mockUsers.containsKey(email)) {
-        return false; // User already exists
+      // Check if user already exists
+      final existing = await _firestore.collection(role == 'vendor' ? 'vendors' : 'suppliers')
+        .where('email', isEqualTo: email)
+        .get();
+      if (existing.docs.isNotEmpty) {
+        return false;
       }
 
-      _mockUsers[email] = {
+      final userData = {
         'name': name,
         'email': email,
-        'password': password,
-        'role': role,
-        'createdAt': DateTime.now(),
+        'password': password, // (You should hash passwords in production)
+        'role': role, // Ensure role is set
+        'createdAt': FieldValue.serverTimestamp(),
       };
-      
+
+      await _firestore.collection(role == 'vendor' ? 'vendors' : 'suppliers').add(userData);
       return true;
     } catch (e) {
       print('Registration error: $e');
       return false;
     }
   }
-
-  // Get mock users for testing (instance getter)
-  Map<String, Map<String, dynamic>> get mockUsers => _mockUsers;
-  
-  // Get mock users for testing (static getter)
-  static Map<String, Map<String, dynamic>> get staticMockUsers => _mockUsers;
 } 

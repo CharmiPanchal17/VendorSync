@@ -344,10 +344,16 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       );
 
-      // Update stock levels
-      await DeliveryTrackingService.updateStockLevels(
+      // Update stock levels automatically through delivery tracking service
+      await DeliveryTrackingService.recordDelivery(
+        orderId: widget.order.id,
         productName: widget.order.productName,
-        deliveredQuantity: widget.order.quantity,
+        quantity: widget.order.quantity,
+        supplierName: widget.order.supplierName,
+        supplierEmail: widget.order.supplierEmail,
+        deliveryDate: _deliveryDate,
+        unitPrice: widget.order.unitPrice,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       );
 
       // Show success message

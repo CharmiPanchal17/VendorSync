@@ -403,7 +403,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                         ),
                                       
                                       // Supplier Selection Dropdown
-                                      Container(
+                                      SizedBox(
                                         width: double.infinity,
                                         child: DropdownButtonFormField<String>(
                                           decoration: InputDecoration(
@@ -588,7 +588,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                                   ),
                                                 ),
                                               );
-                                            }).toList(),
+                                            }),
                                           ],
                                           onChanged: (value) {
                                             print('Dropdown changed to: $value'); // Debug print
@@ -803,7 +803,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity (${_autoOrderQuantity} units)',
+                                      'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity ($_autoOrderQuantity units)',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: maroon,

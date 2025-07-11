@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import 'welcome_screen.dart';
 
 // Add color constant at the top-level for use throughout the file
 const maroonPopup = Color(0xFF800000);
@@ -90,18 +91,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Builder(
                           builder: (context) =>
-                            Navigator.canPop(context)
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
-                                      onPressed: () => Navigator.of(context).pop(),
-                                    ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                              child: Align(
+                                alignment: Alignment.topLeft,
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
+                                  onPressed: () => Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
                                   ),
-                                )
-                              : const SizedBox.shrink(),
+                                ),
+                              ),
+                            ),
                         ),
                         CircleAvatar(
                           radius: 40,

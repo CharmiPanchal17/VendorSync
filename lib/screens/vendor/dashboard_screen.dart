@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
-import '../../models/order.dart' show DeliveryRecord, StockItem;
 import '../../services/notification_service.dart';
+import '../../services/delivery_tracking_service.dart';
+import '../../services/auto_reorder_service.dart';
+import '../../widgets/auto_reorder_dashboard.dart';
 import 'suppliers_list_screen.dart';
 import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,10 +13,9 @@ import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
 import 'analytics_screen.dart';
 import 'create_order_screen.dart';
-import 'package:provider/provider.dart';
-import '../../providers/theme_provider.dart';
 import '../../services/auth_service.dart';
-import 'available_suppliers_screen.dart';
+import 'real_time_sales_screen.dart';
+import 'spreadsheet_upload_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -41,12 +42,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   Future<void> _fetchVendorName() async {
     try {
-      // Use mock data instead of Firebase
-      final authService = AuthService();
-      final vendor = authService.mockUsers[widget.vendorEmail];
-      if (vendor != null) {
+      final query = await FirebaseFirestore.instance
+        .collection('vendors')
+        .where('email', isEqualTo: widget.vendorEmail)
+        .limit(1)
+        .get();
+      if (query.docs.isNotEmpty) {
         setState(() {
-          vendorName = vendor['name'];
+          vendorName = query.docs.first['name'] ?? 'Vendor';
+        });
+      } else {
+        setState(() {
+          vendorName = 'Vendor';
         });
       }
     } catch (e) {
@@ -152,6 +159,36 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => StockManagementScreen(),
                         ));
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.auto_awesome,
+                      title: 'Auto Settings',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/auto-settings', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.bar_chart,
+                      title: 'Monitor Stock',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/monitor-stock', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.warning,
+                      title: 'Below Threshold',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/below-threshold', arguments: widget.vendorEmail);
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
@@ -652,13 +689,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   
+                  // Auto-Reorder Dashboard
+                  AutoReorderDashboard(vendorEmail: widget.vendorEmail),
+                  
+                  const SizedBox(height: 24),
+                  
                   // Status Filter
                   Text(
                     'Filter Orders',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      color: isDark ? colorScheme.onSurface : Colors.grey.shade800,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1018,9 +1060,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => StockManagementScreen(),
-          ));
+          _showUpdateStockOptions(context);
         },
         icon: const Icon(Icons.inventory),
         label: const Text('Update Stock'),
@@ -1426,8 +1466,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         'approvedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update stock management data
-      await _updateStockAfterDelivery(productName, quantity, supplierName, supplierEmail, unitPrice, orderId);
+      // Update stock management data automatically
+      await DeliveryTrackingService.recordDelivery(
+        orderId: orderId,
+        productName: productName,
+        quantity: quantity,
+        supplierName: supplierName,
+        supplierEmail: supplierEmail,
+        deliveryDate: DateTime.now(),
+        unitPrice: unitPrice,
+        notes: 'Approved by vendor',
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1451,6 +1500,56 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         );
       }
     }
+  }
+
+  void _showUpdateStockOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Stock'),
+        content: const Text('How would you like to update the stock?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroonVendor,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => RealTimeSalesScreen(
+                  vendorEmail: widget.vendorEmail,
+                ),
+              ));
+            },
+            child: const Text('Real-time Sales'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroonVendor,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _showSpreadsheetUpload(context);
+            },
+            child: const Text('Upload Spreadsheet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSpreadsheetUpload(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SpreadsheetUploadScreen(
+        vendorEmail: widget.vendorEmail,
+      ),
+    ));
   }
 
   Future<void> _updateStockAfterDelivery(String productName, int quantity, String supplierName, String supplierEmail, double? unitPrice, String orderId) async {
