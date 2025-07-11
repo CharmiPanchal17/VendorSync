@@ -4,13 +4,16 @@ import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'real_time_sales_screen.dart';
 import '../../services/sales_service.dart';
+import 'spreadsheet_upload_screen.dart';
+import 'initial_stock_upload_screen.dart'; // Added import for InitialStockUploadScreen
+import 'sales_data_upload_screen.dart'; // Added import for SalesDataUploadScreen
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class StockManagementScreen extends StatefulWidget {
-  // Remove const constructor to allow hot reload after class structure changes
-  const StockManagementScreen({super.key});
+  final String vendorEmail;
+  const StockManagementScreen({super.key, required this.vendorEmail});
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -19,11 +22,13 @@ class StockManagementScreen extends StatefulWidget {
 class _StockManagementScreenState extends State<StockManagementScreen> {
   List<StockItem> stockItems = [];
   bool isLoading = true;
+  List<Map<String, dynamic>> thresholdAnalysis = [];
 
   @override
   void initState() {
     super.initState();
     _loadStockData();
+    _loadThresholdAnalysis();
   }
 
   Future<void> _loadStockData() async {
@@ -200,6 +205,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     }
   }
 
+  Future<void> _loadThresholdAnalysis() async {
+    try {
+      final analysis = await SalesService.getThresholdAndAutoOrderAnalysis(vendorEmail: widget.vendorEmail);
+      setState(() {
+        thresholdAnalysis = analysis;
+      });
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
+
   List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> historyData) {
     return historyData.map((record) {
       return DeliveryRecord(
@@ -297,22 +313,106 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           ),
         ),
       ),
-      body: Container(
-        color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(maroon),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Upload Initial Stock'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: maroon,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => InitialStockUploadScreen(vendorEmail: widget.vendorEmail),
+                          ));
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: stockItems.length,
-                itemBuilder: (context, index) {
-                  final stockItem = stockItems[index];
-                  return _buildStockCard(context, stockItem, isDark, index);
-                },
-              ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.analytics),
+                        label: const Text('Upload Sales Data for Analysis'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: maroon,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => SalesDataUploadScreen(vendorEmail: widget.vendorEmail),
+                          ));
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
+            child: isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(maroon),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: stockItems.length,
+                    itemBuilder: (context, index) {
+                      final stockItem = stockItems[index];
+                      return _buildStockItemWithAnalysis(stockItem, isDark);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStockItemWithAnalysis(StockItem stockItem, bool isDark) {
+    final analysis = thresholdAnalysis.firstWhere(
+      (a) => a['productName'] == stockItem.productName.toLowerCase(),
+      orElse: () => <String, dynamic>{},
+    );
+    return Card(
+      color: isDark ? Colors.white10 : Colors.white,
+      child: ListTile(
+        title: Text(stockItem.productName, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Current Stock: ${stockItem.currentStock}'),
+            if (analysis.isNotEmpty) ...[
+              if (analysis.isNotEmpty) ...[
+                Text('Recommended Threshold: ${analysis['recommendedThreshold']}'),
+                Text('Auto-Order Priority: ${analysis['priority']}'),
+                Text('Sales Velocity: ${analysis['salesVelocity'].toStringAsFixed(2)} units/week'),
+              ],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -750,19 +850,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     // Navigate to real-time sales screen
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => RealTimeSalesScreen(
-        vendorEmail: 'vendor@example.com', // TODO: Get actual vendor email from context or parameters
+        vendorEmail: widget.vendorEmail,
       ),
     ));
   }
 
   void _showSpreadsheetUploadOption(BuildContext context) {
-    // TODO: Implement spreadsheet upload functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Spreadsheet upload feature coming soon'),
-        backgroundColor: Colors.orange,
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SpreadsheetUploadScreen(
+        vendorEmail: widget.vendorEmail,
       ),
-    );
+    ));
   }
 
   Widget _buildMetricItem(String label, String value, IconData icon, bool isDark) {

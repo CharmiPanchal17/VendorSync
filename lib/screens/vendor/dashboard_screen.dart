@@ -16,6 +16,7 @@ import 'create_order_screen.dart';
 import '../../services/auth_service.dart';
 import 'real_time_sales_screen.dart';
 import 'spreadsheet_upload_screen.dart';
+import '../../services/sales_service.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -33,11 +34,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   String? vendorName;
+  List<Map<String, dynamic>> draftOrders = [];
 
   @override
   void initState() {
     super.initState();
     _fetchVendorName();
+    _checkAndLoadDraftOrders();
   }
 
   Future<void> _fetchVendorName() async {
@@ -62,6 +65,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         vendorName = 'Vendor';
       });
     }
+  }
+
+  Future<void> _checkAndLoadDraftOrders() async {
+    await SalesService.checkAndCreateDraftOrders(widget.vendorEmail);
+    final drafts = await SalesService.getDraftOrders(widget.vendorEmail);
+    setState(() {
+      draftOrders = drafts;
+    });
   }
 
   @override
@@ -157,7 +168,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => StockManagementScreen(),
+                          builder: (context) => StockManagementScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -388,6 +399,64 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.summarize),
+            tooltip: 'View Stock Report',
+            onPressed: () async {
+              final report = await SalesService.generateStockReport(widget.vendorEmail);
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: isDark ? Colors.black : Colors.white,
+                  title: const Text('Stock Report'),
+                  content: SizedBox(
+                    width: 400,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...report.map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
+                                Text('Current Stock: ${item['currentStock']}'),
+                                Text('Days in Stock: ${item['daysInStock']}'),
+                                Text('Weekly Sales Rate: ${item['weeklySalesRate'].toStringAsFixed(2)}'),
+                                Text('Monthly Sales Rate: ${item['monthlySalesRate'].toStringAsFixed(2)}'),
+                                Text('Depletion Speed: ${item['depletionSpeedDays'] ?? 'N/A'} days'),
+                                Text('Recommended Reorder Level: ${item['recommendedReorderLevel']}'),
+                                Text('Priority Score: ${item['priorityScore'].toStringAsFixed(2)}'),
+                              ],
+                            ),
+                          )),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.download),
+                            label: const Text('Download as CSV'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: maroonVendor,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () async {
+                              // TODO: Implement CSV download
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -1644,5 +1713,87 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             return deliveryDate?.toDate() ?? DateTime.now();
           }).toList();
         });
+  }
+
+  Widget _buildDraftOrdersSection(bool isDark) {
+    if (draftOrders.isEmpty) return const SizedBox.shrink();
+    return Card(
+      color: isDark ? Colors.white10 : Colors.white,
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Draft Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+            const SizedBox(height: 12),
+            ...draftOrders.map((order) => _buildDraftOrderCard(order, isDark)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDraftOrderCard(Map<String, dynamic> order, bool isDark) {
+    final analysis = order['analysis'] as Map<String, dynamic>?;
+    final TextEditingController qtyController = TextEditingController(text: order['suggestedQuantity'].toString());
+    return Card(
+      color: isDark ? Colors.white24 : Colors.grey[100],
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(order['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
+            Text('Current Stock: ${order['currentStock']}'),
+            Text('Suggested Quantity: ${order['suggestedQuantity']}'),
+            if (analysis != null) ...[
+              Text('Priority: ${analysis['priority']}'),
+              Text('Sales Velocity: ${analysis['salesVelocity'].toStringAsFixed(2)} units/week'),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: qtyController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Edit Quantity'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final newQty = int.tryParse(qtyController.text) ?? order['suggestedQuantity'];
+                    await SalesService.editDraftOrder(order['id'], newQty);
+                    await _checkAndLoadDraftOrders();
+                  },
+                  child: const Text('Edit'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    await SalesService.approveDraftOrder(order['id']);
+                    await _checkAndLoadDraftOrders();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('Approve'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    await SalesService.rejectDraftOrder(order['id']);
+                    await _checkAndLoadDraftOrders();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Reject'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 } 

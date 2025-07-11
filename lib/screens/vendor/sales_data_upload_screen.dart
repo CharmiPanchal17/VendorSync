@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:convert';
-import '../../models/sales.dart';
-import '../../services/sales_service.dart';
 import 'package:csv/csv.dart';
+import '../../services/sales_service.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
-class SpreadsheetUploadScreen extends StatefulWidget {
+class SalesDataUploadScreen extends StatefulWidget {
   final String vendorEmail;
-
-  const SpreadsheetUploadScreen({
-    super.key,
-    required this.vendorEmail,
-  });
+  const SalesDataUploadScreen({super.key, required this.vendorEmail});
 
   @override
-  State<SpreadsheetUploadScreen> createState() => _SpreadsheetUploadScreenState();
+  State<SalesDataUploadScreen> createState() => _SalesDataUploadScreenState();
 }
 
-class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
-  List<SalesItem> parsedItems = [];
+class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
+  List<Map<String, dynamic>> parsedSales = [];
   bool isLoading = false;
   bool isUploading = false;
   String? selectedFileName;
   String? errorMessage;
+  String? selectedPeriod;
+  Map<String, dynamic>? analysisResult;
+
+  final List<String> periods = ['Week', 'Month', 'Year'];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload Spreadsheet'),
+        title: const Text('Upload Sales Data'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -59,19 +56,25 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildInstructions(isDark),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                _buildPeriodDropdown(isDark),
+                const SizedBox(height: 16),
                 _buildFilePicker(isDark),
                 const SizedBox(height: 24),
                 if (errorMessage != null) _buildErrorMessage(isDark),
-                if (parsedItems.isNotEmpty) ...[
+                if (parsedSales.isNotEmpty) ...[
                   _buildPreviewHeader(isDark),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 300,
+                    height: 200,
                     child: _buildPreviewList(isDark),
                   ),
                   const SizedBox(height: 16),
                   _buildSubmitButton(isDark),
+                ],
+                if (analysisResult != null) ...[
+                  const SizedBox(height: 24),
+                  _buildAnalysisReport(isDark),
                 ],
               ],
             ),
@@ -90,7 +93,7 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Upload Sales Spreadsheet',
+              'Upload Sales Data CSV',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -99,38 +102,37 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Upload a CSV file with the following columns:',
+              'CSV columns required: productName, quantity, unitPrice, soldAt (YYYY-MM-DD), notes (optional)',
               style: TextStyle(
                 color: isDark ? Colors.white70 : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '• productName (required)\n• quantity (required)\n• unitPrice (optional)\n• notes (optional)',
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: maroon.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: maroon.withOpacity(0.3)),
-              ),
-              child: Text(
-                'Note: Only products with available stock will be processed.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: maroon,
-                  fontWeight: FontWeight.w500,
-                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPeriodDropdown(bool isDark) {
+    return DropdownButtonFormField<String>(
+      value: selectedPeriod,
+      decoration: InputDecoration(
+        labelText: 'Select Period',
+        filled: true,
+        fillColor: isDark ? Colors.white10 : Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      items: periods.map((period) {
+        return DropdownMenuItem<String>(
+          value: period,
+          child: Text(period),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          selectedPeriod = value;
+        });
+      },
     );
   }
 
@@ -160,7 +162,7 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
                     onPressed: () {
                       setState(() {
                         selectedFileName = null;
-                        parsedItems.clear();
+                        parsedSales.clear();
                         errorMessage = null;
                       });
                     },
@@ -173,7 +175,7 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: isLoading ? null : _pickFile,
-                icon: isLoading 
+                icon: isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -232,7 +234,7 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
         Icon(Icons.preview, color: maroon),
         const SizedBox(width: 8),
         Text(
-          'Preview (${parsedItems.length} items)',
+          'Preview (${parsedSales.length} items)',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -245,15 +247,15 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
 
   Widget _buildPreviewList(bool isDark) {
     return ListView.builder(
-      itemCount: parsedItems.length,
+      itemCount: parsedSales.length,
       itemBuilder: (context, index) {
-        final item = parsedItems[index];
+        final item = parsedSales[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
           color: isDark ? Colors.white10 : Colors.white,
           child: ListTile(
             title: Text(
-              item.productName,
+              item['productName'] ?? '',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,
@@ -262,17 +264,11 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Quantity: ${item.quantity}'),
-                Text('Price: UGX${item.unitPrice.toStringAsFixed(2)}'),
-                if (item.notes != null) Text('Notes: ${item.notes}'),
+                Text('Quantity: ${item['quantity']}'),
+                Text('Unit Price: UGX${item['unitPrice']}'),
+                Text('Sold At: ${item['soldAt']}'),
+                if (item['notes'] != null) Text('Notes: ${item['notes']}'),
               ],
-            ),
-            trailing: Text(
-              'Total: UGX${item.totalPrice.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: maroon,
-              ),
             ),
           ),
         );
@@ -284,8 +280,8 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: isUploading ? null : _submitSales,
-        icon: isUploading 
+        onPressed: isUploading ? null : _analyzeSales,
+        icon: isUploading
             ? const SizedBox(
                 width: 20,
                 height: 20,
@@ -294,8 +290,8 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
                   color: Colors.white,
                 ),
               )
-            : const Icon(Icons.send),
-        label: Text(isUploading ? 'Processing...' : 'Submit All Sales'),
+            : const Icon(Icons.analytics),
+        label: Text(isUploading ? 'Analyzing...' : 'Analyze Sales Data'),
         style: ElevatedButton.styleFrom(
           backgroundColor: maroon,
           foregroundColor: Colors.white,
@@ -314,19 +310,15 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
         isLoading = true;
         errorMessage = null;
       });
-
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
-
       if (result != null) {
         final file = result.files.first;
         setState(() {
           selectedFileName = file.name;
         });
-
-        // Read and parse the CSV file
         await _parseCSVFile(file);
       }
     } catch (e) {
@@ -342,117 +334,127 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
 
   Future<void> _parseCSVFile(PlatformFile file) async {
     try {
-      print('[CSV] Parsing file: ${file.name}');
       final content = String.fromCharCodes(file.bytes!);
-      print('[CSV] Raw content:');
-      print(content);
       final rows = const CsvToListConverter(eol: '\n').convert(content, eol: '\n');
       if (rows.isEmpty) {
         setState(() {
           errorMessage = 'CSV file is empty.';
         });
-        print('[CSV][ERROR] File is empty.');
         return;
       }
       final header = rows.first.map((e) => e.toString().trim()).toList();
-      print('[CSV] Header: $header');
-      final List<SalesItem> items = [];
+      final List<Map<String, dynamic>> items = [];
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        print('[CSV] Row $i: $row');
         if (row.length < 2) continue;
         final productName = row[header.indexOf('productName')].toString().trim();
         final quantity = int.tryParse(row[header.indexOf('quantity')].toString()) ?? 0;
         final unitPrice = header.contains('unitPrice') ? double.tryParse(row[header.indexOf('unitPrice')].toString()) ?? 0.0 : 0.0;
+        final soldAt = header.contains('soldAt') ? row[header.indexOf('soldAt')].toString() : null;
         final notes = header.contains('notes') ? row[header.indexOf('notes')].toString() : null;
-        print('[CSV] Parsed: productName=$productName, quantity=$quantity, unitPrice=$unitPrice, notes=$notes');
-        if (productName.isNotEmpty && quantity > 0) {
-          items.add(SalesItem(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            productName: productName,
-            quantity: quantity,
-            unitPrice: unitPrice,
-            totalPrice: unitPrice * quantity,
-            soldAt: DateTime.now(),
-            notes: notes,
-          ));
+        if (productName.isNotEmpty && quantity > 0 && soldAt != null && soldAt.isNotEmpty) {
+          items.add({
+            'productName': productName,
+            'quantity': quantity,
+            'unitPrice': unitPrice,
+            'soldAt': soldAt,
+            'notes': notes,
+          });
         }
       }
       setState(() {
-        parsedItems = items;
+        parsedSales = items;
       });
-      print('[CSV] Parsed items: $parsedItems');
       if (items.isEmpty) {
         setState(() {
           errorMessage = 'No valid items found in the file. Please check the format.';
         });
-        print('[CSV][ERROR] No valid items found.');
       }
     } catch (e) {
       setState(() {
         errorMessage = 'Error parsing file: $e';
       });
-      print('[CSV][EXCEPTION] $e');
     }
   }
 
-  Future<void> _submitSales() async {
-    if (parsedItems.isEmpty) {
+  Future<void> _analyzeSales() async {
+    if (parsedSales.isEmpty || selectedPeriod == null) {
       setState(() {
-        errorMessage = 'No items to submit';
+        errorMessage = 'Please select a period and upload a valid sales CSV.';
       });
       return;
     }
-
     setState(() {
       isUploading = true;
       errorMessage = null;
     });
-
     try {
-      // Filter parsedItems to only those in available stock
-      final availableStock = await SalesService.getAvailableStockItems(widget.vendorEmail);
-      final availableNames = availableStock.map((s) => s.productName.toLowerCase()).toSet();
-      final filteredItems = parsedItems.where((item) => availableNames.contains(item.productName.toLowerCase())).toList();
-      final ignoredCount = parsedItems.length - filteredItems.length;
-
-      if (filteredItems.isEmpty) {
-        setState(() {
-          errorMessage = 'No valid items to submit. None of the products exist in your stock.';
-        });
-        return;
-      }
-
-      final invoice = await SalesService.createSalesInvoice(
-        items: filteredItems,
+      // Call analysis service (to be implemented in SalesService)
+      final result = await SalesService.analyzeSalesData(
         vendorEmail: widget.vendorEmail,
-        notes: 'Bulk upload from spreadsheet: $selectedFileName',
+        sales: parsedSales,
+        period: selectedPeriod!,
       );
-
-      if (mounted) {
-        String msg = 'Sales invoice created successfully! Invoice: ${invoice.invoiceNumber}';
-        if (ignoredCount > 0) {
-          msg += '\n$ignoredCount item(s) were ignored because they do not exist in your stock.';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        Navigator.of(context).pop(true);
-      }
+      setState(() {
+        analysisResult = result;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          errorMessage = 'Error creating sales invoice: $e';
-        });
-      }
+      setState(() {
+        errorMessage = 'Error analyzing sales data: $e';
+      });
     } finally {
       setState(() {
         isUploading = false;
       });
     }
+  }
+
+  Widget _buildAnalysisReport(bool isDark) {
+    final report = analysisResult ?? {};
+    final products = report['products'] as List<Map<String, dynamic>>? ?? [];
+    return Card(
+      color: isDark ? Colors.white10 : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Analysis Report', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+            const SizedBox(height: 12),
+            ...products.map((p) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(p['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroon)),
+                  Text('Initial Stock: ${p['initialStock']}'),
+                  Text('Sold: ${p['sold']}'),
+                  Text('Remaining: ${p['remaining']}'),
+                  Text('Sales Rate: ${p['salesRate']} per $selectedPeriod'),
+                  Text('Reorder Suggestion: ${p['reorderSuggestion']}'),
+                  if (p['trend'] != null) Text('Trend: ${p['trend']}'),
+                ],
+              ),
+            )),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.download),
+              label: const Text('Download Report (CSV)'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: maroon,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                // TODO: Implement CSV download
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 } 

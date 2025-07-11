@@ -345,6 +345,155 @@ class SalesService {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> getThresholdAndAutoOrderAnalysis({
+    required String vendorEmail,
+  }) async {
+    // Fetch all sales records for this vendor
+    final salesSnapshot = await _firestore
+        .collection('sales_records')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    final Map<String, List<Map<String, dynamic>>> salesByProduct = {};
+    for (final doc in salesSnapshot.docs) {
+      final data = doc.data();
+      final name = (data['productName'] ?? '').toString().toLowerCase();
+      final soldAt = data['soldAt'] is Timestamp ? (data['soldAt'] as Timestamp).toDate() : DateTime.now();
+      final quantity = data['quantity'] ?? 0;
+      salesByProduct.putIfAbsent(name, () => []).add({
+        'soldAt': soldAt,
+        'quantity': quantity,
+      });
+    }
+    // Fetch current stock for this vendor
+    final stockSnapshot = await _firestore
+        .collection('stock_items')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    final List<Map<String, dynamic>> analysis = [];
+    for (final doc in stockSnapshot.docs) {
+      final data = doc.data();
+      final name = (data['productName'] ?? '').toString().toLowerCase();
+      final currentStock = data['currentStock'] ?? 0;
+      final minimumStock = data['minimumStock'] ?? 0;
+      final sales = salesByProduct[name] ?? [];
+      // Calculate sales velocity (units per week)
+      double salesVelocity = 0;
+      if (sales.isNotEmpty) {
+        sales.sort((a, b) => (a['soldAt'] as DateTime).compareTo(b['soldAt'] as DateTime));
+        final first = sales.first['soldAt'] as DateTime;
+        final last = sales.last['soldAt'] as DateTime;
+        final totalDays = last.difference(first).inDays + 1;
+        final totalUnits = sales.fold<num>(0, (sum, s) => sum + (s['quantity'] ?? 0)).toDouble();
+        salesVelocity = totalDays > 0 ? (totalUnits / (totalDays / 7.0)) : totalUnits;
+      }
+      // Recommend threshold: 1-2 weeks of sales velocity, min 1
+      final recommendedThreshold = salesVelocity > 0 ? salesVelocity.ceil() * 2 : 1;
+      // Priority: high if salesVelocity is high, low if slow
+      final priority = salesVelocity > 10 ? 'High' : salesVelocity > 0 ? 'Medium' : 'Low';
+      analysis.add({
+        'productName': name,
+        'currentStock': currentStock,
+        'minimumStock': minimumStock,
+        'salesVelocity': salesVelocity,
+        'recommendedThreshold': recommendedThreshold,
+        'priority': priority,
+      });
+    }
+    return analysis;
+  }
+
+  static Future<Map<String, dynamic>> analyzeSalesData({
+    required String vendorEmail,
+    required List<Map<String, dynamic>> sales,
+    required String period,
+  }) async {
+    // Fetch initial stock for vendor
+    final stockSnapshot = await _firestore
+        .collection('stock_items')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    final stockMap = <String, int>{};
+    for (final doc in stockSnapshot.docs) {
+      final data = doc.data();
+      final name = data['productName'] ?? '';
+      final qty = data['currentStock'] ?? 0;
+      stockMap[name.toLowerCase()] = qty;
+    }
+    // Aggregate sales
+    final Map<String, int> soldMap = {};
+    for (final sale in sales) {
+      final name = (sale['productName'] ?? '').toString().toLowerCase();
+      final qty = (sale['quantity'] ?? 0) is int ? (sale['quantity'] ?? 0) : ((sale['quantity'] ?? 0) as num).toInt();
+      soldMap[name] = (((soldMap[name] ?? 0) as num) + qty).toInt();
+    }
+    // Analyze per product
+    final List<Map<String, dynamic>> products = [];
+    for (final entry in stockMap.entries) {
+      final name = entry.key;
+      final initialStock = entry.value;
+      final sold = soldMap[name] ?? 0;
+      final remaining = initialStock - sold;
+      // Simple sales rate: sold/period (simulate for now)
+      final salesRate = sold > 0 ? sold : 0;
+      // Trend: up/down/steady (simulate)
+      final trend = salesRate > 10 ? 'Up' : salesRate == 0 ? 'No sales' : 'Steady';
+      // Reorder suggestion
+      final reorderSuggestion = remaining < (initialStock * 0.2) ? 'Yes' : 'No';
+      products.add({
+        'productName': name,
+        'initialStock': initialStock,
+        'sold': sold,
+        'remaining': remaining,
+        'salesRate': salesRate,
+        'trend': trend,
+        'reorderSuggestion': reorderSuggestion,
+      });
+    }
+    return {'products': products};
+  }
+
+  static Future<void> addInitialStockItem({
+    required String vendorEmail,
+    required String productName,
+    required int initialQuantity,
+    required double unitPrice,
+    String? supplierName,
+    String? notes,
+  }) async {
+    final stockRef = _firestore.collection('stock_items');
+    // Check if stock item already exists for this vendor and product
+    final query = await stockRef
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .where('productName', isEqualTo: productName)
+        .limit(1)
+        .get();
+    if (query.docs.isNotEmpty) {
+      // Update existing stock item
+      final doc = query.docs.first.reference;
+      await doc.update({
+        'currentStock': initialQuantity,
+        'unitPrice': unitPrice,
+        'supplierName': supplierName,
+        'notes': notes,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Create new stock item
+      await stockRef.add({
+        'vendorEmail': vendorEmail,
+        'productName': productName,
+        'currentStock': initialQuantity,
+        'minimumStock': (initialQuantity * 0.1).round(),
+        'maximumStock': initialQuantity,
+        'unitPrice': unitPrice,
+        'supplierName': supplierName,
+        'notes': notes,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
   static List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> historyData) {
     return historyData.map((record) {
       return DeliveryRecord(
@@ -362,5 +511,126 @@ class SalesService {
         status: record['status'] ?? 'Completed',
       );
     }).toList();
+  }
+
+  static Future<void> checkAndCreateDraftOrders(String vendorEmail) async {
+    final analysis = await getThresholdAndAutoOrderAnalysis(vendorEmail: vendorEmail);
+    final stockSnapshot = await _firestore
+        .collection('stock_items')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    for (final doc in stockSnapshot.docs) {
+      final data = doc.data();
+      final name = (data['productName'] ?? '').toString().toLowerCase();
+      final currentStock = data['currentStock'] ?? 0;
+      final productAnalysis = analysis.firstWhere((a) => a['productName'] == name, orElse: () => <String, dynamic>{});
+      if (productAnalysis.isNotEmpty && currentStock < productAnalysis['recommendedThreshold']) {
+        // Check if a draft order already exists for this product
+        final draftQuery = await _firestore.collection('draft_orders')
+            .where('vendorEmail', isEqualTo: vendorEmail)
+            .where('productName', isEqualTo: name)
+            .where('status', isEqualTo: 'draft')
+            .limit(1)
+            .get();
+        if (draftQuery.docs.isEmpty) {
+          // Create draft order
+          await _firestore.collection('draft_orders').add({
+            'vendorEmail': vendorEmail,
+            'productName': name,
+            'suggestedQuantity': productAnalysis['recommendedThreshold'],
+            'currentStock': currentStock,
+            'analysis': productAnalysis,
+            'status': 'draft',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getDraftOrders(String vendorEmail) async {
+    final snapshot = await _firestore.collection('draft_orders')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .where('status', isEqualTo: 'draft')
+        .get();
+    return snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+  }
+
+  static Future<void> approveDraftOrder(String draftOrderId) async {
+    final doc = _firestore.collection('draft_orders').doc(draftOrderId);
+    await doc.update({'status': 'approved', 'approvedAt': FieldValue.serverTimestamp()});
+    // Optionally, create a real order here
+  }
+
+  static Future<void> rejectDraftOrder(String draftOrderId) async {
+    final doc = _firestore.collection('draft_orders').doc(draftOrderId);
+    await doc.update({'status': 'rejected', 'rejectedAt': FieldValue.serverTimestamp()});
+  }
+
+  static Future<void> editDraftOrder(String draftOrderId, int newQuantity) async {
+    final doc = _firestore.collection('draft_orders').doc(draftOrderId);
+    await doc.update({'suggestedQuantity': newQuantity, 'editedAt': FieldValue.serverTimestamp()});
+  }
+
+  static Future<List<Map<String, dynamic>>> generateStockReport(String vendorEmail) async {
+    final stockSnapshot = await _firestore
+        .collection('stock_items')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    final salesSnapshot = await _firestore
+        .collection('sales_records')
+        .where('vendorEmail', isEqualTo: vendorEmail)
+        .get();
+    final now = DateTime.now();
+    final Map<String, List<Map<String, dynamic>>> salesByProduct = {};
+    for (final doc in salesSnapshot.docs) {
+      final data = doc.data();
+      final name = (data['productName'] ?? '').toString().toLowerCase();
+      final soldAt = data['soldAt'] is Timestamp ? (data['soldAt'] as Timestamp).toDate() : now;
+      final quantity = data['quantity'] ?? 0;
+      salesByProduct.putIfAbsent(name, () => []).add({
+        'soldAt': soldAt,
+        'quantity': quantity,
+      });
+    }
+    final List<Map<String, dynamic>> report = [];
+    for (final doc in stockSnapshot.docs) {
+      final data = doc.data();
+      final name = (data['productName'] ?? '').toString().toLowerCase();
+      final currentStock = data['currentStock'] ?? 0;
+      final createdAt = data['createdAt'] is Timestamp ? (data['createdAt'] as Timestamp).toDate() : now;
+      final daysInStock = now.difference(createdAt).inDays;
+      final sales = salesByProduct[name] ?? [];
+      // Calculate sales rates
+      int totalSold = 0;
+      int soldLast7 = 0;
+      int soldLast30 = 0;
+      for (final s in sales) {
+        final soldAt = s['soldAt'] as DateTime;
+        final qty = (s['quantity'] ?? 0) is int ? (s['quantity'] ?? 0) : ((s['quantity'] ?? 0) as num).toInt();
+        totalSold = (totalSold + qty).toInt();
+        if (now.difference(soldAt).inDays <= 7) soldLast7 = (soldLast7 + qty).toInt();
+        if (now.difference(soldAt).inDays <= 30) soldLast30 = (soldLast30 + qty).toInt();
+      }
+      final weeklyRate = soldLast7 / 1.0; // 1 week
+      final monthlyRate = soldLast30 / 4.0; // 4 weeks
+      // Depletion speed: days to zero at current weekly rate
+      final depletionSpeed = weeklyRate > 0 ? (currentStock / weeklyRate).ceil() : null;
+      // Recommended reorder level: 2x weekly rate or 1
+      final reorderLevel = weeklyRate > 0 ? (weeklyRate * 2).ceil() : 1;
+      // Priority score: weighted by sales rate and depletion speed
+      final priorityScore = (weeklyRate * 2) + (depletionSpeed != null ? (30 - depletionSpeed) : 0);
+      report.add({
+        'productName': name,
+        'currentStock': currentStock,
+        'daysInStock': daysInStock,
+        'weeklySalesRate': weeklyRate,
+        'monthlySalesRate': monthlyRate,
+        'depletionSpeedDays': depletionSpeed,
+        'recommendedReorderLevel': reorderLevel,
+        'priorityScore': priorityScore,
+      });
+    }
+    return report;
   }
 } 
