@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'real_time_sales_screen.dart';
+import '../../services/sales_service.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class StockManagementScreen extends StatefulWidget {
   // Remove const constructor to allow hot reload after class structure changes
-  StockManagementScreen({Key? key}) : super(key: key);
+  const StockManagementScreen({super.key});
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -597,7 +599,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ...stockItem.deliveryHistory
                 .take(3)
                 .map((record) => _buildDeliveryRecord(record, isDark))
-                .toList(),
+                ,
           ],
         ],
       ),
@@ -676,56 +678,89 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ),
           ),
         ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () async {
+              // Call the auto-order logic for this stock item
+              final productName = stockItem.productName;
+              final quantity = stockItem.minimumStock; // or any test quantity
+              final supplierName = stockItem.primarySupplier;
+              final supplierEmail = stockItem.primarySupplierEmail;
+              final vendorEmail = 'vendor@example.com'; // TODO: Replace with actual vendor email from context or user session
+              await SalesService.placeAutomaticOrder(
+                productName: productName,
+                quantity: quantity,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
+                vendorEmail: vendorEmail,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Auto-order triggered for $productName')),
+                );
+              }
+            },
+            child: Text('Test Auto-Order'),
+          ),
+        ),
       ],
     );
   }
 
   void _showEditStockDialog(BuildContext context, StockItem stockItem, int index) {
-    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Enter number of goods purchased'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(hintText: 'Quantity'),
-        ),
+        title: const Text('Update Stock'),
+        content: const Text('How would you like to update the stock?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: maroon,
               foregroundColor: Colors.white,
             ),
-            onPressed: () async {
-              final qty = int.tryParse(controller.text) ?? 0;
-              if (qty > 0 && qty <= stockItem.currentStock) {
-                final updatedStockItem = StockItem(
-                  id: stockItem.id,
-                  productName: stockItem.productName,
-                  currentStock: stockItem.currentStock - qty,
-                  minimumStock: stockItem.minimumStock,
-                  maximumStock: stockItem.maximumStock,
-                  deliveryHistory: stockItem.deliveryHistory,
-                  primarySupplier: stockItem.primarySupplier,
-                  primarySupplierEmail: stockItem.primarySupplierEmail,
-                  firstDeliveryDate: stockItem.firstDeliveryDate,
-                  lastDeliveryDate: stockItem.lastDeliveryDate,
-                  autoOrderEnabled: stockItem.autoOrderEnabled,
-                  averageUnitPrice: stockItem.averageUnitPrice,
-                );
-                
-                await _updateStockItem(index, updatedStockItem);
-              }
+            onPressed: () {
               Navigator.pop(context);
+              _showRealTimeSalesOption(context);
             },
-            child: Text('Confirm'),
+            child: const Text('Real-time Sales'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroon,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _showSpreadsheetUploadOption(context);
+            },
+            child: const Text('Upload Spreadsheet'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showRealTimeSalesOption(BuildContext context) {
+    // Navigate to real-time sales screen
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => RealTimeSalesScreen(
+        vendorEmail: 'vendor@example.com', // TODO: Get actual vendor email from context or parameters
+      ),
+    ));
+  }
+
+  void _showSpreadsheetUploadOption(BuildContext context) {
+    // TODO: Implement spreadsheet upload functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Spreadsheet upload feature coming soon'),
+        backgroundColor: Colors.orange,
       ),
     );
   }

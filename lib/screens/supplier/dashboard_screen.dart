@@ -6,7 +6,7 @@ import '../../services/notification_service.dart';
 import 'settings_screen.dart';
 
 // Add color constant at the top-level for use throughout the file
-const maroon = Color(0xFF800000);
+const _maroonSupplier = Color(0xFF800000);
 
 class SupplierDashboardScreen extends StatefulWidget {
   final String supplierEmail;
@@ -60,7 +60,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                         end: Alignment.bottomRight,
                         colors: isDark 
                           ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                          : [maroon, maroon.withOpacity(0.8)],
+                          : [_maroonSupplier, _maroonSupplier.withOpacity(0.8)],
                       ),
                     ),
                     child: Row(
@@ -211,7 +211,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                   icon: Icons.check_circle,
                                   title: 'Confirmed',
                                   value: _buildConfirmedOrdersCount(),
-                                  color: maroon, // Changed from Colors.green to maroon
+                                  color: _maroonSupplier, // Changed from Colors.green to maroon
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -248,7 +248,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                 const SizedBox(width: 12),
                                 _buildStatusButton('Confirmed', Colors.blue),
                                 const SizedBox(width: 12),
-                                _buildStatusButton('Delivered', maroon), // Changed from Colors.green to maroon
+                                _buildStatusButton('Delivered', _maroonSupplier), // Changed from Colors.green to maroon
                                 const SizedBox(width: 12),
                                 _buildStatusButton('Pending Approval', Colors.purple),
                               ],
@@ -471,7 +471,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                                           gradient: LinearGradient(
                                             colors: isDark 
                                               ? [colorScheme.primary, colorScheme.secondary]
-                                              : [maroon, maroon.withOpacity(0.8)],
+                                              : [_maroonSupplier, _maroonSupplier.withOpacity(0.8)],
                                           ),
                                           borderRadius: BorderRadius.circular(16),
                                         ),
@@ -700,7 +700,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF3D3D3D) : maroon,
+                color: isDark ? const Color(0xFF3D3D3D) : _maroonSupplier,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
@@ -713,7 +713,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                   CircleAvatar(
                     radius: 35,
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: Icon(Icons.local_shipping, size: 40, color: isDark ? Colors.white : maroon),
+                    child: Icon(Icons.local_shipping, size: 40, color: isDark ? Colors.white : _maroonSupplier),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -753,8 +753,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                     title: 'Dashboard',
                     onTap: () => Navigator.of(context).pop(),
                     isSelected: true,
-                    textColor: isDark ? Colors.white : maroon,
-                    iconColor: isDark ? Colors.white : maroon,
+                    textColor: isDark ? Colors.white : _maroonSupplier,
+                    iconColor: isDark ? Colors.white : _maroonSupplier,
                   ),
                   const SizedBox(height: 8),
                   _buildMenuItem(
@@ -764,8 +764,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamed('/supplier-notifications', arguments: widget.supplierEmail);
                     },
-                    textColor: isDark ? Colors.white : maroon,
-                    iconColor: isDark ? Colors.white : maroon,
+                    textColor: isDark ? Colors.white : _maroonSupplier,
+                    iconColor: isDark ? Colors.white : _maroonSupplier,
                   ),
                   const SizedBox(height: 8),
                   _buildMenuItem(
@@ -775,8 +775,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamed('/supplier-profile', arguments: widget.supplierEmail);
                     },
-                    textColor: isDark ? Colors.white : maroon,
-                    iconColor: isDark ? Colors.white : maroon,
+                    textColor: isDark ? Colors.white : _maroonSupplier,
+                    iconColor: isDark ? Colors.white : _maroonSupplier,
                   ),
                   const SizedBox(height: 8),
                   _buildMenuItem(
@@ -790,8 +790,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                         ),
                       );
                     },
-                    textColor: isDark ? Colors.white : maroon,
-                    iconColor: isDark ? Colors.white : maroon,
+                    textColor: isDark ? Colors.white : _maroonSupplier,
+                    iconColor: isDark ? Colors.white : _maroonSupplier,
                   ),
                   const SizedBox(height: 24),
                   Container(
@@ -812,8 +812,8 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                     title: 'Logout',
                     onTap: () => _showLogoutDialog(),
                     isLogout: true,
-                    textColor: maroon,
-                    iconColor: maroon,
+                    textColor: _maroonSupplier,
+                    iconColor: _maroonSupplier,
                   ),
                 ],
               ),
@@ -925,7 +925,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: maroon,
+              backgroundColor: _maroonSupplier,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -962,7 +962,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue.shade100;
       case 'Delivered':
-        return maroon.withOpacity(0.08); // Changed from Colors.green.shade100 to maroon
+        return _maroonSupplier.withOpacity(0.08); // Changed from Colors.green.shade100 to maroon
       case 'Pending Approval':
         return Colors.purple.shade100;
       default:
@@ -977,7 +977,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return maroon; // Changed from Colors.green to maroon
+        return _maroonSupplier; // Changed from Colors.green to maroon
       case 'Pending Approval':
         return Colors.purple;
       default:
@@ -992,7 +992,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       case 'Confirmed':
         return Colors.blue;
       case 'Delivered':
-        return maroon; // Changed from Colors.green to maroon
+        return _maroonSupplier; // Changed from Colors.green to maroon
       case 'Pending Approval':
         return Colors.purple;
       default:

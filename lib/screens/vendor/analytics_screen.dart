@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'product_analytics_screen.dart';
+import '../../services/sales_service.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -16,7 +18,7 @@ class AnalyticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final vendorEmail = ModalRoute.of(context)?.settings.arguments as String? ?? '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analytics'),
@@ -37,8 +39,11 @@ class AnalyticsScreen extends StatelessWidget {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _fetchStockData(),
+        child: StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('sales_records')
+              .where('vendorEmail', isEqualTo: vendorEmail)
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -46,94 +51,131 @@ class AnalyticsScreen extends StatelessWidget {
             if (snapshot.hasError) {
               return Center(child: Text('Error loading analytics'));
             }
-            final stockData = snapshot.data ?? [];
-            final lowStockCount = stockData.where((item) => (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0)).length;
+            final docs = snapshot.data?.docs ?? [];
+            // Build daily sales data
+            final Map<String, int> salesByDate = {};
+            double totalRevenue = 0.0;
+            int totalItemsSold = 0;
+            int totalTransactions = docs.length;
+            final Map<String, int> productSales = {};
+            for (final doc in docs) {
+              final data = doc.data() as Map<String, dynamic>;
+              final date = (data['soldAt'] as Timestamp?)?.toDate().toString().substring(0, 10) ?? '';
+              final qty = (data['quantity'] as num?)?.toInt() ?? 0;
+              final price = (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
+              salesByDate[date] = (salesByDate[date] ?? 0) + qty;
+              totalRevenue += price;
+              totalItemsSold += qty;
+              final product = data['productName'] ?? 'Unknown';
+              productSales[product] = (productSales[product] ?? 0) + qty;
+            }
+            final dailySalesData = salesByDate.entries.map((e) => {'date': e.key, 'sales': e.value}).toList()
+              ..sort((a, b) => (a['date'] as String).compareTo(b['date'] as String));
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Summary Cards
                 Row(
                   children: [
                     Expanded(
                       child: _buildSummaryCard(
-                        'Total Products',
-                        stockData.length.toString(),
-                        Icons.inventory,
+                        'Total Revenue',
+                        '\$${totalRevenue.toStringAsFixed(2)}',
+                        Icons.attach_money,
                         isDark,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildSummaryCard(
-                        'Low Stock Items',
-                        lowStockCount.toString(),
-                        Icons.warning,
+                        'Items Sold',
+                        totalItemsSold.toString(),
+                        Icons.shopping_cart,
                         isDark,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                _buildSummaryCard(
+                  'Transactions',
+                  totalTransactions.toString(),
+                  Icons.receipt_long,
+                  isDark,
+                ),
                 const SizedBox(height: 24),
-                // Product Cards
-                ...stockData.map((item) {
-                  final isLow = (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0);
-                  return Card(
-                    color: isLow ? Colors.red.shade50 : (isDark ? Colors.white10 : Colors.white),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item['productName'] ?? 'Unknown Product',
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      'Stock: ${item['currentStock']} / ${item['maximumStock']}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: isDark ? Colors.white70 : Colors.grey[600],
-                                      ),
-                                    ),
-                                    if (isLow)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: Text(
-                                          'Low Stock',
-                                          style: TextStyle(
-                                            color: maroon,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
+                // Sales Trend Graph
+                Card(
+                  color: isDark ? Colors.white10 : Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sales Trend',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 200,
+                          child: LineChart(
+                            LineChartData(
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: [
+                                    for (int i = 0; i < dailySalesData.length; i++)
+                                      FlSpot(i.toDouble(), (dailySalesData[i]['sales'] as int).toDouble()),
                                   ],
+                                  isCurved: true,
+                                  color: maroon,
+                                  barWidth: 3,
+                                ),
+                              ],
+                              titlesData: FlTitlesData(
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      if (value.toInt() >= 0 && value.toInt() < dailySalesData.length) {
+                                        final date = dailySalesData[value.toInt()]['date'];
+                                        return Text((date as String).substring(5)); // MM-DD
+                                      }
+                                      return const Text('');
+                                    },
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: true),
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(Icons.show_chart, color: maroon),
-                                onPressed: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => ProductAnalyticsScreen(
-                                      productName: item['productName'] ?? 'Unknown Product',
-                                    ),
-                                  ));
-                                },
-                              ),
-                            ],
+                              gridData: FlGridData(show: true),
+                            ),
                           ),
-                          // You can add more analytics here (trend, sales, etc.)
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Product Sales', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isDark ? Colors.white : maroon)),
+                const SizedBox(height: 12),
+                ...productSales.entries.map((entry) => Card(
+                  color: isDark ? Colors.white10 : Colors.white,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: Text('Sold: ${entry.value}'),
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => ProductAnalyticsScreen(productName: entry.key, vendorEmail: vendorEmail),
+                      ));
+                    },
+                  ),
+                )),
               ],
             );
           },

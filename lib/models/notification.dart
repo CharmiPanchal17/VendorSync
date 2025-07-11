@@ -1,3 +1,4 @@
+// Trigger rebuild: file touched to clear build cache issues
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum NotificationType {
@@ -5,6 +6,7 @@ enum NotificationType {
   orderStatusChanged,
   orderDelivered,
   supplierAdded,
+  stockThreshold, // Added for stock threshold alerts
   general
 }
 
@@ -18,6 +20,10 @@ class AppNotification {
   final String? orderId;
   final DateTime createdAt;
   bool isRead; // Removed final to make it mutable
+  final bool? showOrderNowButton;
+  final int? suggestedQuantity;
+  final String? supplierName;
+  final String? supplierEmail;
 
   AppNotification({
     required this.id,
@@ -29,6 +35,10 @@ class AppNotification {
     this.orderId,
     required this.createdAt,
     this.isRead = false,
+    this.showOrderNowButton,
+    this.suggestedQuantity,
+    this.supplierName,
+    this.supplierEmail,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +51,10 @@ class AppNotification {
       'orderId': orderId,
       'createdAt': createdAt,
       'isRead': isRead,
+      'showOrderNowButton': showOrderNowButton,
+      'suggestedQuantity': suggestedQuantity,
+      'supplierName': supplierName,
+      'supplierEmail': supplierEmail,
     };
   }
 
@@ -67,6 +81,10 @@ class AppNotification {
       orderId: map['orderId'],
       createdAt: createdAt,
       isRead: map['isRead'] ?? false,
+      showOrderNowButton: map['showOrderNowButton'],
+      suggestedQuantity: map['suggestedQuantity'],
+      supplierName: map['supplierName'],
+      supplierEmail: map['supplierEmail'],
     );
   }
 } 

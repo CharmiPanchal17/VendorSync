@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../services/sales_service.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class ProductAnalyticsScreen extends StatelessWidget {
   final String productName;
+  final String vendorEmail;
   
-  const ProductAnalyticsScreen({super.key, required this.productName});
+  const ProductAnalyticsScreen({super.key, required this.productName, required this.vendorEmail});
 
-  // Sample daily sales data - replace with your actual Firestore data
-  List<Map<String, dynamic>> get dailySalesData => [
-    {'date': '2024-06-01', 'sales': 5, 'stock': 100},
-    {'date': '2024-06-02', 'sales': 8, 'stock': 95},
-    {'date': '2024-06-03', 'sales': 12, 'stock': 87},
-    {'date': '2024-06-04', 'sales': 6, 'stock': 81},
-    {'date': '2024-06-05', 'sales': 15, 'stock': 75},
-    {'date': '2024-06-06', 'sales': 9, 'stock': 66},
-    {'date': '2024-06-07', 'sales': 11, 'stock': 57},
-    {'date': '2024-06-08', 'sales': 7, 'stock': 50},
-    {'date': '2024-06-09', 'sales': 13, 'stock': 43},
-    {'date': '2024-06-10', 'sales': 10, 'stock': 33},
-    {'date': '2024-06-11', 'sales': 8, 'stock': 25},
-    {'date': '2024-06-12', 'sales': 14, 'stock': 17},
-    {'date': '2024-06-13', 'sales': 6, 'stock': 11},
-    {'date': '2024-06-14', 'sales': 9, 'stock': 5},
-  ];
+  Future<List<Map<String, dynamic>>> _fetchProductSalesData() async {
+    final analytics = await SalesService.getSalesAnalytics(vendorEmail);
+    final records = analytics['records'] as List<dynamic>? ?? [];
+    final productRecords = records.where((r) => r.productName == productName).toList();
+    // Group by date
+    final Map<String, int> salesByDate = {};
+    for (final record in productRecords) {
+      final date = record.soldAt.toString().substring(0, 10);
+      final qty = (record.quantity as num).toInt();
+      final prev = salesByDate[date] ?? 0;
+      salesByDate[date] = (prev + qty).toInt();
+    }
+    return salesByDate.entries.map((e) => {'date': e.key, 'sales': e.value}).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +50,18 @@ class ProductAnalyticsScreen extends StatelessWidget {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: ListView(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _fetchProductSalesData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error loading product analytics'));
+            }
+            final dailySalesData = snapshot.data ?? [];
+
+            return ListView(
           padding: const EdgeInsets.all(16),
           children: [
             // Product Summary Card
@@ -282,12 +292,14 @@ class ProductAnalyticsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ...dailySalesData.map((item) => _buildDailySalesRow(item, isDark)).toList(),
+                    ...dailySalesData.map((item) => _buildDailySalesRow(item, isDark)),
                   ],
                 ),
               ),
             ),
           ],
+            );
+          },
         ),
       ),
     );

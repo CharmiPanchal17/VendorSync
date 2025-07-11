@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification.dart';
 import 'package:intl/intl.dart';
@@ -296,6 +295,8 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
         return Icons.local_shipping;
       case NotificationType.supplierAdded:
         return Icons.person_add;
+      case NotificationType.stockThreshold:
+        return Icons.warning_amber_rounded;
       case NotificationType.general:
         return Icons.notifications;
     }

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification.dart';
 import 'package:intl/intl.dart';
+import '../../services/sales_service.dart'; // Added import for SalesService
+
+const _maroonVendor = Color(0xFF800000);
+const _lightCyanVendor = Color(0xFFAFFFFF);
 
 class VendorNotificationsScreen extends StatefulWidget {
   final String vendorEmail;
@@ -17,7 +21,6 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const maroon = Color(0xFF800000);
     
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +36,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                : [maroon, maroon.withOpacity(0.8)],
+                : [_maroonVendor, _maroonVendor.withOpacity(0.8)],
             ),
           ),
         ),
@@ -125,7 +128,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : maroon,
+                          color: isDark ? colorScheme.onSurface : _maroonVendor,
                         ),
                       ),
                     ],
@@ -172,7 +175,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface : maroon,
+                          color: isDark ? colorScheme.onSurface : _maroonVendor,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -181,7 +184,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : _maroonVendor.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -196,6 +199,99 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               itemCount: notifications.length,
               itemBuilder: (context, index) {
                 final notification = notifications[index];
+                if (notification.type == NotificationType.stockThreshold) {
+                  // Custom card for stock threshold notification
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.98),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.warning_amber_rounded, color: _maroonVendor, size: 28),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  notification.title,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _maroonVendor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            notification.message,
+                            style: TextStyle(
+                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            DateFormat.yMMMd().add_jm().format(notification.createdAt),
+                            style: TextStyle(
+                              color: isDark ? colorScheme.onSurface.withOpacity(0.5) : Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.shopping_cart_checkout, size: 18),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _maroonVendor,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  onPressed: () => _handleOrderNow(notification),
+                                  label: const Text('Order Now'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.edit, size: 18),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: _maroonVendor,
+                                    side: BorderSide(color: _maroonVendor),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  onPressed: () => _handleAdjustQuantity(notification),
+                                  label: const Text('Adjust Quantity'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
@@ -235,7 +331,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                         color: notification.isRead 
                             ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
-                            : (isDark ? colorScheme.onSurface : maroon),
+                            : (isDark ? colorScheme.onSurface : _maroonVendor),
                       ),
                     ),
                     subtitle: Column(
@@ -298,6 +394,8 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
         return Icons.local_shipping;
       case NotificationType.supplierAdded:
         return Icons.person_add;
+      case NotificationType.stockThreshold:
+        return Icons.warning_amber_rounded;
       case NotificationType.general:
         return Icons.notifications;
     }
@@ -358,6 +456,92 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleOrderNow(AppNotification notification) async {
+    final productName = notification.title.replaceFirst('Stock Alert: ', '');
+    final quantity = notification.suggestedQuantity ?? 1;
+    final supplierName = notification.supplierName;
+    final supplierEmail = notification.supplierEmail;
+    final vendorEmail = notification.recipientEmail;
+    await SalesService.placeAutomaticOrder(
+      productName: productName,
+      quantity: quantity,
+      supplierName: supplierName,
+      supplierEmail: supplierEmail,
+      vendorEmail: vendorEmail,
+    );
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _maroonVendor,
+        title: const Text('Order Placed', style: TextStyle(color: Colors.white)),
+        content: Text('Order for $quantity units has been placed successfully!', style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK', style: TextStyle(color: _lightCyanVendor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleAdjustQuantity(AppNotification notification) async {
+    int quantity = notification.suggestedQuantity ?? 1;
+    final controller = TextEditingController(text: quantity.toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _maroonVendor,
+        title: const Text('Adjust Quantity', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Quantity'),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: _lightCyanVendor)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: _lightCyanVendor, foregroundColor: _maroonVendor),
+            onPressed: () async {
+              quantity = int.tryParse(controller.text) ?? 1;
+              Navigator.of(context).pop();
+              final productName = notification.title.replaceFirst('Stock Alert: ', '');
+              final supplierName = notification.supplierName;
+              final supplierEmail = notification.supplierEmail;
+              final vendorEmail = notification.recipientEmail;
+              await SalesService.placeAutomaticOrder(
+                productName: productName,
+                quantity: quantity,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
+                vendorEmail: vendorEmail,
+              );
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: _maroonVendor,
+                  title: const Text('Order Placed', style: TextStyle(color: Colors.white)),
+                  content: Text('Order for $quantity units has been placed successfully!', style: TextStyle(color: Colors.white)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK', style: TextStyle(color: _lightCyanVendor)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Place Order'),
+          ),
+        ],
       ),
     );
   }
