@@ -22,8 +22,9 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('Firebase initialized successfully');
-  } catch (e) {
+  } catch (e, stack) {
     print('Firebase initialization failed: $e');
+    print('Stack trace: $stack');
     print('App will run with mock data');
   }
 
