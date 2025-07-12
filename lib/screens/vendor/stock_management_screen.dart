@@ -298,6 +298,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     final oldStock = stockItems[index].currentStock; // capture BEFORE setState
     setState(() {
       stockItems[index] = updatedStockItem;
+      // Re-sort the list after updating to maintain threshold items first
+      stockItems = _sortStockItems(List.from(stockItems));
     });
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
@@ -420,15 +422,22 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     final stockStatus = _getStockStatus(stockItem);
     final statusColor = _getStatusColor(stockStatus);
     final statusIcon = _getStatusIcon(stockStatus);
+    final isAtThreshold = _isAtThreshold(stockItem);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: isDark ? Colors.white10 : Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: isAtThreshold ? Border.all(
+          color: Colors.red,
+          width: 2,
+        ) : null,
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            color: isAtThreshold 
+                ? Colors.red.withOpacity(0.3)
+                : (isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1)),
             blurRadius: 15,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -464,13 +473,42 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              stockItem.productName,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    stockItem.productName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (isAtThreshold)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.warning, color: Colors.white, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          'THRESHOLD',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 4),
             Row(
@@ -1378,5 +1416,37 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     } else {
       return Colors.green; // Green for good stock (well above threshold)
     }
+  }
+
+  List<StockItem> _sortStockItems(List<StockItem> items) {
+    // Sort items: threshold items first, then by stock level
+    items.sort((a, b) {
+      final aIsAtThreshold = a.currentStock <= a.minimumStock;
+      final bIsAtThreshold = b.currentStock <= b.minimumStock;
+      
+      // If one is at threshold and the other isn't, threshold item comes first
+      if (aIsAtThreshold && !bIsAtThreshold) return -1;
+      if (!aIsAtThreshold && bIsAtThreshold) return 1;
+      
+      // If both are at threshold or both are not, sort by stock level (lowest first)
+      final aRatio = a.currentStock / a.minimumStock;
+      final bRatio = b.currentStock / b.minimumStock;
+      
+      return aRatio.compareTo(bRatio);
+    });
+    
+    // Debug: Print the sorted order
+    print('DEBUG: Sorted stock items:');
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      final isAtThreshold = item.currentStock <= item.minimumStock;
+      print('  ${i + 1}. ${item.productName} - Current: ${item.currentStock}, Min: ${item.minimumStock}, At Threshold: $isAtThreshold');
+    }
+    
+    return items;
+  }
+
+  bool _isAtThreshold(StockItem stockItem) {
+    return stockItem.currentStock <= stockItem.minimumStock;
   }
 } 
