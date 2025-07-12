@@ -386,6 +386,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.upload),
+            onPressed: () => _showUploadDialog(context),
+            tooltip: 'Upload Stock Data',
+          ),
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -1448,5 +1455,284 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   bool _isAtThreshold(StockItem stockItem) {
     return stockItem.currentStock <= stockItem.minimumStock;
+  }
+
+  void _showUploadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.upload, color: maroon),
+            const SizedBox(width: 8),
+            const Text('Upload Stock Data'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Choose how you want to upload stock data:',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            _buildUploadOption(
+              context,
+              'CSV File',
+              'Upload stock data from a CSV file',
+              Icons.table_chart,
+              () => _uploadFromCSV(context),
+            ),
+            const SizedBox(height: 12),
+            _buildUploadOption(
+              context,
+              'Manual Entry',
+              'Add stock items manually',
+              Icons.edit,
+              () => _showManualEntryDialog(context),
+            ),
+            const SizedBox(height: 12),
+            _buildUploadOption(
+              context,
+              'Bulk Import',
+              'Import multiple items at once',
+              Icons.file_copy,
+              () => _showBulkImportDialog(context),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUploadOption(BuildContext context, String title, String description, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: maroon.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: maroon, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _uploadFromCSV(BuildContext context) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('CSV upload functionality coming soon!'),
+        backgroundColor: maroon,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _showManualEntryDialog(BuildContext context) {
+    Navigator.pop(context);
+    _showAddStockDialog(context);
+  }
+
+  void _showBulkImportDialog(BuildContext context) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Bulk import functionality coming soon!'),
+        backgroundColor: maroon,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _showAddStockDialog(BuildContext context) {
+    final productNameController = TextEditingController();
+    final currentStockController = TextEditingController();
+    final minimumStockController = TextEditingController();
+    final maximumStockController = TextEditingController();
+    final supplierController = TextEditingController();
+    final supplierEmailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.add, color: maroon),
+            const SizedBox(width: 8),
+            const Text('Add New Stock Item'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: productNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: currentStockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Current Stock',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: minimumStockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Minimum Stock',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: maximumStockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Maximum Stock',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: supplierController,
+                decoration: const InputDecoration(
+                  labelText: 'Supplier Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: supplierEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Supplier Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroon,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final productName = productNameController.text.trim();
+              final currentStock = int.tryParse(currentStockController.text) ?? 0;
+              final minimumStock = int.tryParse(minimumStockController.text) ?? 0;
+              final maximumStock = int.tryParse(maximumStockController.text) ?? 0;
+              final supplierName = supplierController.text.trim();
+              final supplierEmail = supplierEmailController.text.trim();
+
+              if (productName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Please enter a product name'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              final newStockItem = StockItem(
+                id: '${productName}_${widget.vendorEmail}',
+                productName: productName,
+                currentStock: currentStock,
+                minimumStock: minimumStock,
+                maximumStock: maximumStock,
+                deliveryHistory: [],
+                primarySupplier: supplierName.isNotEmpty ? supplierName : null,
+                primarySupplierEmail: supplierEmail.isNotEmpty ? supplierEmail : null,
+                firstDeliveryDate: null,
+                lastDeliveryDate: null,
+                autoOrderEnabled: false,
+                averageUnitPrice: null,
+                vendorEmail: widget.vendorEmail,
+              );
+
+              setState(() {
+                stockItems.add(newStockItem);
+                stockItems = _sortStockItems(List.from(stockItems));
+              });
+
+              await _saveStockDataToFirestore();
+              Navigator.pop(context);
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Added new stock item: $productName'),
+                    backgroundColor: maroon,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }
+            },
+            child: const Text('Add Item'),
+          ),
+        ],
+      ),
+    );
   }
 } 
