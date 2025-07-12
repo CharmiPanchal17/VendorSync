@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/order.dart';
 import '../../services/notification_service.dart';
 
-const maroon = Color(0xFF800000);
-const lightCyan = Color(0xFFAFFFFF);
+const maroonThreshold = Color(0xFF800000);
+const lightCyanThreshold = Color(0xFFAFFFFF);
 
 class ThresholdManagementScreen extends StatefulWidget {
   final String vendorEmail;
@@ -142,15 +142,15 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [maroon, maroon.withOpacity(0.8)],
+                                colors: isDark
+                      ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                      : [maroonThreshold, maroonThreshold.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
-        color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
+        color: isDark ? const Color(0xFF2D2D2D) : lightCyanThreshold,
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : stockItems.isEmpty
@@ -358,7 +358,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                         item.thresholdLevel,
                         value,
                       ),
-                      activeColor: maroon,
+                      activeColor: maroonThreshold,
                     ),
                   ],
                 ),
@@ -374,10 +374,10 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                     onPressed: () => _showThresholdDialog(item, isDark),
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit Threshold'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: maroon,
-                      side: BorderSide(color: maroon),
-                    ),
+                                          style: OutlinedButton.styleFrom(
+                        foregroundColor: maroonThreshold,
+                        side: BorderSide(color: maroonThreshold),
+                      ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -389,7 +389,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                     icon: const Icon(Icons.shopping_cart),
                     label: const Text('Order Now'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: maroon,
+                      backgroundColor: maroonThreshold,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -488,7 +488,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: TextStyle(color: maroon),
+              style: TextStyle(color: maroonThreshold),
             ),
           ),
           ElevatedButton(
@@ -498,7 +498,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: maroon,
+              backgroundColor: maroonThreshold,
               foregroundColor: Colors.white,
             ),
             child: const Text('Save'),

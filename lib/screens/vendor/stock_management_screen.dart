@@ -69,6 +69,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
             vendorEmail: currentVendorEmail,
+            thresholdLevel: data['thresholdLevel'] ?? 0,
+            thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
+            lastThresholdAlert: data['lastThresholdAlert'] != null 
+                ? (data['lastThresholdAlert'] as Timestamp).toDate() 
+                : null,
+            suggestedOrderQuantity: data['suggestedOrderQuantity'] ?? 0,
           );
         }).toList();
 

@@ -13,6 +13,10 @@ class NotificationService {
     required String recipientEmail,
     String? senderEmail,
     String? orderId,
+    String? productName,
+    int? stockLevel,
+    int? thresholdLevel,
+    Map<String, dynamic>? actionData,
   }) async {
     try {
       await _firestore.collection('notifications').add({
@@ -22,6 +26,10 @@ class NotificationService {
         'recipientEmail': recipientEmail,
         'senderEmail': senderEmail,
         'orderId': orderId,
+        'productName': productName,
+        'stockLevel': stockLevel,
+        'thresholdLevel': thresholdLevel,
+        'actionData': actionData,
         'createdAt': FieldValue.serverTimestamp(),
         'isRead': false,
       });
