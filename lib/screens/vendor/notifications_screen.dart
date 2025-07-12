@@ -360,7 +360,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
             ),
         ],
       ),
-    );
+                );
   }
 
   bool _isThresholdNotification(NotificationType type) {

@@ -484,7 +484,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    stockItem.productName,
+          stockItem.productName, 
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -501,25 +501,25 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: [
+          children: [
                         Icon(Icons.warning, color: Colors.white, size: 14),
                         const SizedBox(width: 4),
-                        Text(
+              Text(
                           'THRESHOLD',
-                          style: TextStyle(
+                style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
                   ),
               ],
             ),
             const SizedBox(height: 4),
             Row(
-              children: [
+          children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -536,7 +536,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+            const SizedBox(width: 8),
                 if (stockItem.autoOrderEnabled)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -696,14 +696,14 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Stock Overview',
-                style: TextStyle(
+          Text(
+            'Stock Overview',
+            style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
             ],
           ),
           const SizedBox(height: 20),
@@ -737,11 +737,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: _getStockProgressColor(stockItem, isDark),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                                ),
+                              ),
+            ],
+          ),
+          const SizedBox(height: 12),
                 Stack(
                   children: [
                     Container(
@@ -762,15 +762,15 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
+          ),
+          const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+          Text(
                       '${stockItem.currentStock} units',
-                      style: TextStyle(
-                        fontSize: 12,
+            style: TextStyle(
+              fontSize: 12,
                         color: isDark ? Colors.white60 : Colors.grey[500],
                       ),
                     ),
@@ -918,14 +918,14 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        stockItem.primarySupplier!,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stockItem.primarySupplier!,
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                           fontSize: 16,
                           color: isDark ? Colors.white : Colors.black87,
                         ),
@@ -939,20 +939,20 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                             color: isDark ? Colors.white60 : Colors.grey[500],
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            stockItem.primarySupplierEmail!,
-                            style: TextStyle(
-                              fontSize: 12,
+                    Text(
+                      stockItem.primarySupplierEmail!,
+                      style: TextStyle(
+                        fontSize: 12,
                               color: isDark ? Colors.white60 : Colors.grey[500],
-                            ),
+                      ),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
           ),
           
           if (stockItem.averageUnitPrice != null) ...[
@@ -974,12 +974,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                     size: 20,
                   ),
                   const SizedBox(width: 8),
-                  Text(
+            Text(
                     'Average Unit Price',
-                    style: TextStyle(
+              style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : Colors.grey[600],
+                color: isDark ? Colors.white70 : Colors.grey[600],
                     ),
                   ),
                   const Spacer(),
@@ -1154,7 +1154,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      children: [
           Row(
             children: [
               Container(
@@ -1176,9 +1176,9 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-            ],
+          ),
+        ),
+      ],
           ),
           const SizedBox(height: 16),
           
@@ -1487,18 +1487,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             const SizedBox(height: 12),
             _buildUploadOption(
               context,
-              'Manual Entry',
-              'Add stock items manually',
-              Icons.edit,
+              'Spreadsheet',
+              'Add stock items via spreadsheet',
+              Icons.table_view,
               () => _showManualEntryDialog(context),
-            ),
-            const SizedBox(height: 12),
-            _buildUploadOption(
-              context,
-              'Bulk Import',
-              'Import multiple items at once',
-              Icons.file_copy,
-              () => _showBulkImportDialog(context),
             ),
           ],
         ),
@@ -1575,20 +1567,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   void _showManualEntryDialog(BuildContext context) {
     Navigator.pop(context);
-    _showAddStockDialog(context);
-  }
-
-  void _showBulkImportDialog(BuildContext context) {
-    Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Bulk import functionality coming soon!'),
+        content: const Text('Spreadsheet functionality coming soon!'),
         backgroundColor: maroon,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
+
+
 
   void _showAddStockDialog(BuildContext context) {
     final productNameController = TextEditingController();

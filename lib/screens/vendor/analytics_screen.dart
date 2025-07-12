@@ -159,116 +159,99 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : stockData.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.inventory_2, size: 64, color: isDark ? Colors.white24 : Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No stock data yet',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add products or receive deliveries to see analytics.',
-                        style: TextStyle(fontSize: 16, color: isDark ? Colors.white38 : Colors.grey[600]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Summary Cards
-                    Row(
+      body: Container(
+        color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
+        child: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(maroon),
+                ),
+              )
+            : stockData.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: _buildSummaryCard(
-                            'Total Products',
-                            stockData.length.toString(),
-                            Icons.inventory,
-                            isDark,
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildSummaryCard(
-                            'Low Stock Items',
-                            stockData.where((item) => (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0)).length.toString(),
-                            Icons.warning,
-                            isDark,
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.analytics,
+                                size: 64,
+                                color: maroon.withOpacity(0.6),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Analytics Data',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Add products or receive deliveries\nto see detailed analytics.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDark ? Colors.white60 : Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Product Cards
-                    ...stockData.map((item) {
-                      final isLow = (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0);
-                      return Card(
-                        color: isLow ? Colors.red.shade50 : (isDark ? Colors.white10 : Colors.white),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item['productName'] ?? 'Unknown Product',
-                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                        ),
-                                        Text(
-                                          "Stock:  9${item['currentStock']} / ${item['maximumStock']}",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: isDark ? Colors.white70 : Colors.grey[600],
-                                          ),
-                                        ),
-                                        if (isLow)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 8.0),
-                                            child: Text(
-                                              'Low Stock',
-                                              style: TextStyle(
-                                                color: maroon,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.show_chart, color: maroon),
-                                    onPressed: () {
-                                      Navigator.of(context).push(MaterialPageRoute(
-                                        builder: (context) => ProductAnalyticsScreen(
-                                          productName: item['productName'] ?? 'Unknown Product',
-                                        ),
-                                      ));
-                                    },
-                                  ),
-                                ],
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // Summary Cards
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildEnhancedSummaryCard(
+                                'Total Products',
+                                stockData.length.toString(),
+                                Icons.inventory_2,
+                                isDark,
                               ),
-                              // You can add more analytics here (trend, sales, etc.)
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildEnhancedSummaryCard(
+                                'Low Stock Items',
+                                stockData.where((item) => (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0)).length.toString(),
+                                Icons.warning_amber,
+                                isDark,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }).toList(),
-                  ],
-                ),
+                      ),
+                      // Product Cards
+                      ...stockData.map((item) {
+                        final isLow = (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0);
+                        return _buildEnhancedProductCard(item, isLow, isDark, context);
+                      }).toList(),
+                    ],
+                  ),
+      ),
     );
   }
 
