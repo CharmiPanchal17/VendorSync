@@ -316,6 +316,55 @@ class ProductAnalyticsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    // Action Buttons
+                    Card(
+                      color: isDark ? Colors.white10 : Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Actions',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _navigateToDetailedReports(),
+                                    icon: const Icon(Icons.assessment),
+                                    label: const Text('Detailed Reports'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: maroon,
+                                      side: BorderSide(color: maroon),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _navigateToOrderScreen(),
+                                    icon: const Icon(Icons.shopping_cart),
+                                    label: const Text('Place Order'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: maroon,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -323,6 +372,26 @@ class ProductAnalyticsScreen extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  void _navigateToDetailedReports(BuildContext context) {
+    // Navigate to detailed reports page
+    Navigator.of(context).pushNamed(
+      '/vendor-detailed-reports',
+      arguments: productName,
+    );
+  }
+
+  void _navigateToOrderScreen(BuildContext context) {
+    // Navigate to order screen with pre-filled product info
+    Navigator.of(context).pushNamed(
+      '/vendor-quick-order',
+      arguments: {
+        'productName': productName,
+        'suggestedQuantity': 0, // Will be calculated
+        'vendorEmail': '', // Will be passed from context
+      },
     );
   }
 

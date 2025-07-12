@@ -221,7 +221,7 @@ class NotificationService {
     );
   }
 
-  // Check and create threshold alerts for all products
+  // Check and create threshold alerts for all products (no auto-ordering)
   static Future<void> checkThresholdAlerts(String vendorEmail) async {
     try {
       final stockSnapshot = await _firestore
@@ -265,7 +265,7 @@ class NotificationService {
               DateTime.now().difference(lastAlert).inHours >= 24;
 
           if (shouldSendAlert) {
-            // Calculate suggested quantity
+            // Calculate suggested quantity for reference only
             final suggestedQuantity = _calculateSuggestedQuantity(data);
 
             await createThresholdAlert(
