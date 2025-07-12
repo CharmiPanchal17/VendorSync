@@ -179,3 +179,4 @@ Backend  parser
 Improved  UX
 Fixed duplicate rows issue
 Integrated CSV upload module
+Validated CSV data format
