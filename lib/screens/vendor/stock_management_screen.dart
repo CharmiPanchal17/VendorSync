@@ -79,7 +79,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         }).toList();
 
         setState(() {
-          stockItems = loadedStockItems;
+          stockItems = _sortStockItems(loadedStockItems);
           isLoading = false;
         });
       } else {
@@ -112,7 +112,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       if (ordersSnapshot.docs.isEmpty) {
         // No delivered orders, use mock data
         setState(() {
-          stockItems = List.from(mockStockItems);
+          stockItems = _sortStockItems(List.from(mockStockItems));
           isLoading = false;
         });
         await _saveStockDataToFirestore();
@@ -210,7 +210,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       }
 
       setState(() {
-        stockItems = realStockItems;
+        stockItems = _sortStockItems(realStockItems);
         isLoading = false;
       });
 
@@ -221,7 +221,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       print('Error creating stock from orders: $e');
       // Fallback to mock data
       setState(() {
-        stockItems = List.from(mockStockItems);
+        stockItems = _sortStockItems(List.from(mockStockItems));
         isLoading = false;
       });
     }
@@ -496,19 +496,19 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.2),
+                      color: maroon.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                      border: Border.all(color: maroon.withOpacity(0.5)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_awesome, color: Colors.orange, size: 12),
+                        Icon(Icons.auto_awesome, color: maroon, size: 12),
                         const SizedBox(width: 2),
                         Text(
                           'Auto',
                           style: TextStyle(
-                            color: Colors.orange,
+                            color: maroon,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -520,37 +520,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ),
           ],
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildStockMetric(
-                  'Current',
-                  '${stockItem.currentStock}',
-                  Icons.inventory,
-                  isDark,
-                ),
-              ),
-              Expanded(
-                child: _buildStockMetric(
-                  'Min',
-                  '${stockItem.minimumStock}',
-                  Icons.warning,
-                  isDark,
-                ),
-              ),
-              Expanded(
-                child: _buildStockMetric(
-                  'Max',
-                  '${stockItem.maximumStock}',
-                  Icons.storage,
-                  isDark,
-                ),
-              ),
-            ],
-          ),
-        ),
+
         trailing: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -570,33 +540,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     );
   }
 
-  Widget _buildStockMetric(String label, String value, IconData icon, bool isDark) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDark ? Colors.white70 : Colors.grey[600],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: isDark ? Colors.white60 : Colors.grey[500],
-          ),
-        ),
-      ],
-    );
-  }
+
 
   String _getStockStatus(StockItem stockItem) {
     if (stockItem.currentStock <= (stockItem.minimumStock * 0.5)) {
@@ -613,13 +557,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Critical':
-        return Colors.red;
+        return maroon;
       case 'Low':
-        return Colors.orange;
+        return maroon.withOpacity(0.8);
       case 'Warning':
-        return Colors.yellow.shade700;
+        return maroon.withOpacity(0.6);
       case 'Good':
-        return Colors.green;
+        return maroon.withOpacity(0.4);
       default:
         return Colors.grey;
     }
@@ -747,7 +691,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: statusColor,
+                        color: _getStockProgressColor(stockItem, isDark),
                       ),
                     ),
                   ],
@@ -767,7 +711,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                       width: MediaQuery.of(context).size.width * 0.6 * stockItem.stockPercentage,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [statusColor, statusColor.withOpacity(0.7)],
+                          colors: [_getStockProgressColor(stockItem, isDark), _getStockProgressColor(stockItem, isDark).withOpacity(0.7)],
                         ),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -798,42 +742,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ),
           ),
           
-          const SizedBox(height: 16),
-          
-          // Stock Metrics Grid
-          Row(
-            children: [
-              Expanded(
-                child: _buildEnhancedMetricItem(
-                  'Current Stock',
-                  '${stockItem.currentStock}',
-                  Icons.inventory,
-                  statusColor,
-                  isDark,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildEnhancedMetricItem(
-                  'Min Stock',
-                  '${stockItem.minimumStock}',
-                  Icons.warning,
-                  Colors.orange,
-                  isDark,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildEnhancedMetricItem(
-                  'Max Stock',
-                  '${stockItem.maximumStock}',
-                  Icons.storage,
-                  Colors.blue,
-                  isDark,
-                ),
-              ),
-            ],
-          ),
+
         ],
       ),
     );
@@ -894,13 +803,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue.withOpacity(0.1),
-            Colors.blue.withOpacity(0.05),
+            maroon.withOpacity(0.1),
+            maroon.withOpacity(0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: maroon.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -912,12 +821,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.2),
+                  color: maroon.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.business,
-                  color: Colors.blue,
+                  color: maroon,
                   size: 20,
                 ),
               ),
@@ -938,7 +847,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white5 : Colors.white,
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isDark ? Colors.white10 : Colors.grey.shade200,
@@ -951,15 +860,15 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.blue.withOpacity(0.2),
-                        Colors.blue.withOpacity(0.1),
+                        maroon.withOpacity(0.2),
+                        maroon.withOpacity(0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.business,
-                    color: Colors.blue,
+                    color: maroon,
                     size: 24,
                   ),
                 ),
@@ -1006,17 +915,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: maroon.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Colors.green.withOpacity(0.3),
+                  color: maroon.withOpacity(0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.attach_money,
-                    color: Colors.green,
+                    color: maroon,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -1034,7 +943,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: maroon,
                     ),
                   ),
                 ],
@@ -1050,7 +959,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: maroon.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -1141,7 +1050,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         children: [
           Icon(
             Icons.check_circle,
-            color: Colors.green,
+            color: maroon,
             size: 16,
           ),
           const SizedBox(width: 8),
@@ -1229,9 +1138,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           const SizedBox(height: 16),
           
           // Action Buttons Grid
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              Expanded(
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 80) / 2,
                 child: _buildActionButton(
                   'Update Stock',
                   Icons.edit,
@@ -1240,39 +1152,23 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   isDark,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 80) / 2,
                 child: _buildActionButton(
                   'View Analytics',
                   Icons.analytics,
-                  Colors.blue,
+                  maroon.withOpacity(0.8),
                   () => _navigateToAnalytics(stockItem),
                   isDark,
                 ),
               ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          Row(
-            children: [
-              Expanded(
+              SizedBox(
+                width: (MediaQuery.of(context).size.width - 80) / 2,
                 child: _buildActionButton(
                   'Set Threshold',
                   Icons.warning,
-                  Colors.orange,
+                  maroon.withOpacity(0.6),
                   () => _navigateToThresholdManagement(stockItem),
-                  isDark,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  'Place Order',
-                  Icons.shopping_cart,
-                  Colors.green,
-                  () => _navigateToOrder(stockItem),
                   isDark,
                 ),
               ),
@@ -1305,22 +1201,26 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   icon,
                   color: color,
-                  size: 20,
+                  size: 18,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -1470,11 +1370,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     final stockToMinRatio = stockItem.currentStock / stockItem.minimumStock;
     
     if (stockItem.isLowStock || stockToMinRatio <= 1.0) {
-      return maroon; // Red for low stock (at or below minimum)
+      return Colors.red; // Red for critical low stock (at or below minimum)
+    } else if (stockToMinRatio <= 1.2) {
+      return Colors.orange; // Orange for low stock (approaching threshold)
     } else if (stockToMinRatio <= 1.5) {
-      return Colors.orange; // Orange for approaching threshold (1-1.5x minimum)
+      return Colors.yellow; // Yellow for warning (close to threshold)
     } else {
-      return Colors.green; // Green for good stock (above 1.5x minimum)
+      return Colors.green; // Green for good stock (well above threshold)
     }
   }
 } 

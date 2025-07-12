@@ -243,89 +243,89 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
         notificationIcon = Icons.notifications;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
       child: Column(
         children: [
           ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: notification.isRead 
-                      ? [Colors.grey.shade300, Colors.grey.shade400]
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: notification.isRead 
+                              ? [Colors.grey.shade300, Colors.grey.shade400]
                       : [notificationColor, notificationColor.withOpacity(0.7)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
                 notificationIcon,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            title: Text(
-              notification.title,
-              style: TextStyle(
-                fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-                color: notification.isRead 
-                    ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
-                                                : (isDark ? colorScheme.onSurface : maroonNotification),
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Text(
-                  notification.message,
-                  style: TextStyle(
-                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  DateFormat.yMMMd().add_jm().format(notification.createdAt),
-                  style: TextStyle(
-                    color: isDark ? colorScheme.onSurface.withOpacity(0.5) : Colors.grey.shade500,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            trailing: notification.isRead 
-                ? null 
-                : Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
-                  ),
-            onTap: () async {
-              if (!notification.isRead) {
-                await NotificationService.markNotificationAsRead(notification.id);
-              }
+                    title: Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+                        color: notification.isRead 
+                            ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
+                                                : (isDark ? colorScheme.onSurface : maroonNotification),
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          notification.message,
+                          style: TextStyle(
+                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat.yMMMd().add_jm().format(notification.createdAt),
+                          style: TextStyle(
+                            color: isDark ? colorScheme.onSurface.withOpacity(0.5) : Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: notification.isRead 
+                        ? null 
+                        : Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                    onTap: () async {
+                      if (!notification.isRead) {
+                        await NotificationService.markNotificationAsRead(notification.id);
+                      }
               _handleNotificationTap(notification);
-            },
-            onLongPress: () {
-              _showNotificationOptions(context, notification);
-            },
-          ),
+                    },
+                    onLongPress: () {
+                      _showNotificationOptions(context, notification);
+                    },
+                  ),
           // Quick action buttons for threshold notifications
           if (_isThresholdNotification(notification.type) && notification.actionData != null)
             Container(
