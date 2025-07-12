@@ -5,6 +5,9 @@ enum NotificationType {
   orderStatusChanged,
   orderDelivered,
   supplierAdded,
+  thresholdAlert,
+  stockLow,
+  stockCritical,
   general
 }
 
@@ -16,8 +19,12 @@ class AppNotification {
   final String recipientEmail;
   final String? senderEmail;
   final String? orderId;
+  final String? productName;
+  final int? stockLevel;
+  final int? thresholdLevel;
   final DateTime createdAt;
   final bool isRead;
+  final Map<String, dynamic>? actionData;
 
   AppNotification({
     required this.id,
@@ -27,8 +34,12 @@ class AppNotification {
     required this.recipientEmail,
     this.senderEmail,
     this.orderId,
+    this.productName,
+    this.stockLevel,
+    this.thresholdLevel,
     required this.createdAt,
     this.isRead = false,
+    this.actionData,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,8 +50,12 @@ class AppNotification {
       'recipientEmail': recipientEmail,
       'senderEmail': senderEmail,
       'orderId': orderId,
+      'productName': productName,
+      'stockLevel': stockLevel,
+      'thresholdLevel': thresholdLevel,
       'createdAt': createdAt,
       'isRead': isRead,
+      'actionData': actionData,
     };
   }
 
@@ -56,8 +71,12 @@ class AppNotification {
       recipientEmail: map['recipientEmail'] ?? '',
       senderEmail: map['senderEmail'],
       orderId: map['orderId'],
+      productName: map['productName'],
+      stockLevel: map['stockLevel'],
+      thresholdLevel: map['thresholdLevel'],
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       isRead: map['isRead'] ?? false,
+      actionData: map['actionData'],
     );
   }
 } 
