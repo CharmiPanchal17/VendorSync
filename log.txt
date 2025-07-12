@@ -151,3 +151,4 @@ Setup login validation
 Improved responsive design
 Added forgot password page
 Integrated CSV upload module
+Created upload history view
