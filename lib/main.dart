@@ -7,6 +7,7 @@ import 'screens/vendor/settings_screen.dart';
 import 'screens/supplier/settings_screen.dart';
 import 'screens/vendor/product_analytics_screen.dart';
 import 'screens/vendor/orders_screen.dart';
+import 'screens/vendor/detailed_reports_screen.dart';
 import 'models/order.dart' as order_model;
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -105,6 +106,10 @@ class VendorSyncApp extends StatelessWidget {
             '/vendor-orders': (context) {
               final email = ModalRoute.of(context)?.settings.arguments as String?;
               return OrdersScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-detailed-reports': (context) {
+              final productName = ModalRoute.of(context)?.settings.arguments as String?;
+              return DetailedReportsScreen(productName: productName ?? '');
             },
             '/vendor-quick-order': (context) {
               final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;

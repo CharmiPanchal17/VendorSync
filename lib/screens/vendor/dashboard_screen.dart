@@ -28,12 +28,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   String? vendorName;
+  int _pendingOrdersCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchVendorName();
     _checkThresholdAlerts();
+    _loadPendingOrdersCount();
   }
 
   Future<void> _checkThresholdAlerts() async {
@@ -51,6 +53,37 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       setState(() {
         vendorName = vendorQuery.docs.first['name'];
       });
+    }
+  }
+
+  Future<void> _loadPendingOrdersCount() async {
+    try {
+      final stockSnapshot = await FirebaseFirestore.instance
+          .collection('stock_items')
+          .where('vendorEmail', isEqualTo: widget.vendorEmail)
+          .get();
+
+      int count = 0;
+      for (final doc in stockSnapshot.docs) {
+        final data = doc.data();
+        final currentStock = data['currentStock'] as int? ?? 0;
+        final thresholdLevel = data['thresholdLevel'] as int? ?? 0;
+        final minimumStock = data['minimumStock'] as int? ?? 0;
+
+        if (thresholdLevel > 0) {
+          if (currentStock <= (minimumStock * 0.5) || 
+              currentStock <= thresholdLevel || 
+              currentStock <= (minimumStock * 1.2)) {
+            count++;
+          }
+        }
+      }
+
+      setState(() {
+        _pendingOrdersCount = count;
+      });
+    } catch (e) {
+      print('Error loading pending orders count: $e');
     }
   }
 
@@ -171,6 +204,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
+                      badge: _pendingOrdersCount > 0 ? _pendingOrdersCount.toString() : null,
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -1152,6 +1186,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     bool isLogout = false,
     Color? textColor,
     Color? iconColor,
+    String? badge,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1189,6 +1224,23 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             fontSize: 16,
           ),
         ),
+        trailing: badge != null
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : null,
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

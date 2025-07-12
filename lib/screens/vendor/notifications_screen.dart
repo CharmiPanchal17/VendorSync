@@ -346,9 +346,9 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _navigateToQuickOrder(notification),
+                      onPressed: () => _navigateToOrders(),
                       icon: const Icon(Icons.shopping_cart),
-                      label: const Text('Order Now'),
+                      label: const Text('Review Orders'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: maroonNotification,
                         foregroundColor: Colors.white,
@@ -404,6 +404,10 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
     }
   }
 
+  void _navigateToOrders() {
+    Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
+  }
+
   void _showThresholdNotificationOptions(AppNotification notification) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const maroonNotification = Color(0xFF800000);
@@ -444,14 +448,14 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
             ListTile(
               leading: Icon(Icons.shopping_cart, color: maroonNotification),
               title: Text(
-                'Place Order Now',
+                'Review Orders',
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
               onTap: () {
                 Navigator.pop(context);
-                _navigateToQuickOrder(notification);
+                _navigateToOrders();
               },
             ),
             ListTile(
