@@ -164,6 +164,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
+                      icon: Icons.shopping_cart,
+                      title: 'Orders',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
                       icon: Icons.analytics,
                       title: 'Analytics',
                       onTap: () {
