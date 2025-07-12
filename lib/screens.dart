@@ -16,6 +16,7 @@ export 'screens/vendor/suppliers_list_screen.dart';
 export 'screens/vendor/available_suppliers_screen.dart';
 export 'screens/vendor/threshold_management_screen.dart';
 export 'screens/vendor/quick_order_screen.dart';
+export 'screens/vendor/orders_screen.dart';
 export 'screens/supplier/dashboard_screen.dart';
 export 'screens/supplier/order_details_screen.dart';
 export 'screens/supplier/delivery_confirmation_screen.dart';
