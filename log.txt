@@ -181,3 +181,4 @@ Fixed duplicate rows issue
 Integrated CSV upload module
 Validated CSV data format
 Created upload history view
+Validated CSV data format
