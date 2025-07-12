@@ -35,9 +35,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
           .get();
 
       if (stockSnapshot.docs.isNotEmpty) {
+        print('Found ${stockSnapshot.docs.length} stock items for vendor: ${widget.vendorEmail}');
+        
         final loadedStockItems = stockSnapshot.docs.map((doc) {
           final data = doc.data();
-          return StockItem(
+          final item = StockItem(
             id: doc.id,
             productName: data['productName'] ?? '',
             currentStock: data['currentStock'] ?? 0,
@@ -62,6 +64,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 : null,
             suggestedOrderQuantity: data['suggestedOrderQuantity'] ?? 0,
           );
+          
+          print('Product: ${item.productName}');
+          print('  Current Stock: ${item.currentStock}');
+          print('  Minimum Stock: ${item.minimumStock}');
+          print('  Threshold Level: ${item.thresholdLevel}');
+          print('  Is at threshold: ${item.isAtThreshold}');
+          print('  Is critical: ${item.isCriticalStock}');
+          print('  Needs restock: ${item.needsRestock}');
+          
+          return item;
         }).toList();
 
         // Filter only products that have reached threshold
@@ -69,11 +81,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
           item.isAtThreshold || item.isCriticalStock || item.needsRestock
         ).toList();
 
+        print('Found ${thresholdItems.length} items that need ordering');
+
         setState(() {
           thresholdProducts = thresholdItems;
           isLoading = false;
         });
       } else {
+        print('No stock items found for vendor: ${widget.vendorEmail}');
         setState(() { isLoading = false; });
       }
     } catch (e) {
@@ -98,6 +113,57 @@ class _OrdersScreenState extends State<OrdersScreen> {
     )).toList();
   }
 
+  Future<void> _addTestData() async {
+    try {
+      // Add a test product that will appear in orders
+      await FirebaseFirestore.instance.collection('stock_items').add({
+        'productName': 'Test Product - Low Stock',
+        'currentStock': 20, // Low stock
+        'minimumStock': 100,
+        'maximumStock': 200,
+        'thresholdLevel': 50, // Will trigger threshold
+        'thresholdNotificationsEnabled': true,
+        'vendorEmail': widget.vendorEmail,
+        'primarySupplier': 'Test Supplier',
+        'primarySupplierEmail': 'supplier@test.com',
+        'averageUnitPrice': 25.0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Add another test product
+      await FirebaseFirestore.instance.collection('stock_items').add({
+        'productName': 'Test Product - Critical',
+        'currentStock': 10, // Critical stock
+        'minimumStock': 100,
+        'maximumStock': 200,
+        'thresholdLevel': 80,
+        'thresholdNotificationsEnabled': true,
+        'vendorEmail': widget.vendorEmail,
+        'primarySupplier': 'Test Supplier 2',
+        'primarySupplierEmail': 'supplier2@test.com',
+        'averageUnitPrice': 30.0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Test data added! Refresh to see products.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Reload the data
+      await _loadThresholdProducts();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding test data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -108,6 +174,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: _addTestData,
+            tooltip: 'Add Test Data',
+          ),
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -309,7 +382,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white5 : Colors.blue.shade50,
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isDark ? Colors.blue.shade300 : Colors.blue.shade200,

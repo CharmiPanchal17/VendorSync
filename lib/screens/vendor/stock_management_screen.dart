@@ -417,53 +417,227 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   Widget _buildStockCard(BuildContext context, StockItem stockItem, bool isDark, int index) {
-    return Card(
-      color: stockItem.isLowStock 
-          ? Colors.red.shade50 
-          : (isDark ? Colors.white10 : Colors.white),
-      margin: const EdgeInsets.only(bottom: 16),
+    final stockStatus = _getStockStatus(stockItem);
+    final statusColor = _getStatusColor(stockStatus);
+    final statusIcon = _getStatusIcon(stockStatus);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: stockItem.isLowStock 
-              ? maroon.withOpacity(0.2) 
-              : Colors.grey.shade200,
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                statusColor.withOpacity(0.2),
+                statusColor.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: statusColor.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
           child: Icon(
-            Icons.inventory, 
-            color: stockItem.isLowStock ? maroon : Colors.grey
+            statusIcon,
+            color: statusColor,
+            size: 24,
           ),
         ),
-        title: Text(
-          stockItem.productName, 
-          style: const TextStyle(fontWeight: FontWeight.bold)
-        ),
-        subtitle: Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Stock: 	${stockItem.currentStock} / ${stockItem.maximumStock}'),
-            if (stockItem.isLowStock)
-              Text(
-                'Low Stock',
-                style: TextStyle(
-                  color: maroon,
-                  fontWeight: FontWeight.bold,
-                ),
+            Text(
+              stockItem.productName,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black87,
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: statusColor.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    stockStatus,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (stockItem.autoOrderEnabled)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome, color: Colors.orange, size: 12),
+                        const SizedBox(width: 2),
+                        Text(
+                          'Auto',
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (stockItem.autoOrderEnabled)
-              Icon(Icons.auto_awesome, color: maroon, size: 20),
-            const SizedBox(width: 8),
-            Icon(Icons.expand_more, color: maroon),
-          ],
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildStockMetric(
+                  'Current',
+                  '${stockItem.currentStock}',
+                  Icons.inventory,
+                  isDark,
+                ),
+              ),
+              Expanded(
+                child: _buildStockMetric(
+                  'Min',
+                  '${stockItem.minimumStock}',
+                  Icons.warning,
+                  isDark,
+                ),
+              ),
+              Expanded(
+                child: _buildStockMetric(
+                  'Max',
+                  '${stockItem.maximumStock}',
+                  Icons.storage,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: maroon.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.expand_more,
+            color: maroon,
+            size: 20,
+          ),
         ),
         children: [
           _buildStockDetails(context, stockItem, isDark, index),
         ],
       ),
     );
+  }
+
+  Widget _buildStockMetric(String label, String value, IconData icon, bool isDark) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: isDark ? Colors.white70 : Colors.grey[600],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: isDark ? Colors.white60 : Colors.grey[500],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getStockStatus(StockItem stockItem) {
+    if (stockItem.currentStock <= (stockItem.minimumStock * 0.5)) {
+      return 'Critical';
+    } else if (stockItem.currentStock <= stockItem.minimumStock) {
+      return 'Low';
+    } else if (stockItem.currentStock <= (stockItem.minimumStock * 1.2)) {
+      return 'Warning';
+    } else {
+      return 'Good';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Critical':
+        return Colors.red;
+      case 'Low':
+        return Colors.orange;
+      case 'Warning':
+        return Colors.yellow.shade700;
+      case 'Good':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'Critical':
+        return Icons.warning;
+      case 'Low':
+        return Icons.warning_amber;
+      case 'Warning':
+        return Icons.info;
+      case 'Good':
+        return Icons.check_circle;
+      default:
+        return Icons.inventory;
+    }
   }
 
   Widget _buildStockDetails(BuildContext context, StockItem stockItem, bool isDark, int index) {
@@ -495,67 +669,217 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   Widget _buildStockOverview(StockItem stockItem, bool isDark) {
+    final stockStatus = _getStockStatus(stockItem);
+    final statusColor = _getStatusColor(stockStatus);
+    
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: maroon.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            statusColor.withOpacity(0.1),
+            statusColor.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: statusColor.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.analytics,
+                  color: statusColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Stock Overview',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Stock Level Indicator
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.grey.shade200,
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Stock Level',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Stack(
+                  children: [
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Container(
+                      height: 8,
+                      width: MediaQuery.of(context).size.width * 0.6 * stockItem.stockPercentage,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [statusColor, statusColor.withOpacity(0.7)],
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${stockItem.currentStock} units',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : Colors.grey[500],
+                      ),
+                    ),
+                    Text(
+                      '${stockItem.maximumStock} units',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Stock Metrics Grid
+          Row(
+            children: [
+              Expanded(
+                child: _buildEnhancedMetricItem(
+                  'Current Stock',
+                  '${stockItem.currentStock}',
+                  Icons.inventory,
+                  statusColor,
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildEnhancedMetricItem(
+                  'Min Stock',
+                  '${stockItem.minimumStock}',
+                  Icons.warning,
+                  Colors.orange,
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildEnhancedMetricItem(
+                  'Max Stock',
+                  '${stockItem.maximumStock}',
+                  Icons.storage,
+                  Colors.blue,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedMetricItem(String title, String value, IconData icon, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(height: 8),
           Text(
-            'Stock Overview',
+            value,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetricItem(
-                  'Current Stock',
-                  '${stockItem.currentStock}',
-                  Icons.inventory,
-                  isDark,
-                ),
-              ),
-              Expanded(
-                child: _buildMetricItem(
-                  'Min Stock',
-                  '${stockItem.minimumStock}',
-                  Icons.warning,
-                  isDark,
-                ),
-              ),
-                                            Expanded(
-                                child: _buildMetricItem(
-                                  'Total Stock',
-                                  '${stockItem.maximumStock}',
-                                  Icons.storage,
-                                  isDark,
-                                ),
-                              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: stockItem.stockPercentage,
-            backgroundColor: isDark ? Colors.white24 : Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              _getStockProgressColor(stockItem, isDark),
-            ),
-          ),
-          const SizedBox(height: 8),
           Text(
-            '${(stockItem.stockPercentage * 100).toStringAsFixed(1)}% of total capacity',
+            title,
             style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.grey[600],
+              fontSize: 11,
+              color: isDark ? Colors.white60 : Colors.grey[500],
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -564,60 +888,156 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
   Widget _buildSupplierInfo(StockItem stockItem, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.withOpacity(0.1),
+            Colors.blue.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Primary Supplier',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.blue.withOpacity(0.2),
-                child: Icon(Icons.business, color: Colors.blue),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.business,
+                  color: Colors.blue,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stockItem.primarySupplier!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      stockItem.primarySupplierEmail!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.grey[600],
-                      ),
-                    ),
-                  ],
+              Text(
+                'Primary Supplier',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          
+          // Supplier Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white5 : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.grey.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.blue.withOpacity(0.2),
+                        Colors.blue.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.business,
+                    color: Colors.blue,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stockItem.primarySupplier!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.email,
+                            size: 14,
+                            color: isDark ? Colors.white60 : Colors.grey[500],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            stockItem.primarySupplierEmail!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white60 : Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
           if (stockItem.averageUnitPrice != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Avg. Unit Price: \$${stockItem.averageUnitPrice!.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white70 : Colors.grey[600],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.attach_money,
+                    color: Colors.green,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Average Unit Price',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.grey[600],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '\$${stockItem.averageUnitPrice!.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -761,23 +1181,180 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   Widget _buildActionButtons(BuildContext context, StockItem stockItem, bool isDark, int index) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              _showEditStockDialog(context, stockItem, index);
-            },
-            icon: Icon(Icons.edit, size: 16),
-            label: const Text('Update Stock'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: maroon,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            maroon.withOpacity(0.1),
+            maroon.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: maroon.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: maroon.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.settings,
+                  color: maroon,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Actions',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Action Buttons Grid
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  'Update Stock',
+                  Icons.edit,
+                  maroon,
+                  () => _showEditStockDialog(context, stockItem, index),
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  'View Analytics',
+                  Icons.analytics,
+                  Colors.blue,
+                  () => _navigateToAnalytics(stockItem),
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  'Set Threshold',
+                  Icons.warning,
+                  Colors.orange,
+                  () => _navigateToThresholdManagement(stockItem),
+                  isDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  'Place Order',
+                  Icons.shopping_cart,
+                  Colors.green,
+                  () => _navigateToOrder(stockItem),
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onPressed, bool isDark) {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withOpacity(0.1),
+            color.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  void _navigateToAnalytics(StockItem stockItem) {
+    Navigator.of(context).pushNamed(
+      '/vendor-product-analytics',
+      arguments: stockItem.productName,
+    );
+  }
+
+  void _navigateToThresholdManagement(StockItem stockItem) {
+    Navigator.of(context).pushNamed(
+      '/vendor-threshold-management',
+      arguments: widget.vendorEmail,
+    );
+  }
+
+  void _navigateToOrder(StockItem stockItem) {
+    Navigator.of(context).pushNamed(
+      '/vendor-quick-order',
+      arguments: {
+        'productName': stockItem.productName,
+        'suggestedQuantity': stockItem.calculateSuggestedOrderQuantity(),
+        'supplierEmail': stockItem.primarySupplierEmail,
+        'supplierName': stockItem.primarySupplier,
+        'vendorEmail': widget.vendorEmail,
+      },
     );
   }
 

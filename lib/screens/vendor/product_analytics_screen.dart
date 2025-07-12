@@ -338,7 +338,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: OutlinedButton.icon(
-                                    onPressed: () => _navigateToDetailedReports(),
+                                    onPressed: () => _navigateToDetailedReports(context),
                                     icon: const Icon(Icons.assessment),
                                     label: const Text('Detailed Reports'),
                                     style: OutlinedButton.styleFrom(
@@ -350,7 +350,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: () => _navigateToOrderScreen(),
+                                    onPressed: () => _navigateToOrderScreen(context),
                                     icon: const Icon(Icons.shopping_cart),
                                     label: const Text('Place Order'),
                                     style: ElevatedButton.styleFrom(
