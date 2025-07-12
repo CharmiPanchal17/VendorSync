@@ -5,6 +5,7 @@ import 'screens/vendor/edit_profile_screen.dart';
 import 'screens/supplier/edit_profile_screen.dart';
 import 'screens/vendor/settings_screen.dart';
 import 'screens/supplier/settings_screen.dart';
+import 'screens/vendor/product_analytics_screen.dart';
 import 'models/order.dart' as order_model;
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
@@ -95,6 +96,24 @@ class VendorSyncApp extends StatelessWidget {
             '/vendor-suppliers': (context) {
               final email = ModalRoute.of(context)?.settings.arguments as String?;
               return SuppliersListScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-threshold-management': (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return ThresholdManagementScreen(vendorEmail: email ?? '');
+            },
+            '/vendor-quick-order': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              return QuickOrderScreen(
+                vendorEmail: args?['vendorEmail'] ?? '',
+                productName: args?['productName'] ?? '',
+                suggestedQuantity: args?['suggestedQuantity'] ?? 0,
+                supplierEmail: args?['supplierEmail'],
+                supplierName: args?['supplierName'],
+              );
+            },
+            '/vendor-product-analytics': (context) {
+              final productName = ModalRoute.of(context)?.settings.arguments as String?;
+              return ProductAnalyticsScreen(productName: productName ?? '');
             },
           },
           debugShowCheckedModeBanner: false,

@@ -33,6 +33,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   void initState() {
     super.initState();
     _fetchVendorName();
+    _checkThresholdAlerts();
+  }
+
+  Future<void> _checkThresholdAlerts() async {
+    // Check for threshold alerts when dashboard loads
+    await NotificationService.checkThresholdAlerts(widget.vendorEmail);
   }
 
   Future<void> _fetchVendorName() async {
@@ -143,6 +149,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => StockManagementScreen(vendorEmail: widget.vendorEmail),
                         ));
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.warning,
+                      title: 'Threshold Management',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/vendor-threshold-management', arguments: widget.vendorEmail);
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
