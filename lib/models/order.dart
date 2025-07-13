@@ -158,10 +158,10 @@ class StockItem {
     final currentMonth = now.month;
     final currentDay = now.day;
     
-    // Check if this is a food item (you can enhance this logic)
-    final isFoodItem = _isFoodItem();
+    // Check if this is a seasonal food item that should get holiday adjustments
+    final isSeasonalFoodItem = _isSeasonalFoodItem();
     
-    if (!isFoodItem) return 0; // No seasonal adjustment for non-food items
+    if (!isSeasonalFoodItem) return 0; // No seasonal adjustment for non-seasonal items
     
     // Calculate days until next major holiday
     final daysUntilEaster = _getDaysUntilEaster(now);
@@ -173,11 +173,44 @@ class StockItem {
     
     if (closestHoliday == null) return 0; // No upcoming holiday
     
+    // Check if this specific product is relevant to the upcoming holiday
+    final isRelevantToHoliday = _isRelevantToHoliday(closestHoliday['name'] as String);
+    
+    if (!isRelevantToHoliday) return 0; // No adjustment if product not relevant to this holiday
+    
     // Calculate seasonal adjustment based on proximity to holiday
     return _calculateHolidayAdjustment(closestHoliday);
   }
 
-  // Check if the product is a food item
+  // Check if the product is a food item that should get seasonal adjustments
+  bool _isSeasonalFoodItem() {
+    // Specific food items that typically see increased demand during holidays
+    final seasonalFoodKeywords = [
+      // Easter-specific items
+      'chocolate', 'candy', 'eggs', 'ham', 'lamb', 'bread', 'cake', 'pastry', 'biscuits',
+      'milk', 'butter', 'cheese', 'cream', 'flour', 'sugar', 'vanilla', 'cinnamon',
+      
+      // Eid al-Fitr specific items
+      'dates', 'honey', 'nuts', 'almonds', 'pistachios', 'walnuts', 'rice', 'lamb',
+      'chicken', 'beef', 'mutton', 'spices', 'saffron', 'cardamom', 'cinnamon',
+      'rose water', 'orange blossom', 'semolina', 'phyllo', 'baklava',
+      
+      // Christmas specific items
+      'turkey', 'ham', 'roast', 'potatoes', 'cranberry', 'stuffing', 'gravy',
+      'pudding', 'fruitcake', 'gingerbread', 'cookies', 'candy canes', 'chocolate',
+      'nuts', 'dried fruits', 'wine', 'champagne', 'eggnog', 'mulled wine',
+      
+      // General holiday staples
+      'sugar', 'flour', 'oil', 'milk', 'eggs', 'butter', 'cheese', 'bread',
+      'pasta', 'rice', 'beans', 'vegetables', 'fruits', 'juice', 'soda',
+      'coffee', 'tea', 'spices', 'herbs', 'sauce', 'condiments'
+    ];
+    
+    final productNameLower = productName.toLowerCase();
+    return seasonalFoodKeywords.any((keyword) => productNameLower.contains(keyword));
+  }
+
+  // Check if the product is a food item (general check)
   bool _isFoodItem() {
     // List of food-related keywords
     final foodKeywords = [
@@ -190,6 +223,42 @@ class StockItem {
     
     final productNameLower = productName.toLowerCase();
     return foodKeywords.any((keyword) => productNameLower.contains(keyword));
+  }
+
+  // Check if the product is relevant to a specific holiday
+  bool _isRelevantToHoliday(String holidayName) {
+    final productNameLower = productName.toLowerCase();
+    
+    switch (holidayName) {
+      case 'Easter':
+        // Easter-specific items
+        final easterKeywords = [
+          'chocolate', 'candy', 'eggs', 'ham', 'lamb', 'bread', 'cake', 'pastry', 'biscuits',
+          'milk', 'butter', 'cheese', 'cream', 'flour', 'sugar', 'vanilla', 'cinnamon'
+        ];
+        return easterKeywords.any((keyword) => productNameLower.contains(keyword));
+        
+      case 'Idd':
+        // Eid al-Fitr specific items
+        final iddKeywords = [
+          'dates', 'honey', 'nuts', 'almonds', 'pistachios', 'walnuts', 'rice', 'lamb',
+          'chicken', 'beef', 'mutton', 'spices', 'saffron', 'cardamom', 'cinnamon',
+          'rose water', 'orange blossom', 'semolina', 'phyllo', 'baklava'
+        ];
+        return iddKeywords.any((keyword) => productNameLower.contains(keyword));
+        
+      case 'Christmas':
+        // Christmas specific items
+        final christmasKeywords = [
+          'turkey', 'ham', 'roast', 'potatoes', 'cranberry', 'stuffing', 'gravy',
+          'pudding', 'fruitcake', 'gingerbread', 'cookies', 'candy canes', 'chocolate',
+          'nuts', 'dried fruits', 'wine', 'champagne', 'eggnog', 'mulled wine'
+        ];
+        return christmasKeywords.any((keyword) => productNameLower.contains(keyword));
+        
+      default:
+        return false;
+    }
   }
 
   // Get days until Easter (simplified calculation)
