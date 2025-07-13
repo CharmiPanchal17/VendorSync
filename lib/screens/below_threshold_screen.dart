@@ -23,11 +23,14 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
   List<StockItem> belowThresholdItems = [];
   Map<String, int> manualOrderQuantities = {};
   bool isLoading = true;
+  Map<String, Map<String, String>> selectedSuppliers = {}; // {stockItemId: {name, email}}
+  List<Map<String, String>> suppliers = [];
 
   @override
   void initState() {
     super.initState();
     _loadBelowThresholdItems();
+    _loadSuppliers();
   }
 
   Future<void> _loadBelowThresholdItems() async {
@@ -95,6 +98,70 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
     }
   }
 
+  Future<void> _loadSuppliers() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('suppliers').get();
+      setState(() {
+        suppliers = snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            'name': (data['name'] ?? '').toString(),
+            'email': (data['email'] ?? '').toString(),
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('Error loading suppliers: $e');
+    }
+  }
+
+  Future<void> _addSupplierDialog() async {
+    String name = '';
+    String email = '';
+    final formKey = GlobalKey<FormState>();
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Supplier'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+                onChanged: (v) => name = v,
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                validator: (v) => v == null || v.isEmpty ? 'Enter email' : null,
+                onChanged: (v) => email = v,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                await FirebaseFirestore.instance.collection('suppliers').add({'name': name, 'email': email});
+                Navigator.pop(context, {'name': name, 'email': email});
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        suppliers.add(result);
+      });
+    }
+  }
+
   List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> historyData) {
     return historyData.map((record) {
       return DeliveryRecord(
@@ -116,16 +183,16 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
 
   Future<void> _approveAutoOrder(StockItem item) async {
     try {
-      if (item.primarySupplierEmail == null || item.primarySupplierEmail!.isEmpty) {
+      final supplier = selectedSuppliers[item.id];
+      if (supplier == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No supplier found for this product'),
+            content: Text('Please select a supplier before placing an order.'),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
-
       final lastOrderQuantity = item.deliveryHistory.isNotEmpty 
           ? item.deliveryHistory.last.quantity 
           : item.maximumStock;
@@ -134,8 +201,8 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'productName': item.productName,
         'quantity': lastOrderQuantity,
-        'supplierName': item.primarySupplier ?? 'Unknown Supplier',
-        'supplierEmail': item.primarySupplierEmail,
+        'supplierName': supplier['name'],
+        'supplierEmail': supplier['email'],
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
@@ -151,7 +218,7 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
       // Send notifications
       await NotificationService.notifySupplierOfAutoOrder(
         vendorEmail: widget.vendorEmail,
-        supplierEmail: item.primarySupplierEmail!,
+        supplierEmail: supplier['email']!,
         orderId: orderRef.id,
         productName: item.productName,
         quantity: lastOrderQuantity,
@@ -161,7 +228,7 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
 
       await NotificationService.notifyVendorOfAutoOrder(
         vendorEmail: widget.vendorEmail,
-        supplierEmail: item.primarySupplierEmail!,
+        supplierEmail: supplier['email']!,
         orderId: orderRef.id,
         productName: item.productName,
         quantity: lastOrderQuantity,
@@ -194,11 +261,11 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
   Future<void> _placeManualOrder(StockItem item) async {
     try {
       final quantity = manualOrderQuantities[item.id] ?? item.maximumStock;
-      
-      if (item.primarySupplierEmail == null || item.primarySupplierEmail!.isEmpty) {
+      final supplier = selectedSuppliers[item.id];
+      if (supplier == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No supplier found for this product'),
+            content: Text('Please select a supplier before placing an order.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -209,20 +276,23 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'productName': item.productName,
         'quantity': quantity,
-        'supplierName': item.primarySupplier ?? 'Unknown Supplier',
-        'supplierEmail': item.primarySupplierEmail,
+        'supplierName': supplier['name'],
+        'supplierEmail': supplier['email'],
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
-        'isAutoOrder': false,
-        'notes': 'Manual order placed due to low stock level',
+        'isManualOrder': true,
+        'manualOrderTriggeredAt': FieldValue.serverTimestamp(),
+        'stockLevelAtTrigger': item.currentStock,
+        'thresholdLevel': item.minimumStock,
+        'notes': 'Manual order placed by vendor',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       // Send notification to supplier
       await NotificationService.notifySupplierOfNewOrder(
-        supplierEmail: item.primarySupplierEmail!,
+        supplierEmail: supplier['email']!,
         vendorEmail: widget.vendorEmail,
         orderId: orderRef.id,
         productName: item.productName,
@@ -249,6 +319,95 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
         );
       }
     }
+  }
+
+  Future<Map<String, dynamic>> _fetchProductAnalytics(String productName) async {
+    // Fetch sales records for this product and vendor
+    final salesSnapshot = await FirebaseFirestore.instance
+        .collection('sales_records')
+        .where('vendorEmail', isEqualTo: widget.vendorEmail)
+        .where('productName', isEqualTo: productName)
+        .orderBy('soldAt', descending: true)
+        .get();
+    final now = DateTime.now();
+    int totalSold = 0;
+    int soldLast7 = 0;
+    int soldLast30 = 0;
+    DateTime? firstSale;
+    DateTime? lastSale;
+    for (final doc in salesSnapshot.docs) {
+      final data = doc.data();
+      final soldAt = data['soldAt'] is Timestamp ? (data['soldAt'] as Timestamp).toDate() : now;
+      final qtyRaw = data['quantity'] ?? 0;
+      final qty = qtyRaw is int ? qtyRaw : (qtyRaw is num ? qtyRaw.toInt() : 0);
+      totalSold += qty;
+      if (now.difference(soldAt).inDays <= 7) soldLast7 += qty;
+      if (now.difference(soldAt).inDays <= 30) soldLast30 += qty;
+      if (firstSale == null || soldAt.isBefore(firstSale)) firstSale = soldAt;
+      if (lastSale == null || soldAt.isAfter(lastSale)) lastSale = soldAt;
+    }
+    final weeklyRate = soldLast7 / 1.0;
+    final monthlyRate = soldLast30 / 4.0;
+    final trend = weeklyRate > 10 ? 'Up' : weeklyRate == 0 ? 'No sales' : 'Steady';
+    final duration = firstSale != null ? now.difference(firstSale).inDays : 0;
+    final reorderSuggestion = weeklyRate > 0 ? (weeklyRate * 2).ceil() : 1;
+    return {
+      'totalSold': totalSold,
+      'soldLast7': soldLast7,
+      'soldLast30': soldLast30,
+      'weeklyRate': weeklyRate,
+      'monthlyRate': monthlyRate,
+      'trend': trend,
+      'duration': duration,
+      'reorderSuggestion': reorderSuggestion,
+      'firstSale': firstSale,
+      'lastSale': lastSale,
+    };
+  }
+
+  void _showProductReport(BuildContext context, StockItem item) async {
+    final analytics = await _fetchProductAnalytics(item.productName);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Report: ${item.productName}'),
+        content: SizedBox(
+          width: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DataTable(
+                  columns: const [
+                    DataColumn(label: Text('Metric')),
+                    DataColumn(label: Text('Value')),
+                  ],
+                  rows: [
+                    DataRow(cells: [DataCell(Text('Total Sold')), DataCell(Text('${analytics['totalSold']}'))]),
+                    DataRow(cells: [DataCell(Text('Sold Last 7 Days')), DataCell(Text('${analytics['soldLast7']}'))]),
+                    DataRow(cells: [DataCell(Text('Sold Last 30 Days')), DataCell(Text('${analytics['soldLast30']}'))]),
+                    DataRow(cells: [DataCell(Text('Weekly Sales Rate')), DataCell(Text('${analytics['weeklyRate'].toStringAsFixed(2)}'))]),
+                    DataRow(cells: [DataCell(Text('Monthly Sales Rate')), DataCell(Text('${analytics['monthlyRate'].toStringAsFixed(2)}'))]),
+                    DataRow(cells: [DataCell(Text('Trend')), DataCell(Text('${analytics['trend']}'))]),
+                    DataRow(cells: [DataCell(Text('Duration in Stock (days)')), DataCell(Text('${analytics['duration']}'))]),
+                    DataRow(cells: [DataCell(Text('Suggested Reorder Qty')), DataCell(Text('${analytics['reorderSuggestion']}'))]),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (analytics['firstSale'] != null && analytics['lastSale'] != null)
+                  Text('Sales from: ${analytics['firstSale']} to ${analytics['lastSale']}'),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -593,11 +752,51 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
                           ),
                         ],
                       ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.analytics),
+                        label: Text('View Product Report'),
+                        onPressed: () => _showProductReport(context, item),
+                      ),
                     ],
                   ),
                 ),
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupplierDropdown(StockItem item) {
+    final selected = selectedSuppliers[item.id];
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<Map<String, String>>(
+            value: selected,
+            hint: const Text('Select Supplier'),
+            items: [
+              ...suppliers.map((s) => DropdownMenuItem(
+                value: s,
+                child: Text('${s['name']} (${s['email']})'),
+              )),
+              DropdownMenuItem(
+                value: null,
+                child: GestureDetector(
+                  onTap: _addSupplierDialog,
+                  child: const Text('Add New Supplier'),
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  selectedSuppliers[item.id] = value;
+                });
+              }
+            },
+            validator: (v) => v == null ? 'Select supplier' : null,
           ),
         ),
       ],
