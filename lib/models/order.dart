@@ -158,34 +158,35 @@ class StockItem {
     final currentMonth = now.month;
     final currentDay = now.day;
     
-    // Check if this is a seasonal food item that should get holiday adjustments
-    final isSeasonalFoodItem = _isSeasonalFoodItem();
+    // Check if this is a seasonal item that should get adjustments
+    final isSeasonalItem = _isSeasonalItem();
     
-    if (!isSeasonalFoodItem) return 0; // No seasonal adjustment for non-seasonal items
+    if (!isSeasonalItem) return 0; // No seasonal adjustment for non-seasonal items
     
     // Calculate days until next major holiday
     final daysUntilEaster = _getDaysUntilEaster(now);
     final daysUntilIdd = _getDaysUntilIdd(now);
     final daysUntilChristmas = _getDaysUntilChristmas(now);
+    final daysUntilBackToSchool = _getDaysUntilBackToSchool(now);
     
-    // Determine the closest upcoming holiday
-    final closestHoliday = _getClosestHoliday(daysUntilEaster, daysUntilIdd, daysUntilChristmas);
+    // Determine the closest upcoming season/holiday
+    final closestSeason = _getClosestSeason(daysUntilEaster, daysUntilIdd, daysUntilChristmas, daysUntilBackToSchool);
     
-    if (closestHoliday == null) return 0; // No upcoming holiday
+    if (closestSeason == null) return 0; // No upcoming season
     
-    // Check if this specific product is relevant to the upcoming holiday
-    final isRelevantToHoliday = _isRelevantToHoliday(closestHoliday['name'] as String);
+    // Check if this specific product is relevant to the upcoming season
+    final isRelevantToSeason = _isRelevantToSeason(closestSeason['name'] as String);
     
-    if (!isRelevantToHoliday) return 0; // No adjustment if product not relevant to this holiday
+    if (!isRelevantToSeason) return 0; // No adjustment if product not relevant to this season
     
-    // Calculate seasonal adjustment based on proximity to holiday
-    return _calculateHolidayAdjustment(closestHoliday);
+    // Calculate seasonal adjustment based on proximity to season
+    return _calculateSeasonAdjustment(closestSeason);
   }
 
-  // Check if the product is a food item that should get seasonal adjustments
-  bool _isSeasonalFoodItem() {
-    // Specific food items that typically see increased demand during holidays
-    final seasonalFoodKeywords = [
+  // Check if the product is a seasonal item that should get adjustments
+  bool _isSeasonalItem() {
+    // Specific items that typically see increased demand during holidays and seasons
+    final seasonalKeywords = [
       // Easter-specific items
       'chocolate', 'candy', 'eggs', 'ham', 'lamb', 'bread', 'cake', 'pastry', 'biscuits',
       'milk', 'butter', 'cheese', 'cream', 'flour', 'sugar', 'vanilla', 'cinnamon',
@@ -200,6 +201,16 @@ class StockItem {
       'pudding', 'fruitcake', 'gingerbread', 'cookies', 'candy canes', 'chocolate',
       'nuts', 'dried fruits', 'wine', 'champagne', 'eggnog', 'mulled wine',
       
+      // Back-to-school items
+      'notebook', 'notebooks', 'paper', 'pencil', 'pencils', 'pen', 'pens', 'eraser',
+      'erasers', 'ruler', 'rulers', 'scissors', 'glue', 'marker', 'markers',
+      'crayon', 'crayons', 'backpack', 'backpacks', 'binder', 'binders', 'folder',
+      'folders', 'textbook', 'textbooks', 'calculator', 'calculators', 'laptop',
+      'laptops', 'tablet', 'tablets', 'uniform', 'uniforms', 'shoes', 'sneakers',
+      'lunchbox', 'lunchboxes', 'water bottle', 'water bottles', 'school bag',
+      'school bags', 'stationery', 'stationeries', 'art supplies', 'craft supplies',
+      'whiteboard', 'whiteboards', 'chalk', 'chalkboard', 'chalkboards',
+      
       // General holiday staples
       'sugar', 'flour', 'oil', 'milk', 'eggs', 'butter', 'cheese', 'bread',
       'pasta', 'rice', 'beans', 'vegetables', 'fruits', 'juice', 'soda',
@@ -207,7 +218,7 @@ class StockItem {
     ];
     
     final productNameLower = productName.toLowerCase();
-    return seasonalFoodKeywords.any((keyword) => productNameLower.contains(keyword));
+    return seasonalKeywords.any((keyword) => productNameLower.contains(keyword));
   }
 
   // Check if the product is a food item (general check)
@@ -225,11 +236,11 @@ class StockItem {
     return foodKeywords.any((keyword) => productNameLower.contains(keyword));
   }
 
-  // Check if the product is relevant to a specific holiday
-  bool _isRelevantToHoliday(String holidayName) {
+  // Check if the product is relevant to a specific season
+  bool _isRelevantToSeason(String seasonName) {
     final productNameLower = productName.toLowerCase();
     
-    switch (holidayName) {
+    switch (seasonName) {
       case 'Easter':
         // Easter-specific items
         final easterKeywords = [
@@ -255,6 +266,20 @@ class StockItem {
           'nuts', 'dried fruits', 'wine', 'champagne', 'eggnog', 'mulled wine'
         ];
         return christmasKeywords.any((keyword) => productNameLower.contains(keyword));
+        
+      case 'BackToSchool':
+        // Back-to-school specific items
+        final backToSchoolKeywords = [
+          'notebook', 'notebooks', 'paper', 'pencil', 'pencils', 'pen', 'pens', 'eraser',
+          'erasers', 'ruler', 'rulers', 'scissors', 'glue', 'marker', 'markers',
+          'crayon', 'crayons', 'backpack', 'backpacks', 'binder', 'binders', 'folder',
+          'folders', 'textbook', 'textbooks', 'calculator', 'calculators', 'laptop',
+          'laptops', 'tablet', 'tablets', 'uniform', 'uniforms', 'shoes', 'sneakers',
+          'lunchbox', 'lunchboxes', 'water bottle', 'water bottles', 'school bag',
+          'school bags', 'stationery', 'stationeries', 'art supplies', 'craft supplies',
+          'whiteboard', 'whiteboards', 'chalk', 'chalkboard', 'chalkboards'
+        ];
+        return backToSchoolKeywords.any((keyword) => productNameLower.contains(keyword));
         
       default:
         return false;
@@ -335,54 +360,118 @@ class StockItem {
     return christmasDate.difference(now).inDays;
   }
 
-  // Get the closest upcoming holiday
-  Map<String, dynamic>? _getClosestHoliday(int daysUntilEaster, int daysUntilIdd, int daysUntilChristmas) {
-    final holidays = <Map<String, dynamic>>[
+  // Get days until Back-to-School season
+  int _getDaysUntilBackToSchool(DateTime now) {
+    final currentYear = now.year;
+    final currentMonth = now.month;
+    
+    // Back-to-school seasons: January and July (common in many countries)
+    // January: New academic year start
+    // July: Mid-year break and preparation for second semester
+    
+    // Check for January back-to-school period
+    if (currentMonth == 1) {
+      // We're in January back-to-school season
+      return 0; // Already in season
+    }
+    
+    // Check for July back-to-school period
+    if (currentMonth == 7) {
+      // We're in July back-to-school season
+      return 0; // Already in season
+    }
+    
+    // Calculate days until next back-to-school season
+    if (currentMonth < 1) {
+      // Before January - calculate days until January 1st
+      final januaryStart = DateTime(currentYear, 1, 1);
+      return januaryStart.difference(now).inDays;
+    } else if (currentMonth < 7) {
+      // Between January and July - calculate days until July 1st
+      final julyStart = DateTime(currentYear, 7, 1);
+      return julyStart.difference(now).inDays;
+    } else {
+      // After July - calculate days until next year's January 1st
+      final nextJanuaryStart = DateTime(currentYear + 1, 1, 1);
+      return nextJanuaryStart.difference(now).inDays;
+    }
+  }
+
+  // Get the closest upcoming season/holiday
+  Map<String, dynamic>? _getClosestSeason(int daysUntilEaster, int daysUntilIdd, int daysUntilChristmas, int daysUntilBackToSchool) {
+    final seasons = <Map<String, dynamic>>[
       {'name': 'Easter', 'days': daysUntilEaster},
       {'name': 'Idd', 'days': daysUntilIdd},
       {'name': 'Christmas', 'days': daysUntilChristmas},
+      {'name': 'BackToSchool', 'days': daysUntilBackToSchool},
     ];
     
-    // Filter holidays that are within 60 days and find the closest
-    final upcomingHolidays = holidays.where((holiday) => (holiday['days'] as int) <= 60).toList();
+    // Filter seasons that are within 90 days and find the closest
+    // Back-to-school gets a longer window since it's a longer season
+    final upcomingSeasons = seasons.where((season) {
+      final days = season['days'] as int;
+      if (season['name'] == 'BackToSchool') {
+        return days <= 90; // 3 months window for back-to-school
+      }
+      return days <= 60; // 2 months window for holidays
+    }).toList();
     
-    if (upcomingHolidays.isEmpty) return null;
+    if (upcomingSeasons.isEmpty) return null;
     
-    // Return the closest holiday
-    upcomingHolidays.sort((a, b) => (a['days'] as int).compareTo(b['days'] as int));
+    // Return the closest season
+    upcomingSeasons.sort((a, b) => (a['days'] as int).compareTo(b['days'] as int));
     return {
-      'name': upcomingHolidays.first['name'] as String,
-      'days': upcomingHolidays.first['days'] as int,
+      'name': upcomingSeasons.first['name'] as String,
+      'days': upcomingSeasons.first['days'] as int,
     };
   }
 
-  // Calculate holiday adjustment based on proximity
-  int _calculateHolidayAdjustment(Map<String, dynamic> holiday) {
-    final daysUntilHoliday = holiday['days'] as int;
-    final holidayName = holiday['name'] as String;
+  // Calculate season adjustment based on proximity
+  int _calculateSeasonAdjustment(Map<String, dynamic> season) {
+    final daysUntilSeason = season['days'] as int;
+    final seasonName = season['name'] as String;
     
-    // Base adjustment factors for different holidays
+    // Base adjustment factors for different seasons
     final baseAdjustments = {
-      'Easter': 0.4,    // 40% increase for Easter
-      'Idd': 0.5,       // 50% increase for Idd
-      'Christmas': 0.6, // 60% increase for Christmas
+      'Easter': 0.4,        // 40% increase for Easter
+      'Idd': 0.5,           // 50% increase for Idd
+      'Christmas': 0.6,     // 60% increase for Christmas
+      'BackToSchool': 0.8,  // 80% increase for Back-to-School (higher due to longer season)
     };
     
-    final baseAdjustment = baseAdjustments[holidayName] ?? 0.3;
+    final baseAdjustment = baseAdjustments[seasonName] ?? 0.3;
     
-    // Adjust based on proximity to holiday
-    if (daysUntilHoliday <= 7) {
-      // Very close to holiday - maximum adjustment
-      return (minimumStock * baseAdjustment * 1.5).round();
-    } else if (daysUntilHoliday <= 14) {
-      // Close to holiday - high adjustment
-      return (minimumStock * baseAdjustment * 1.2).round();
-    } else if (daysUntilHoliday <= 30) {
-      // Approaching holiday - moderate adjustment
-      return (minimumStock * baseAdjustment).round();
-    } else if (daysUntilHoliday <= 60) {
-      // Planning for holiday - slight adjustment
-      return (minimumStock * baseAdjustment * 0.7).round();
+    // Adjust based on proximity to season
+    if (seasonName == 'BackToSchool') {
+      // Back-to-school has different timing - it's a longer season
+      if (daysUntilSeason <= 0) {
+        // In back-to-school season - maximum adjustment
+        return (minimumStock * baseAdjustment * 1.8).round();
+      } else if (daysUntilSeason <= 14) {
+        // Very close to back-to-school - high adjustment
+        return (minimumStock * baseAdjustment * 1.5).round();
+      } else if (daysUntilSeason <= 30) {
+        // Approaching back-to-school - moderate adjustment
+        return (minimumStock * baseAdjustment * 1.2).round();
+      } else if (daysUntilSeason <= 90) {
+        // Planning for back-to-school - slight adjustment
+        return (minimumStock * baseAdjustment * 0.8).round();
+      }
+    } else {
+      // Holiday adjustments (shorter periods)
+      if (daysUntilSeason <= 7) {
+        // Very close to holiday - maximum adjustment
+        return (minimumStock * baseAdjustment * 1.5).round();
+      } else if (daysUntilSeason <= 14) {
+        // Close to holiday - high adjustment
+        return (minimumStock * baseAdjustment * 1.2).round();
+      } else if (daysUntilSeason <= 30) {
+        // Approaching holiday - moderate adjustment
+        return (minimumStock * baseAdjustment).round();
+      } else if (daysUntilSeason <= 60) {
+        // Planning for holiday - slight adjustment
+        return (minimumStock * baseAdjustment * 0.7).round();
+      }
     }
     
     return 0;
