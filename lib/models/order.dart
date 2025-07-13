@@ -288,9 +288,9 @@ class StockItem {
   }
 
   // Calculate holiday adjustment based on proximity
-  int _calculateHolidayAdjustment(Map<String, int> holiday) {
-    final daysUntilHoliday = holiday['days']!;
-    final holidayName = holiday['name']!;
+  int _calculateHolidayAdjustment(Map<String, dynamic> holiday) {
+    final daysUntilHoliday = holiday['days'] as int;
+    final holidayName = holiday['name'] as String;
     
     // Base adjustment factors for different holidays
     final baseAdjustments = {
