@@ -86,26 +86,26 @@ class StockItem {
   // Calculate suggested order quantity based on multiple factors
   int calculateSuggestedOrderQuantity() {
     // Base calculation using delivery history
-    final baseQuantity = _calculateBaseQuantity();
+    final baseQuantity = calculateBaseQuantity();
     
     // Adjust based on current stock levels
-    final stockAdjustment = _calculateStockAdjustment();
+    final stockAdjustment = calculateStockAdjustment();
     
     // Adjust based on seasonal trends (if available)
-    final seasonalAdjustment = _calculateSeasonalAdjustment();
+    final seasonalAdjustment = calculateSeasonalAdjustment();
     
     // Adjust based on supplier lead time
-    final leadTimeAdjustment = _calculateLeadTimeAdjustment();
+    final leadTimeAdjustment = calculateLeadTimeAdjustment();
     
     // Adjust based on demand patterns
-    final demandAdjustment = _calculateDemandAdjustment();
+    final demandAdjustment = calculateDemandAdjustment();
     
     // Check if this is a seasonal item to determine weighting strategy
-    final isSeasonalItem = _isSeasonalItem();
+    final isSeasonal = isSeasonalItem();
     
     double suggestedQuantity;
     
-    if (isSeasonalItem) {
+    if (isSeasonal) {
       // For seasonal items: balanced approach with seasonal considerations
       suggestedQuantity = (
         baseQuantity * 0.4 +           // 40% weight to base calculation
@@ -135,11 +135,11 @@ class StockItem {
     if (deliveryHistory.isEmpty) return minimumStock;
     
     // Check if this is a seasonal item to determine analysis period
-    final isSeasonalItem = _isSeasonalItem();
+    final isSeasonal = isSeasonalItem();
     
     // For seasonal items: use shorter period (60 days) for recent trends
     // For non-seasonal items: use longer period (90 days) for stable demand patterns
-    final analysisDays = isSeasonalItem ? 60 : 90;
+    final analysisDays = isSeasonal ? 60 : 90;
     
     // Get recent deliveries for analysis
     final recentDeliveries = deliveryHistory
@@ -154,10 +154,10 @@ class StockItem {
     final avgDailyUsage = daysSinceFirstDelivery > 0 ? totalQuantity / daysSinceFirstDelivery : totalQuantity / analysisDays;
     
     // Determine order period based on item type
-    final orderPeriodDays = isSeasonalItem ? 21 : 30; // 3 weeks for seasonal, 4 weeks for non-seasonal
+    final orderPeriodDays = isSeasonal ? 21 : 30; // 3 weeks for seasonal, 4 weeks for non-seasonal
     
     // For non-seasonal items, also consider trend analysis
-    if (!isSeasonalItem && recentDeliveries.length >= 3) {
+    if (!isSeasonal && recentDeliveries.length >= 3) {
       // Calculate trend to adjust for increasing/decreasing demand
       final trendAdjustment = _calculateDemandTrend(recentDeliveries);
       final baseOrder = (avgDailyUsage * orderPeriodDays).round();
@@ -169,7 +169,7 @@ class StockItem {
   }
 
   // Adjust based on current stock levels
-  int _calculateStockAdjustment() {
+  int calculateStockAdjustment() {
     final stockRatio = currentStock / maximumStock;
     
     if (stockRatio < 0.2) {
@@ -227,15 +227,15 @@ class StockItem {
   }
 
   // Adjust based on seasonal trends and holiday periods
-  int _calculateSeasonalAdjustment() {
+  int calculateSeasonalAdjustment() {
     final now = DateTime.now();
     final currentMonth = now.month;
     final currentDay = now.day;
     
     // Check if this is a seasonal item that should get adjustments
-    final isSeasonalItem = _isSeasonalItem();
+    final isSeasonal = isSeasonalItem();
     
-    if (!isSeasonalItem) return 0; // No seasonal adjustment for non-seasonal items
+    if (!isSeasonal) return 0; // No seasonal adjustment for non-seasonal items
     
     // Calculate days until next major holiday
     final daysUntilEaster = _getDaysUntilEaster(now);
@@ -255,11 +255,11 @@ class StockItem {
     if (!isRelevantToSeason) return 0; // No adjustment if product not relevant to this season
     
     // Calculate seasonal adjustment based on proximity to season
-    return _calculateSeasonAdjustment(closestSeason);
+    return calculateSeasonAdjustment(closestSeason);
   }
 
   // Check if the product is a seasonal item that should get adjustments
-  bool _isSeasonalItem() {
+  bool isSeasonalItem() {
     // Specific items that typically see increased demand during holidays and seasons
     final seasonalKeywords = [
       // Easter-specific items
@@ -564,7 +564,7 @@ class StockItem {
   }
 
   // Calculate season adjustment based on proximity
-  int _calculateSeasonAdjustment(Map<String, dynamic> season) {
+  int calculateSeasonAdjustment(Map<String, dynamic> season) {
     final daysUntilSeason = season['days'] as int;
     final seasonName = season['name'] as String;
     
@@ -634,7 +634,7 @@ class StockItem {
   }
 
   // Adjust based on supplier lead time
-  int _calculateLeadTimeAdjustment() {
+  int calculateLeadTimeAdjustment() {
     // Assume average lead time of 7 days
     // Order extra to cover lead time period
     if (deliveryHistory.isEmpty) return minimumStock;
@@ -653,7 +653,7 @@ class StockItem {
   }
 
   // Adjust based on demand patterns and trends including slope analysis
-  int _calculateDemandAdjustment() {
+  int calculateDemandAdjustment() {
     // This would ideally use sales history data
     // For now, use delivery patterns to estimate demand
     

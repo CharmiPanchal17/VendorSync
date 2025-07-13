@@ -170,7 +170,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pending Orders'),
+        title: const Text('Orders'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,

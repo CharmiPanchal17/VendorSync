@@ -207,13 +207,13 @@ class SuggestedOrderDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildCalculationBreakdown(bool isDark) {
-    final baseQuantity = stockItem._calculateBaseQuantity();
-    final stockAdjustment = stockItem._calculateStockAdjustment();
-    final seasonalAdjustment = stockItem._calculateSeasonalAdjustment();
-    final leadTimeAdjustment = stockItem._calculateLeadTimeAdjustment();
-    final demandAdjustment = stockItem._calculateDemandAdjustment();
+    final baseQuantity = stockItem.calculateBaseQuantity();
+    final stockAdjustment = stockItem.calculateStockAdjustment();
+    final seasonalAdjustment = stockItem.calculateSeasonalAdjustment();
+    final leadTimeAdjustment = stockItem.calculateLeadTimeAdjustment();
+    final demandAdjustment = stockItem.calculateDemandAdjustment();
     
-    final isSeasonalItem = stockItem._isSeasonalItem();
+    final isSeasonalItem = stockItem.isSeasonalItem();
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -465,7 +465,7 @@ class SuggestedOrderDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildSeasonalInfo(bool isDark) {
-    final isSeasonalItem = stockItem._isSeasonalItem();
+    final isSeasonalItem = stockItem.isSeasonalItem();
     
     if (!isSeasonalItem) {
       return Container(
@@ -493,7 +493,7 @@ class SuggestedOrderDetailsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
-                    Icons.seasonal,
+                    Icons.calendar_today,
                     color: Colors.grey,
                     size: 20,
                   ),
@@ -567,11 +567,11 @@ class SuggestedOrderDetailsScreen extends StatelessWidget {
                   color: Colors.purple.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.seasonal,
-                  color: Colors.purple,
-                  size: 20,
-                ),
+                                  child: const Icon(
+                    Icons.calendar_today,
+                    color: Colors.purple,
+                    size: 20,
+                  ),
               ),
               const SizedBox(width: 12),
               Text(

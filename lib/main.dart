@@ -7,6 +7,7 @@ import 'screens/vendor/settings_screen.dart';
 import 'screens/supplier/settings_screen.dart';
 import 'screens/vendor/product_analytics_screen.dart';
 import 'screens/vendor/suggested_order_details_screen.dart';
+import 'models/order.dart';
 import 'screens/vendor/orders_screen.dart';
 import 'screens/vendor/detailed_reports_screen.dart';
 import 'models/order.dart' as order_model;

@@ -163,6 +163,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
+                      icon: Icons.shopping_cart,
+                      title: 'Orders',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                      badge: _pendingOrdersCount > 0 ? _pendingOrdersCount.toString() : null,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
                       icon: Icons.add_shopping_cart,
                       title: 'Create Initial Order',
                       onTap: () {
@@ -194,17 +205,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.of(context).pushNamed('/vendor-threshold-management', arguments: widget.vendorEmail);
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      icon: Icons.shopping_cart,
-                      title: 'Orders',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
-                      },
-                      textColor: isDark ? Colors.white : Color(0xFF800000),
-                      badge: _pendingOrdersCount > 0 ? _pendingOrdersCount.toString() : null,
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
