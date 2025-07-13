@@ -168,9 +168,10 @@ class StockItem {
     final daysUntilIdd = _getDaysUntilIdd(now);
     final daysUntilChristmas = _getDaysUntilChristmas(now);
     final daysUntilBackToSchool = _getDaysUntilBackToSchool(now);
+    final daysUntilSuccessCards = _getDaysUntilSuccessCardsSeason(now);
     
     // Determine the closest upcoming season/holiday
-    final closestSeason = _getClosestSeason(daysUntilEaster, daysUntilIdd, daysUntilChristmas, daysUntilBackToSchool);
+    final closestSeason = _getClosestSeason(daysUntilEaster, daysUntilIdd, daysUntilChristmas, daysUntilBackToSchool, daysUntilSuccessCards);
     
     if (closestSeason == null) return 0; // No upcoming season
     
@@ -210,6 +211,18 @@ class StockItem {
       'lunchbox', 'lunchboxes', 'water bottle', 'water bottles', 'school bag',
       'school bags', 'stationery', 'stationeries', 'art supplies', 'craft supplies',
       'whiteboard', 'whiteboards', 'chalk', 'chalkboard', 'chalkboards',
+      
+      // Success cards and greeting cards
+      'success card', 'success cards', 'greeting card', 'greeting cards', 'congratulation',
+      'congratulations', 'celebration card', 'celebration cards', 'anniversary card',
+      'anniversary cards', 'birthday card', 'birthday cards', 'thank you card',
+      'thank you cards', 'invitation card', 'invitation cards', 'welcome card',
+      'welcome cards', 'farewell card', 'farewell cards', 'get well card',
+      'get well cards', 'sympathy card', 'sympathy cards', 'condolence card',
+      'condolence cards', 'graduation card', 'graduation cards', 'wedding card',
+      'wedding cards', 'engagement card', 'engagement cards', 'baby card',
+      'baby cards', 'new job card', 'new job cards', 'promotion card',
+      'promotion cards', 'achievement card', 'achievement cards',
       
       // General holiday staples
       'sugar', 'flour', 'oil', 'milk', 'eggs', 'butter', 'cheese', 'bread',
@@ -280,6 +293,22 @@ class StockItem {
           'whiteboard', 'whiteboards', 'chalk', 'chalkboard', 'chalkboards'
         ];
         return backToSchoolKeywords.any((keyword) => productNameLower.contains(keyword));
+        
+      case 'SuccessCards':
+        // Success cards and greeting cards
+        final successCardKeywords = [
+          'success card', 'success cards', 'greeting card', 'greeting cards', 'congratulation',
+          'congratulations', 'celebration card', 'celebration cards', 'anniversary card',
+          'anniversary cards', 'birthday card', 'birthday cards', 'thank you card',
+          'thank you cards', 'invitation card', 'invitation cards', 'welcome card',
+          'welcome cards', 'farewell card', 'farewell cards', 'get well card',
+          'get well cards', 'sympathy card', 'sympathy cards', 'condolence card',
+          'condolence cards', 'graduation card', 'graduation cards', 'wedding card',
+          'wedding cards', 'engagement card', 'engagement cards', 'baby card',
+          'baby cards', 'new job card', 'new job cards', 'promotion card',
+          'promotion cards', 'achievement card', 'achievement cards'
+        ];
+        return successCardKeywords.any((keyword) => productNameLower.contains(keyword));
         
       default:
         return false;
@@ -397,21 +426,55 @@ class StockItem {
     }
   }
 
+  // Get days until Success Cards season
+  int _getDaysUntilSuccessCardsSeason(DateTime now) {
+    final currentYear = now.year;
+    final currentMonth = now.month;
+    
+    // Success cards season: October and November
+    // High demand for congratulatory cards, graduation cards, achievement cards, etc.
+    
+    // Check for October success cards season
+    if (currentMonth == 10) {
+      // We're in October success cards season
+      return 0; // Already in season
+    }
+    
+    // Check for November success cards season
+    if (currentMonth == 11) {
+      // We're in November success cards season
+      return 0; // Already in season
+    }
+    
+    // Calculate days until next success cards season
+    if (currentMonth < 10) {
+      // Before October - calculate days until October 1st
+      final octoberStart = DateTime(currentYear, 10, 1);
+      return octoberStart.difference(now).inDays;
+    } else {
+      // After November - calculate days until next year's October 1st
+      final nextOctoberStart = DateTime(currentYear + 1, 10, 1);
+      return nextOctoberStart.difference(now).inDays;
+    }
+  }
+
   // Get the closest upcoming season/holiday
-  Map<String, dynamic>? _getClosestSeason(int daysUntilEaster, int daysUntilIdd, int daysUntilChristmas, int daysUntilBackToSchool) {
+  Map<String, dynamic>? _getClosestSeason(int daysUntilEaster, int daysUntilIdd, int daysUntilChristmas, int daysUntilBackToSchool, int daysUntilSuccessCards) {
     final seasons = <Map<String, dynamic>>[
       {'name': 'Easter', 'days': daysUntilEaster},
       {'name': 'Idd', 'days': daysUntilIdd},
       {'name': 'Christmas', 'days': daysUntilChristmas},
       {'name': 'BackToSchool', 'days': daysUntilBackToSchool},
+      {'name': 'SuccessCards', 'days': daysUntilSuccessCards},
     ];
     
-    // Filter seasons that are within 90 days and find the closest
-    // Back-to-school gets a longer window since it's a longer season
+    // Filter seasons that are within their respective windows and find the closest
     final upcomingSeasons = seasons.where((season) {
       final days = season['days'] as int;
       if (season['name'] == 'BackToSchool') {
         return days <= 90; // 3 months window for back-to-school
+      } else if (season['name'] == 'SuccessCards') {
+        return days <= 60; // 2 months window for success cards season
       }
       return days <= 60; // 2 months window for holidays
     }).toList();
