@@ -8,3 +8,4 @@ UI enhancements
 Bug fix in auth flow
 Improved responsive design
 Added forgot password page
+Implemented Excel upload support
