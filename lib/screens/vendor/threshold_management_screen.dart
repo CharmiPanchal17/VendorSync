@@ -374,23 +374,9 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                     onPressed: () => _showThresholdDialog(item, isDark),
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit Threshold'),
-                                          style: OutlinedButton.styleFrom(
-                        foregroundColor: maroonThreshold,
-                        side: BorderSide(color: maroonThreshold),
-                      ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: item.primarySupplierEmail != null
-                        ? () => _navigateToQuickOrder(item)
-                        : null,
-                    icon: const Icon(Icons.shopping_cart),
-                    label: const Text('Order Now'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: maroonThreshold,
-                      foregroundColor: Colors.white,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: maroonThreshold,
+                      side: BorderSide(color: maroonThreshold),
                     ),
                   ),
                 ),
@@ -508,18 +494,5 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
     );
   }
 
-  void _navigateToQuickOrder(StockItem item) {
-    // Navigate to quick order screen with pre-filled data
-    Navigator.pushNamed(
-      context,
-      '/vendor-quick-order',
-      arguments: {
-        'productName': item.productName,
-        'suggestedQuantity': item.calculateSuggestedOrderQuantity(),
-        'supplierEmail': item.primarySupplierEmail,
-        'supplierName': item.primarySupplier,
-        'vendorEmail': widget.vendorEmail,
-      },
-    );
-  }
+
 } 

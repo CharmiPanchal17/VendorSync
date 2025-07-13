@@ -258,14 +258,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildEnhancedSummaryCard(String title, String value, IconData icon, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-            isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -332,31 +325,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isLow
-              ? [
-                  Colors.red.withOpacity(0.1),
-                  Colors.red.withOpacity(0.05),
-                ]
-              : [
-                  isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-                  isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
-                ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: isLow
             ? Border.all(color: Colors.red.withOpacity(0.3), width: 1)
             : Border.all(
-                color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+                color: Colors.grey.shade200,
                 width: 1,
               ),
         boxShadow: [
           BoxShadow(
             color: isLow
                 ? Colors.red.withOpacity(0.2)
-                : (isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1)),
+                : Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
             spreadRadius: 0,
@@ -567,7 +548,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: maroon.withOpacity(0.2),
