@@ -431,7 +431,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _navigateToProductAnalytics(item.productName),
                     icon: const Icon(Icons.analytics),
-                    label: const Text('View Reports'),
+                    label: const Text('View Analytics'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: maroonOrders,
                       side: BorderSide(color: maroonOrders),
@@ -484,6 +484,51 @@ class _OrdersScreenState extends State<OrdersScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Supplier Information
+            if (item.primarySupplier != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.business,
+                      color: maroonOrders,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Supplier: ${item.primarySupplier}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          if (item.primarySupplierEmail != null)
+                            Text(
+                              item.primarySupplierEmail!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
             Text(
               'Current Stock: ${item.currentStock}\nThreshold Level: ${item.thresholdLevel}',
               style: TextStyle(

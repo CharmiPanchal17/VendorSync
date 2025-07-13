@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'product_report_screen.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -361,10 +362,11 @@ class ProductAnalyticsScreen extends StatelessWidget {
   }
 
   void _navigateToDetailedReports(BuildContext context) {
-    // Navigate to detailed reports page
-    Navigator.of(context).pushNamed(
-      '/vendor-detailed-reports',
-      arguments: productName,
+    // Navigate to the new clean report screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProductReportScreen(productName: productName),
+      ),
     );
   }
 
