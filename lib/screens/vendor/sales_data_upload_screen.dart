@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import '../../services/sales_service.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+// Add this import only for web
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:convert';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -437,24 +445,126 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
               ),
             )),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.download),
-              label: const Text('Download Report (CSV)'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: maroon,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.download),
+                  label: const Text('Export as CSV'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: maroon,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _exportAnalysisCSV(products),
                 ),
-              ),
-              onPressed: () {
-                // TODO: Implement CSV download
-              },
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Export as PDF'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: maroon,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _exportAnalysisPDF(products),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _exportAnalysisCSV(List<Map<String, dynamic>> products) async {
+    final headers = [
+      'Product Name',
+      'Initial Stock',
+      'Sold',
+      'Remaining',
+      'Sales Rate',
+      'Trend',
+      'Reorder Suggestion',
+    ];
+    final dataRows = products.map((p) => [
+      p['productName'] ?? '',
+      '${p['initialStock']}',
+      '${p['sold']}',
+      '${p['remaining']}',
+      '${p['salesRate']}',
+      p['trend'] ?? '',
+      p['reorderSuggestion'] ?? '',
+    ]).toList();
+    final csvData = const ListToCsvConverter().convert([headers, ...dataRows]);
+    if (kIsWeb) {
+      // Web: trigger download
+      final bytes = utf8.encode(csvData);
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'sales_analysis_report.csv')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } else {
+      await Printing.sharePdf(bytes: Uint8List.fromList(csvData.codeUnits), filename: 'sales_analysis_report.csv');
+    }
+  }
+
+  Future<void> _exportAnalysisPDF(List<Map<String, dynamic>> products) async {
+    final pdf = pw.Document();
+    final headers = [
+      'Product Name',
+      'Initial Stock',
+      'Sold',
+      'Remaining',
+      'Sales Rate',
+      'Trend',
+      'Reorder Suggestion',
+    ];
+    final dataRows = products.map((p) => [
+      p['productName'] ?? '',
+      '${p['initialStock']}',
+      '${p['sold']}',
+      '${p['remaining']}',
+      '${p['salesRate']}',
+      p['trend'] ?? '',
+      p['reorderSuggestion'] ?? '',
+    ]).toList();
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => [
+          pw.Text('Sales Analysis Report', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 16),
+          pw.Table.fromTextArray(
+            headers: headers,
+            data: dataRows,
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            cellAlignment: pw.Alignment.centerLeft,
+            headerDecoration: pw.BoxDecoration(),
+            headerHeight: 24,
+            cellHeight: 20,
+            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellDecoration: (index, data, rowNum) => pw.BoxDecoration(),
+          ),
+        ],
+      ),
+    );
+    if (kIsWeb) {
+      final bytes = await pdf.save();
+      final blob = html.Blob([bytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'sales_analysis_report.pdf')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } else {
+      await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    }
   }
 } 

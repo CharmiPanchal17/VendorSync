@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../../models/sales.dart';
 import '../../services/sales_service.dart';
 import 'package:csv/csv.dart';
+import 'report_screen.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -27,53 +28,80 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
   String? selectedFileName;
   String? errorMessage;
 
+  Future<bool> _onWillPop() async {
+    if (parsedItems.isNotEmpty && !isUploading) {
+      final shouldLeave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Unsaved Sales'),
+          content: const Text('You have uploaded sales that are not yet submitted. Are you sure you want to leave?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Stay'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Leave'),
+            ),
+          ],
+        ),
+      );
+      return shouldLeave ?? false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Spreadsheet'),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark
-                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                  : [maroon, maroon.withOpacity(0.8)],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Upload Spreadsheet'),
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                    : [maroon, maroon.withOpacity(0.8)],
+              ),
             ),
           ),
         ),
-      ),
-      body: Container(
-        color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildInstructions(isDark),
-                const SizedBox(height: 24),
-                _buildFilePicker(isDark),
-                const SizedBox(height: 24),
-                if (errorMessage != null) _buildErrorMessage(isDark),
-                if (parsedItems.isNotEmpty) ...[
-                  _buildPreviewHeader(isDark),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 300,
-                    child: _buildPreviewList(isDark),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSubmitButton(isDark),
+        body: Container(
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildInstructions(isDark),
+                  const SizedBox(height: 24),
+                  _buildFilePicker(isDark),
+                  const SizedBox(height: 24),
+                  if (errorMessage != null) _buildErrorMessage(isDark),
+                  if (parsedItems.isNotEmpty) ...[
+                    _buildPreviewHeader(isDark),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 300,
+                      child: _buildPreviewList(isDark),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSubmitButton(isDark),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -440,7 +468,8 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
             backgroundColor: Colors.green,
           ),
         );
-
+        // Refresh report if open
+        ReportScreen.refreshReport(context);
         Navigator.of(context).pop(true);
       }
     } catch (e) {

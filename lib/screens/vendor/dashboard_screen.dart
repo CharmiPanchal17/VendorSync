@@ -17,6 +17,8 @@ import '../../services/auth_service.dart';
 import 'real_time_sales_screen.dart';
 import 'spreadsheet_upload_screen.dart';
 import '../../services/sales_service.dart';
+import 'report_screen.dart';
+import 'below_threshold_screen.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -77,9 +79,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       drawer: Drawer(
         child: Container(
@@ -354,6 +355,25 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         foregroundColor: isDark ? colorScheme.onSurface : maroonVendor,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.summarize),
+            tooltip: 'View Stock Report',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => ReportScreen(vendorEmail: widget.vendorEmail),
+              ));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () async {
+              await _checkAndLoadDraftOrders();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Dashboard refreshed.'), backgroundColor: maroonVendor),
+              );
+            },
+          ),
           // Notification Bell with Badge
           Stack(
             children: [
@@ -399,64 +419,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               ),
             ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.summarize),
-            tooltip: 'View Stock Report',
-            onPressed: () async {
-              final report = await SalesService.generateStockReport(widget.vendorEmail);
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: isDark ? Colors.black : Colors.white,
-                  title: const Text('Stock Report'),
-                  content: SizedBox(
-                    width: 400,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ...report.map((item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
-                                Text('Current Stock: ${item['currentStock']}'),
-                                Text('Days in Stock: ${item['daysInStock']}'),
-                                Text('Weekly Sales Rate: ${item['weeklySalesRate'].toStringAsFixed(2)}'),
-                                Text('Monthly Sales Rate: ${item['monthlySalesRate'].toStringAsFixed(2)}'),
-                                Text('Depletion Speed: ${item['depletionSpeedDays'] ?? 'N/A'} days'),
-                                Text('Recommended Reorder Level: ${item['recommendedReorderLevel']}'),
-                                Text('Priority Score: ${item['priorityScore'].toStringAsFixed(2)}'),
-                              ],
-                            ),
-                          )),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.download),
-                            label: const Text('Download as CSV'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: maroonVendor,
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () async {
-                              // TODO: Implement CSV download
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Close'),
-                    ),
-                  ],
-                ),
-              );
-            },
           ),
           const SizedBox(width: 8),
         ],
@@ -1720,12 +1682,22 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     return Card(
       color: isDark ? Colors.white10 : Colors.white,
       margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: maroonVendor, width: 2),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Draft Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+            Row(
+              children: [
+                Icon(Icons.assignment, color: maroonVendor),
+                const SizedBox(width: 8),
+                Text('Draft Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              ],
+            ),
             const SizedBox(height: 12),
             ...draftOrders.map((order) => _buildDraftOrderCard(order, isDark)),
           ],
@@ -1737,15 +1709,47 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   Widget _buildDraftOrderCard(Map<String, dynamic> order, bool isDark) {
     final analysis = order['analysis'] as Map<String, dynamic>?;
     final TextEditingController qtyController = TextEditingController(text: order['suggestedQuantity'].toString());
+    Color getPriorityColor(String? priority) {
+      switch (priority) {
+        case 'High':
+          return Colors.red;
+        case 'Medium':
+          return Colors.orange;
+        case 'Low':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
     return Card(
       color: isDark ? Colors.white24 : Colors.grey[100],
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: maroonVendor.withOpacity(0.5), width: 1.5),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(order['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
+            Row(
+              children: [
+                Icon(Icons.shopping_cart, color: maroonVendor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(order['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
+                ),
+                if (analysis != null)
+                  Chip(
+                    label: Text(
+                      analysis['priority'] ?? '',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    backgroundColor: getPriorityColor(analysis['priority']),
+                  ),
+              ],
+            ),
             Text('Current Stock: ${order['currentStock']}'),
             Text('Suggested Quantity: ${order['suggestedQuantity']}'),
             if (analysis != null) ...[
@@ -1763,31 +1767,45 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    final newQty = int.tryParse(qtyController.text) ?? order['suggestedQuantity'];
-                    await SalesService.editDraftOrder(order['id'], newQty);
-                    await _checkAndLoadDraftOrders();
-                  },
-                  child: const Text('Edit'),
+                Tooltip(
+                  message: 'Edit suggested quantity',
+                  child: IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.orange),
+                    onPressed: () async {
+                      final newQty = int.tryParse(qtyController.text) ?? order['suggestedQuantity'];
+                      await SalesService.editDraftOrder(order['id'], newQty);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Draft order updated.'), backgroundColor: maroonVendor),
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    await SalesService.approveDraftOrder(order['id']);
-                    await _checkAndLoadDraftOrders();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('Approve'),
+                Tooltip(
+                  message: 'Approve and create order',
+                  child: IconButton(
+                    icon: const Icon(Icons.check_circle, color: Colors.green),
+                    onPressed: () async {
+                      await SalesService.approveDraftOrder(order['id']);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Order approved!'), backgroundColor: Colors.green),
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () async {
-                    await SalesService.rejectDraftOrder(order['id']);
-                    await _checkAndLoadDraftOrders();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text('Reject'),
+                Tooltip(
+                  message: 'Reject draft order',
+                  child: IconButton(
+                    icon: const Icon(Icons.cancel, color: Colors.red),
+                    onPressed: () async {
+                      await SalesService.rejectDraftOrder(order['id']);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Draft order rejected.'), backgroundColor: Colors.red),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
