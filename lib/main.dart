@@ -17,7 +17,21 @@ class VendorSyncApp extends StatelessWidget {
       title: 'VendorSync',
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          background: Colors.white,
+          surface: Colors.white,
+          primary: Color(0xFF8B0000), // Maroon
+          onPrimary: Colors.white,    // Button text color
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF8B0000),
+            foregroundColor: Colors.white,
+            textStyle: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
       initialRoute: '/splash',
       routes: {

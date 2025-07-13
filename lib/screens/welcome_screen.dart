@@ -5,95 +5,105 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // Define the colors based on the screenshot
+    const Color backgroundColor = Color(0xFFB2FFFF); // Light cyan/sky blue
+    const Color maroonColor = Color(0xFF8B0000); // Deep maroon
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // Gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  elevation: 0, // No shadow
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
+      backgroundColor: backgroundColor,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 32),
+                Text(
+                  'Welcome to',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: maroonColor,
                   ),
-                  color: Colors.transparent, // Fully transparent
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: colorScheme.primary.withOpacity(0.1),
-                          child: Icon(Icons.sync, size: 56, color: colorScheme.primary),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  'VendorSync',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: maroonColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Your all-in-one Vendor-to-Supplier\nManagement System',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // Oval image from assets
+                ClipOval(
+                  child: Image.asset(
+                    'assets/supermarket.jpg', // Updated filename
+                    width: 220,
+                    height: 140,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 36),
+                // Vendor Register Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: maroonColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Welcome to VendorSync',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 36,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Your all-in-one Vendor-to-Supplier Management System',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 40),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.person_add_alt_1),
-                          label: const Text('Vendor Register', style: TextStyle(fontSize: 18)),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            elevation: 2,
-                          ),
-                          onPressed: () => Navigator.of(context).pushNamed('/register'),
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          icon: const Icon(Icons.local_shipping),
-                          label: const Text('Supplier Register', style: TextStyle(fontSize: 18)),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            elevation: 2,
-                          ),
-                          onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
-                        ),
-                      ],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        elevation: 2,
+                      ),
+                      onPressed: () => Navigator.of(context).pushNamed('/register'),
+                      child: const Text('🔗 Vendor Register'),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                // Supplier Register Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: maroonColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        elevation: 2,
+                      ),
+                      onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
+                      child: const Text('📦 Supplier Register'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

@@ -16,18 +16,9 @@ class VendorProfileScreen extends StatelessWidget {
     final int totalSuppliers = 7;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Vendor Profile')),
+      appBar: AppBar(title: const Text('Vendor Profile'), backgroundColor: Colors.white, foregroundColor: Colors.black),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(

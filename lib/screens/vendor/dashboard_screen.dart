@@ -53,16 +53,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     return Scaffold(
       drawer: Drawer(
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
-            ),
-          ),
+          color: Colors.blue.shade700,
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -228,32 +219,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         title: const Text('Vendor Dashboard'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
-            ),
-          ),
-        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
           child: SingleChildScrollView(
         child: Padding(

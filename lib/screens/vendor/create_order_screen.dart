@@ -63,32 +63,11 @@ class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
         title: const Text('Create New Order'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
-            ),
-          ),
-        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
           child: Center(
             child: Padding(

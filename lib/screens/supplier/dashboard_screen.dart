@@ -34,26 +34,18 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
       key: _scaffoldKey,
       drawer: _buildDrawer(),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF43E97B), // Green
-              Color(0xFF38F9D7), // Lighter green/teal
-            ],
-          ),
-        ),
+        color: Colors.white,
         child: SafeArea(
             child: Column(
               children: [
               // Header
               Container(
                 padding: const EdgeInsets.all(20),
-                    child: Row(
+                color: Colors.white,
+                child: Row(
                       children: [
                     IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                      icon: const Icon(Icons.menu, color: Colors.black, size: 28),
                       onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                     ),
                     const SizedBox(width: 16),
@@ -66,14 +58,14 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                           ),
                           Text(
                             'Welcome back, ${widget.supplierEmail}',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.black.withOpacity(0.9),
                           ),
                         ),
                       ],
@@ -82,12 +74,12 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.black.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
                         Icons.local_shipping,
-                        color: Colors.white,
+                        color: Colors.black,
                         size: 24,
                       ),
                     ),

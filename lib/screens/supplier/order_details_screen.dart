@@ -32,387 +32,366 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
     }
     
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF43E97B),
-                  Color(0xFF38F9D7),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(width: 16),
-                      const Text(
-                        'Order Details',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
+      body: Container(
+        color: Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Order Details',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: const Icon(Icons.inventory, color: Colors.white, size: 24),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            order.productName,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1A1A1A),
-                                            ),
-                                          ),
-                                          Text(
-                                            'Order ID: ${order.id}',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                _buildDetailRow('Vendor', order.supplierName),
-                                _buildDetailRow('Quantity', order.quantity.toString()),
-                                _buildDetailRow(
-                                  'Preferred Delivery',
-                                  DateFormat.yMMMd().format(order.preferredDeliveryDate),
-                                ),
-                                if (order.status != 'Pending Approval')
-                                  _buildDetailRow('Current Status', order.status),
-                              ],
-                            ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Update Order Status',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                if (_getAvailableStatusOptions(order.status).isEmpty && order.status != 'Pending Approval') ...[
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
                                   Container(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(order.status).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: _getStatusColor(order.status).withOpacity(0.3),
-                                        width: 1,
-                                      ),
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
-                                    child: Row(
+                                    child: Icon(Icons.inventory, color: Theme.of(context).colorScheme.primary, size: 24),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Icon(
-                                          _getStatusIcon(order.status),
-                                          color: _getStatusColor(order.status),
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
                                         Text(
-                                          'Current Status: ${order.status}',
-                                          style: TextStyle(
-                                            color: _getStatusColor(order.status),
+                                          order.productName,
+                                          style: const TextStyle(
+                                            fontSize: 20,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            color: Color(0xFF1A1A1A),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Order ID: ${order.id}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade600,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
                                 ],
+                              ),
+                              const SizedBox(height: 20),
+                              _buildDetailRow('Vendor', order.supplierName),
+                              _buildDetailRow('Quantity', order.quantity.toString()),
+                              _buildDetailRow(
+                                'Preferred Delivery',
+                                DateFormat.yMMMd().format(order.preferredDeliveryDate),
+                              ),
+                              if (order.status != 'Pending Approval')
+                                _buildDetailRow('Current Status', order.status),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Update Order Status',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              if (_getAvailableStatusOptions(order.status).isEmpty && order.status != 'Pending Approval') ...[
                                 Container(
+                                  padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Colors.white, Colors.grey.shade50],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
+                                    color: _getStatusColor(order.status).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _getStatusColor(order.status).withOpacity(0.3),
+                                      width: 1,
                                     ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.grey.shade200),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
                                   ),
-                                  child: DropdownButtonFormField<String>(
-                                    decoration: InputDecoration(
-                                      labelText: 'Order Status',
-                                      labelStyle: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 14,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _getStatusIcon(order.status),
+                                        color: _getStatusColor(order.status),
+                                        size: 20,
                                       ),
-                                      border: InputBorder.none,
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                      prefixIcon: Container(
-                                        margin: const EdgeInsets.only(right: 8),
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Current Status: ${order.status}',
+                                        style: TextStyle(
+                                          color: _getStatusColor(order.status),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
                                         ),
-                                        child: const Icon(Icons.assignment, color: Colors.white, size: 20),
                                       ),
-                                    ),
-                                    value: _getAvailableStatusOptions(order.status).isNotEmpty ? status : null,
-                                    icon: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
-                                    ),
-                                    dropdownColor: Colors.white,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF1A1A1A),
-                                    ),
-                                    items: [
-                                      ..._getAvailableStatusOptions(order.status),
                                     ],
-                                    onChanged: _getAvailableStatusOptions(order.status).isEmpty 
-                                        ? null 
-                                        : (val) {
-                                            if (val != null) {
-                                              setState(() => status = val);
-                                            }
-                                          },
-                                    hint: _getAvailableStatusOptions(order.status).isEmpty 
-                                        ? Text(
-                                            'No further updates',
-                                            style: TextStyle(
-                                              color: Colors.grey.shade600,
-                                              fontSize: 14,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            softWrap: false,
-                                            maxLines: 1,
-                                          )
-                                        : null,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(12),
+                              ],
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.white, Colors.grey.shade50],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    leading: Container(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: DropdownButtonFormField<String>(
+                                  decoration: InputDecoration(
+                                    labelText: 'Order Status',
+                                    labelStyle: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                    prefixIcon: Container(
+                                      margin: const EdgeInsets.only(right: 8),
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                                        ),
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Icon(Icons.calendar_today, color: Colors.white, size: 20),
+                                      child: Icon(Icons.assignment, color: Theme.of(context).colorScheme.primary, size: 20),
                                     ),
-                                    title: Text(
-                                      deliveryDate == null
-                      ? 'Set Delivery Date'
-                                          : 'Delivery Date: ${DateFormat.yMMMd().format(deliveryDate!)}',
-                                      style: TextStyle(
-                                        color: deliveryDate == null ? Colors.grey.shade600 : Colors.black,
-                                        fontWeight: deliveryDate == null ? FontWeight.normal : FontWeight.w500,
-                                      ),
+                                  ),
+                                  value: _getAvailableStatusOptions(order.status).isNotEmpty ? status : null,
+                                  icon: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              colorScheme: const ColorScheme.light(
-                                                primary: Color(0xFF43E97B),
-                                                onPrimary: Colors.white,
-                                                surface: Colors.white,
-                                                onSurface: Colors.black,
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
+                                    child: Icon(Icons.keyboard_arrow_down, color: Theme.of(context).colorScheme.primary, size: 20),
+                                  ),
+                                  dropdownColor: Colors.white,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF1A1A1A),
+                                  ),
+                                  items: [
+                                    ..._getAvailableStatusOptions(order.status),
+                                  ],
+                                  onChanged: _getAvailableStatusOptions(order.status).isEmpty 
+                                      ? null 
+                                      : (val) {
+                                          if (val != null) {
+                                            setState(() => status = val);
+                                          }
                                         },
-                        );
-                        if (picked != null) {
-                          setState(() => deliveryDate = picked);
-                        }
-                      },
+                                  hint: _getAvailableStatusOptions(order.status).isEmpty 
+                                      ? Text(
+                                          'No further updates',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 14,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          softWrap: false,
+                                          maxLines: 1,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary, size: 20),
+                                  ),
+                                  title: Text(
+                                    deliveryDate == null
+                                        ? 'Set Delivery Date'
+                                        : 'Delivery Date: ${DateFormat.yMMMd().format(deliveryDate!)}',
+                                    style: TextStyle(
+                                      color: deliveryDate == null ? Colors.grey.shade600 : Colors.black,
+                                      fontWeight: deliveryDate == null ? FontWeight.normal : FontWeight.w500,
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      builder: (context, child) {
+                                        return Theme(
+                                          data: Theme.of(context).copyWith(
+                                            colorScheme: const ColorScheme.light(
+                                              primary: Color(0xFF43E97B),
+                                              onPrimary: Colors.white,
+                                              surface: Colors.white,
+                                              onSurface: Colors.black,
+                                            ),
+                                          ),
+                                          child: child!,
+                                        );
+                                      },
+                                    );
+                                    if (picked != null) {
+                                      setState(() => deliveryDate = picked);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            onPressed: _isLoading || _getAvailableStatusOptions(order.status).isEmpty 
+                                ? null 
+                                : () => _showUpdateConfirmation(order.id),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    _getAvailableStatusOptions(order.status).isEmpty 
+                                        ? 'No Updates Available'
+                                        : 'Update Order',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: _getAvailableStatusOptions(order.status).isEmpty 
+                                          ? Colors.grey.shade600 
+                                          : Colors.white,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: TextStyle(color: Colors.red.shade700, fontSize: 14),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF43E97B),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 2,
-                              ),
-                              onPressed: _isLoading || _getAvailableStatusOptions(order.status).isEmpty 
-                                  ? null 
-                                  : () => _showUpdateConfirmation(order.id),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Text(
-                                      _getAvailableStatusOptions(order.status).isEmpty 
-                                          ? 'No Updates Available'
-                                          : 'Update Order',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: _getAvailableStatusOptions(order.status).isEmpty 
-                                            ? Colors.grey.shade600 
-                                            : Colors.white,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.red.shade200),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _errorMessage!,
-                                      style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -482,7 +461,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
-                Navigator.of(context).pop();
+        Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() {
@@ -502,12 +481,10 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                ),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.update, color: Colors.white, size: 24),
+              child: Icon(Icons.update, color: Theme.of(context).colorScheme.primary, size: 24),
             ),
             const SizedBox(width: 12),
             const Text('Update Order'),
