@@ -334,32 +334,17 @@ class ProductAnalyticsScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => _navigateToDetailedReports(context),
-                                    icon: const Icon(Icons.assessment),
-                                    label: const Text('Detailed Reports'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: maroon,
-                                      side: BorderSide(color: maroon),
-                                    ),
-                                  ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: () => _navigateToDetailedReports(context),
+                                icon: const Icon(Icons.assessment),
+                                label: const Text('Generate Report'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: maroon,
+                                  side: BorderSide(color: maroon),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _navigateToOrderScreen(context),
-                                    icon: const Icon(Icons.shopping_cart),
-                                    label: const Text('Place Order'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: maroon,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
@@ -383,17 +368,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToOrderScreen(BuildContext context) {
-    // Navigate to order screen with pre-filled product info
-    Navigator.of(context).pushNamed(
-      '/vendor-quick-order',
-      arguments: {
-        'productName': productName,
-        'suggestedQuantity': 0, // Will be calculated
-        'vendorEmail': '', // Will be passed from context
-      },
-    );
-  }
+
 
   Widget _buildMetricCard(String title, String value, IconData icon, bool isDark) {
     return Card(
