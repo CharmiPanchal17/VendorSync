@@ -6,6 +6,7 @@ import 'screens/supplier/edit_profile_screen.dart';
 import 'screens/vendor/settings_screen.dart';
 import 'screens/supplier/settings_screen.dart';
 import 'screens/vendor/product_analytics_screen.dart';
+import 'screens/vendor/suggested_order_details_screen.dart';
 import 'screens/vendor/orders_screen.dart';
 import 'screens/vendor/detailed_reports_screen.dart';
 import 'models/order.dart' as order_model;
@@ -124,6 +125,10 @@ class VendorSyncApp extends StatelessWidget {
             '/vendor-product-analytics': (context) {
               final productName = ModalRoute.of(context)?.settings.arguments as String?;
               return ProductAnalyticsScreen(productName: productName ?? '');
+            },
+            '/vendor-suggested-order-details': (context) {
+              final stockItem = ModalRoute.of(context)?.settings.arguments as StockItem?;
+              return SuggestedOrderDetailsScreen(stockItem: stockItem!);
             },
           },
           debugShowCheckedModeBanner: false,

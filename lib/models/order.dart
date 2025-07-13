@@ -100,27 +100,50 @@ class StockItem {
     // Adjust based on demand patterns
     final demandAdjustment = _calculateDemandAdjustment();
     
-    // Combine all factors with weighted importance
-    final suggestedQuantity = (
-      baseQuantity * 0.4 +           // 40% weight to base calculation
-      stockAdjustment * 0.2 +        // 20% weight to stock levels
-      seasonalAdjustment * 0.1 +     // 10% weight to seasonal trends
-      leadTimeAdjustment * 0.2 +     // 20% weight to lead time
-      demandAdjustment * 0.1         // 10% weight to demand patterns
-    ).round();
+    // Check if this is a seasonal item to determine weighting strategy
+    final isSeasonalItem = _isSeasonalItem();
+    
+    double suggestedQuantity;
+    
+    if (isSeasonalItem) {
+      // For seasonal items: balanced approach with seasonal considerations
+      suggestedQuantity = (
+        baseQuantity * 0.4 +           // 40% weight to base calculation
+        stockAdjustment * 0.2 +        // 20% weight to stock levels
+        seasonalAdjustment * 0.1 +     // 10% weight to seasonal trends
+        leadTimeAdjustment * 0.2 +     // 20% weight to lead time
+        demandAdjustment * 0.1         // 10% weight to demand patterns
+      );
+    } else {
+      // For non-seasonal items: focus primarily on previous demand patterns
+      suggestedQuantity = (
+        baseQuantity * 0.6 +           // 60% weight to base calculation (previous demand)
+        stockAdjustment * 0.15 +       // 15% weight to stock levels
+        seasonalAdjustment * 0.0 +     // 0% weight to seasonal trends (not applicable)
+        leadTimeAdjustment * 0.15 +    // 15% weight to lead time
+        demandAdjustment * 0.1         // 10% weight to demand patterns
+      );
+    }
     
     // Ensure minimum order quantity and apply safety margin
-    final finalQuantity = suggestedQuantity > 0 ? suggestedQuantity : minimumStock;
+    final finalQuantity = suggestedQuantity > 0 ? suggestedQuantity.round() : minimumStock;
     return (finalQuantity * 1.1).round(); // 10% safety margin
   }
 
   // Calculate base quantity from delivery history
-  int _calculateBaseQuantity() {
+  int calculateBaseQuantity() {
     if (deliveryHistory.isEmpty) return minimumStock;
     
-    // Get recent deliveries (last 60 days for better accuracy)
+    // Check if this is a seasonal item to determine analysis period
+    final isSeasonalItem = _isSeasonalItem();
+    
+    // For seasonal items: use shorter period (60 days) for recent trends
+    // For non-seasonal items: use longer period (90 days) for stable demand patterns
+    final analysisDays = isSeasonalItem ? 60 : 90;
+    
+    // Get recent deliveries for analysis
     final recentDeliveries = deliveryHistory
-        .where((record) => record.deliveryDate.isAfter(DateTime.now().subtract(const Duration(days: 60))))
+        .where((record) => record.deliveryDate.isAfter(DateTime.now().subtract(Duration(days: analysisDays))))
         .toList();
     
     if (recentDeliveries.isEmpty) return minimumStock;
@@ -128,10 +151,21 @@ class StockItem {
     // Calculate average daily usage
     final totalQuantity = recentDeliveries.fold(0, (sum, record) => sum + record.quantity);
     final daysSinceFirstDelivery = DateTime.now().difference(recentDeliveries.first.deliveryDate).inDays;
-    final avgDailyUsage = daysSinceFirstDelivery > 0 ? totalQuantity / daysSinceFirstDelivery : totalQuantity / 30;
+    final avgDailyUsage = daysSinceFirstDelivery > 0 ? totalQuantity / daysSinceFirstDelivery : totalQuantity / analysisDays;
     
-    // Order enough to last 3 weeks (21 days) for better planning
-    return (avgDailyUsage * 21).round();
+    // Determine order period based on item type
+    final orderPeriodDays = isSeasonalItem ? 21 : 30; // 3 weeks for seasonal, 4 weeks for non-seasonal
+    
+    // For non-seasonal items, also consider trend analysis
+    if (!isSeasonalItem && recentDeliveries.length >= 3) {
+      // Calculate trend to adjust for increasing/decreasing demand
+      final trendAdjustment = _calculateDemandTrend(recentDeliveries);
+      final baseOrder = (avgDailyUsage * orderPeriodDays).round();
+      return (baseOrder * trendAdjustment).round();
+    }
+    
+    // Order enough to last the determined period
+    return (avgDailyUsage * orderPeriodDays).round();
   }
 
   // Adjust based on current stock levels
@@ -150,6 +184,46 @@ class StockItem {
     }
     
     return 0; // No adjustment needed
+  }
+
+  // Calculate demand trend for non-seasonal items
+  double _calculateDemandTrend(List<DeliveryRecord> recentDeliveries) {
+    if (recentDeliveries.length < 3) return 1.0; // No trend data available
+    
+    // Sort deliveries by date
+    recentDeliveries.sort((a, b) => a.deliveryDate.compareTo(b.deliveryDate));
+    
+    // Split into two halves to compare early vs recent demand
+    final midPoint = recentDeliveries.length ~/ 2;
+    final earlyDeliveries = recentDeliveries.take(midPoint).toList();
+    final recentDeliveriesHalf = recentDeliveries.skip(midPoint).toList();
+    
+    // Calculate average quantities for each period
+    final earlyAvg = earlyDeliveries.fold(0, (sum, record) => sum + record.quantity) / earlyDeliveries.length;
+    final recentAvg = recentDeliveriesHalf.fold(0, (sum, record) => sum + record.quantity) / recentDeliveriesHalf.length;
+    
+    if (earlyAvg == 0) return 1.0; // Avoid division by zero
+    
+    // Calculate trend ratio
+    final trendRatio = recentAvg / earlyAvg;
+    
+    // Apply trend adjustment with reasonable bounds
+    if (trendRatio > 1.5) {
+      // Strong upward trend - increase by up to 30%
+      return 1.3;
+    } else if (trendRatio > 1.2) {
+      // Moderate upward trend - increase by up to 15%
+      return 1.15;
+    } else if (trendRatio < 0.7) {
+      // Strong downward trend - decrease by up to 25%
+      return 0.75;
+    } else if (trendRatio < 0.85) {
+      // Moderate downward trend - decrease by up to 10%
+      return 0.9;
+    } else {
+      // Stable demand - no adjustment
+      return 1.0;
+    }
   }
 
   // Adjust based on seasonal trends and holiday periods
@@ -500,6 +574,7 @@ class StockItem {
       'Idd': 0.5,           // 50% increase for Idd
       'Christmas': 0.6,     // 60% increase for Christmas
       'BackToSchool': 0.8,  // 80% increase for Back-to-School (higher due to longer season)
+      'SuccessCards': 1.2,  // 120% increase for Success Cards (drastic increase as requested)
     };
     
     final baseAdjustment = baseAdjustments[seasonName] ?? 0.3;
@@ -519,6 +594,24 @@ class StockItem {
       } else if (daysUntilSeason <= 90) {
         // Planning for back-to-school - slight adjustment
         return (minimumStock * baseAdjustment * 0.8).round();
+      }
+    } else if (seasonName == 'SuccessCards') {
+      // Success cards have drastic increase during October-November
+      if (daysUntilSeason <= 0) {
+        // In success cards season - drastic maximum adjustment
+        return (minimumStock * baseAdjustment * 2.5).round(); // 300% total increase
+      } else if (daysUntilSeason <= 7) {
+        // Very close to success cards season - very high adjustment
+        return (minimumStock * baseAdjustment * 2.0).round(); // 240% total increase
+      } else if (daysUntilSeason <= 14) {
+        // Close to success cards season - high adjustment
+        return (minimumStock * baseAdjustment * 1.8).round(); // 216% total increase
+      } else if (daysUntilSeason <= 30) {
+        // Approaching success cards season - moderate adjustment
+        return (minimumStock * baseAdjustment * 1.5).round(); // 180% total increase
+      } else if (daysUntilSeason <= 60) {
+        // Planning for success cards season - slight adjustment
+        return (minimumStock * baseAdjustment * 1.2).round(); // 144% total increase
       }
     } else {
       // Holiday adjustments (shorter periods)

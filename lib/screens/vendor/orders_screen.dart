@@ -419,6 +419,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       ],
                     ),
                   ),
+                  // Arrow button to view details
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      onPressed: () => _navigateToSuggestedOrderDetails(item),
+                      icon: Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.blue.shade700,
+                        size: 16,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -462,6 +482,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
     Navigator.of(context).pushNamed(
       '/vendor-product-analytics',
       arguments: productName,
+    );
+  }
+
+  void _navigateToSuggestedOrderDetails(StockItem item) {
+    Navigator.of(context).pushNamed(
+      '/vendor-suggested-order-details',
+      arguments: item,
     );
   }
 
