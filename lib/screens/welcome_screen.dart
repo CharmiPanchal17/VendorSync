@@ -1,409 +1,155 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-class WelcomeScreen extends StatefulWidget {
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _cardController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _cardAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _cardController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
-    _cardAnimation = CurvedAnimation(
-      parent: _cardController,
-      curve: Curves.easeOutCubic,
-    );
-    
-    _controller.forward();
-    
-    // Start card animation after a delay
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        _cardController.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _cardController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              lightCyan,
-              lightCyan.withOpacity(0.8),
+              isDark ? const Color(0xFF2D2D2D) : lightCyan,
               Colors.white,
             ],
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
+          child: Column(
+            children: [
+              // Upper section: Logo and words
+              Expanded(
+                flex: 5,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20),
-                      
-                      // Hero Illustration
+                      const SizedBox(height: 16),
+                      // Logo
                       Container(
-                        height: 380, // Increased height to accommodate image
-                        width: double.infinity,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              maroon.withOpacity(0.1),
-                              Colors.blue.withOpacity(0.1),
-                              Colors.green.withOpacity(0.1),
-                            ],
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            // Background Pattern
-                            Positioned.fill(
-                              child: CustomPaint(
-                                painter: BackgroundPatternPainter(),
-                              ),
-                            ),
-                            // Main Illustration
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // Original Welcome Image
-                                  Container(
-                                    width: 180,
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.asset(
-                                        'assets/images/welcome.jpeg',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            color: maroon.withOpacity(0.1),
-                                            child: Icon(
-                                              Icons.image,
-                                              size: 48,
-                                              color: maroon,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: maroon.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.sync,
-                                      size: 48,
-                                      color: maroon,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'VendorSync',
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: maroon,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: maroon.withOpacity(0.15),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Welcome Text
-                      Text(
-                        'Welcome to VendorSync',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: maroon,
-                          letterSpacing: 0.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      Text(
-                        'Your intelligent Vendor-to-Supplier Management System',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Feature Cards with Staggered Animation
-                      FadeTransition(
-                        opacity: _cardAnimation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.3),
-                            end: Offset.zero,
-                          ).animate(_cardAnimation),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildFeatureCard(
-                                      icon: Icons.auto_awesome,
-                                      title: 'Auto-Reorder',
-                                      subtitle: 'Smart inventory management',
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildFeatureCard(
-                                      icon: Icons.analytics,
-                                      title: 'Analytics',
-                                      subtitle: 'Real-time insights',
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 12),
-                              
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildFeatureCard(
-                                      icon: Icons.notifications,
-                                      title: 'Notifications',
-                                      subtitle: 'Instant alerts',
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildFeatureCard(
-                                      icon: Icons.security,
-                                      title: 'Secure',
-                                      subtitle: 'Enterprise-grade security',
-                                      color: Colors.purple,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.jpeg',
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Action Buttons
-                      _buildActionButton(
-                        'Vendor Register',
-                        Icons.store,
-                        maroon,
-                        () => Navigator.of(context).pushNamed('/register'),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      _buildActionButton(
-                        'Supplier Register',
-                        Icons.local_shipping,
-                        Colors.blue,
-                        () => Navigator.of(context).pushNamed('/register-supplier'),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      _buildOutlinedButton(
-                        'Login',
-                        Icons.login,
-                        () => Navigator.of(context).pushNamed('/role-selection'),
-                      ),
-                      
                       const SizedBox(height: 20),
+                      Text(
+                        'VendorSync',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: maroon,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Your intelligent Vendor-to-Supplier \n Management System',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: isDark ? Colors.white70 : Colors.grey[700],
+                          height: 1.8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-            Colors.white.withOpacity(0.9),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withOpacity(0.2),
-                  color.withOpacity(0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+              // Rainbow divider
+              SizedBox(
+                height: 128,
+                width: double.infinity,
+                child: CustomPaint(
+                  painter: RainbowDividerPainter(),
                 ),
-              ],
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+              ),
+              // Lower section: Buttons
+              Expanded(
+                flex: 5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: IntrinsicHeight(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 16),
+                                _buildActionButton(
+                                  'Vendor Register',
+                                  Icons.store,
+                                  maroon,
+                                  () => Navigator.of(context).pushNamed('/register'),
+                                ),
+                                const SizedBox(height: 24),
+                                _buildActionButton(
+                                  'Supplier Register',
+                                  Icons.local_shipping,
+                                  maroon,
+                                  () => Navigator.of(context).pushNamed('/register-supplier'),
+                                ),
+                                const SizedBox(height: 24),
+                                _buildActionButton(
+                                  'Login as Vendor',
+                                  Icons.login,
+                                  Colors.blue,
+                                  () => Navigator.of(context).pushNamed('/login', arguments: 'vendor'),
+                                ),
+                                const SizedBox(height: 24),
+                                _buildActionButton(
+                                  'Login as Supplier',
+                                  Icons.login,
+                                  Colors.blue,
+                                  () => Navigator.of(context).pushNamed('/login', arguments: 'supplier'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color.withOpacity(0.8),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: color.withOpacity(0.6),
-              height: 1.3,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildActionButton(String text, IconData icon, Color color, VoidCallback onPressed) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -412,7 +158,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 0,
+          elevation: 2,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -433,7 +179,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   }
 
   Widget _buildOutlinedButton(String text, IconData icon, VoidCallback onPressed) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 56,
       child: OutlinedButton(
@@ -464,21 +210,37 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   }
 }
 
-class BackgroundPatternPainter extends CustomPainter {
+class RainbowDividerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    final rainbow = [
+      Colors.white,
+      maroon,
+      Colors.blue,
+    ];
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
-      ..strokeWidth = 1;
-
-    // Draw diagonal lines
-    for (int i = 0; i < size.width + size.height; i += 20) {
-      canvas.drawLine(
-        Offset(i.toDouble(), 0),
-        Offset(0, i.toDouble()),
-        paint,
-      );
-    }
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 20;
+    final path = Path();
+    // Draw a bigger wavy curve
+    path.moveTo(0, size.height * 0.7);
+    path.cubicTo(
+      size.width * 0.15, size.height * 0.1,
+      size.width * 0.85, size.height * 1.3,
+      size.width, size.height * 0.7,
+    );
+    // White
+    paint.color = rainbow[0];
+    paint.strokeWidth = 20;
+    canvas.drawPath(path, paint);
+    // Maroon
+    paint.color = rainbow[1];
+    paint.strokeWidth = 20;
+    canvas.drawPath(path.shift(const Offset(0, 8)), paint);
+    // Blue (thinner)
+    paint.color = rainbow[2];
+    paint.strokeWidth = 12;
+    canvas.drawPath(path.shift(const Offset(0, 16)), paint);
   }
 
   @override
