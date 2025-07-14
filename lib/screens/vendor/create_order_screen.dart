@@ -783,7 +783,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               return null;
                             },
                             onChanged: (value) {
-                              // _updateAutoOrderQuantity(); // No longer needed
+                              setState(() {});
                             },
                           ),
                           const SizedBox(height: 16),
@@ -794,21 +794,13 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: maroon.withOpacity(0.3)),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.info_outline, color: maroon, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: maroon,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              'You will be notified when stock reaches ${_thresholdController.text}% of initial quantity',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: maroon,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -1067,8 +1059,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': _preferredDeliveryDate,
-        // 'autoOrderEnabled': _enableAutoOrder, // No longer needed
-        // 'autoOrderThreshold': threshold, // No longer needed
+        'threshold': threshold,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
