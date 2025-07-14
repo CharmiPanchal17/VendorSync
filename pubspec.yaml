@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.3
   provider: ^6.0.5
   intl: ^0.18.1
   firebase_core: ^2.24.2

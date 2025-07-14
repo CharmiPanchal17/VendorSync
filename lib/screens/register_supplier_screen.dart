@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -233,12 +235,13 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                       _errorMessage = null;
                                     });
                                     try {
+                                      final hashedPassword = sha256.convert(utf8.encode(password)).toString();
                                       await FirebaseFirestore.instance.collection('suppliers').add({
                                         'name': name,
                                         'email': email,
-                                        'password': password,
+                                        'password': hashedPassword, // Store hashed password
+                                        'role': 'supplier',
                                         'createdAt': FieldValue.serverTimestamp(),
-                                        'vendorEmail': null,
                                       });
                                       setState(() => _isLoading = false);
                                       Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);

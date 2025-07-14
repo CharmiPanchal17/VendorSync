@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 // Add color constant at the top-level for use throughout the file
 const maroonPopup = Color(0xFF800000);
@@ -47,10 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
 
         // Add new vendor to Firestore
+        final hashedPassword = sha256.convert(utf8.encode(password)).toString();
         await FirebaseFirestore.instance.collection('vendors').add({
           'name': name,
           'email': email,
-          'password': password, // Note: In production, this should be hashed
+          'password': hashedPassword, // Store hashed password
           'role': 'vendor',
           'createdAt': FieldValue.serverTimestamp(),
         });

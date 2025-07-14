@@ -6,142 +6,135 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              isDark ? const Color(0xFF2D2D2D) : lightCyan,
-              Colors.white,
-            ],
+      body: Stack(
+        children: [
+          // Solid light cyan background to match login page
+          Container(
+            color: const Color(0xFFAFFFFF),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Upper section: Logo and words
-              Expanded(
-                flex: 5,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 16),
-                      // Logo
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: maroon.withOpacity(0.15),
-                              blurRadius: 16,
-                              offset: const Offset(0, 8),
+          SafeArea(
+            child: Column(
+              children: [
+                // Upper section: Logo and words
+                Expanded(
+                  flex: 5,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                        const SizedBox(height: 16),
+                        // Logo
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: maroon.withOpacity(0.15),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                              child: ClipOval(
+                                child: Image.asset(
+                              'assets/images/logo.jpeg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/logo.jpeg',
-                            fit: BoxFit.cover,
+                        const SizedBox(height: 20),
+                        Text(
+                          'VendorSync',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: maroon,
+                            letterSpacing: 1.2,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'VendorSync',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: maroon,
-                          letterSpacing: 1.2,
+                        const SizedBox(height: 24),
+                        Text(
+                          'Your intelligent Vendor-to-Supplier \n Management System',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.grey[700],
+                            height: 1.8,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Your intelligent Vendor-to-Supplier \n Management System',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: isDark ? Colors.white70 : Colors.grey[700],
-                          height: 1.8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                                      ),
+                                    ),
+                                  ),
+                // Rainbow divider
+                SizedBox(
+                  height: 128,
+                  width: double.infinity,
+                  child: CustomPaint(
+                    painter: RainbowDividerPainter(),
                   ),
                 ),
-              ),
-              // Rainbow divider
-              SizedBox(
-                height: 128,
-                width: double.infinity,
-                child: CustomPaint(
-                  painter: RainbowDividerPainter(),
-                ),
-              ),
-              // Lower section: Buttons
-              Expanded(
-                flex: 5,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: IntrinsicHeight(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 16),
-                                _buildActionButton(
-                                  'Vendor Register',
-                                  Icons.store,
-                                  maroon,
-                                  () => Navigator.of(context).pushNamed('/register'),
-                                ),
-                                const SizedBox(height: 24),
-                                _buildActionButton(
-                                  'Supplier Register',
-                                  Icons.local_shipping,
-                                  maroon,
-                                  () => Navigator.of(context).pushNamed('/register-supplier'),
-                                ),
-                                const SizedBox(height: 24),
-                                _buildActionButton(
-                                  'Login as Vendor',
-                                  Icons.login,
-                                  Colors.blue,
-                                  () => Navigator.of(context).pushNamed('/login', arguments: 'vendor'),
-                                ),
-                                const SizedBox(height: 24),
-                                _buildActionButton(
-                                  'Login as Supplier',
-                                  Icons.login,
-                                  Colors.blue,
-                                  () => Navigator.of(context).pushNamed('/login', arguments: 'supplier'),
-                                ),
-                              ],
+                // Lower section: Buttons
+                              Expanded(
+                  flex: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 16),
+                                  _buildActionButton(
+                                    'Vendor Register',
+                                    Icons.store,
+                                    maroon,
+                                    () => Navigator.of(context).pushNamed('/register'),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _buildActionButton(
+                                    'Supplier Register',
+                                    Icons.local_shipping,
+                                    maroon,
+                                    () => Navigator.of(context).pushNamed('/register-supplier'),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _buildActionButton(
+                                    'Login as Vendor',
+                                    Icons.login,
+                                    Colors.blue,
+                                    () => Navigator.of(context).pushNamed('/login', arguments: 'vendor'),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _buildActionButton(
+                                    'Login as Supplier',
+                                    Icons.login,
+                                    Colors.blue,
+                                    () => Navigator.of(context).pushNamed('/login', arguments: 'supplier'),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
