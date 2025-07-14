@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -132,10 +134,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                       .limit(1)
                                       .get();
                                   if (query.docs.isNotEmpty) {
+                                    final hashedPassword = sha256.convert(utf8.encode(newPassword)).toString();
                                     await FirebaseFirestore.instance
                                         .collection(collection)
                                         .doc(query.docs.first.id)
-                                        .update({'password': newPassword});
+                                        .update({'password': hashedPassword});
                                     setState(() {
                                       _errorMessage = null;
                                     });

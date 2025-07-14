@@ -14,20 +14,39 @@ import 'models/order.dart' as order_model;
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/splash_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  final storage = FlutterSecureStorage();
+  String? userEmail = await storage.read(key: 'userEmail');
+  String? loginTimestampStr = await storage.read(key: 'loginTimestamp');
+  bool isSessionValid = false;
+  if (userEmail != null && loginTimestampStr != null) {
+    final loginTimestamp = DateTime.fromMillisecondsSinceEpoch(int.parse(loginTimestampStr));
+    final now = DateTime.now();
+    if (now.difference(loginTimestamp).inDays < 6) {
+      isSessionValid = true;
+    } else {
+      // Session expired, clear storage
+      await storage.delete(key: 'userEmail');
+      await storage.delete(key: 'loginTimestamp');
+    }
+  }
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: const VendorSyncApp(),
+      child: VendorSyncApp(isSessionValid: isSessionValid, userEmail: userEmail),
     ),
   );
 }
 
 class VendorSyncApp extends StatelessWidget {
-  const VendorSyncApp({super.key});
+  final bool isSessionValid;
+  final String? userEmail;
+  const VendorSyncApp({super.key, this.isSessionValid = false, this.userEmail});
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +57,9 @@ class VendorSyncApp extends StatelessWidget {
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          initialRoute: '/splash',
+          initialRoute: isSessionValid ? '/auto-login' : '/splash',
           routes: {
+            '/auto-login': (context) => _AutoLoginScreen(userEmail: userEmail),
             '/splash': (context) => const SplashScreen(),
             '/welcome': (context) => const WelcomeScreen(),
             '/login': (context) => const LoginScreen(),
@@ -176,6 +196,57 @@ class VendorSyncApp extends StatelessWidget {
       drawerTheme: const DrawerThemeData(
         backgroundColor: Color(0xFF1E1E1E),
       ),
+    );
+  }
+}
+
+class _AutoLoginScreen extends StatelessWidget {
+  final String? userEmail;
+  const _AutoLoginScreen({Key? key, this.userEmail}) : super(key: key);
+
+  Future<String?> _getUserRole(String? email) async {
+    if (email == null) return null;
+    final vendorQuery = await FirebaseFirestore.instance
+        .collection('vendors')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    if (vendorQuery.docs.isNotEmpty) return 'vendor';
+    final supplierQuery = await FirebaseFirestore.instance
+        .collection('suppliers')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    if (supplierQuery.docs.isNotEmpty) return 'supplier';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String?>(
+      future: _getUserRole(userEmail),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        if (snapshot.hasData) {
+          final role = snapshot.data;
+          if (role == 'vendor') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: userEmail);
+            });
+          } else if (role == 'supplier') {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: userEmail);
+            });
+          } else {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushReplacementNamed('/login');
+            });
+          }
+        }
+        return const SplashScreen();
+      },
     );
   }
 }

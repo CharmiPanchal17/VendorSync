@@ -11,10 +11,10 @@ import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
 import 'analytics_screen.dart';
 import 'create_order_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
-
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key, this.vendorEmail = 'vendor@example.com'});
   final String vendorEmail;
@@ -290,30 +290,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 color: isDark ? colorScheme.onSurface : Colors.black,
                               ),
                             ),
-                            content: Text(
-                              'Are you sure you want to logout? This will remove your vendor details from the system.',
-                              style: TextStyle(
-                                color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                              ),
-                            ),
-                            backgroundColor: maroonVendor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            content: const Text('Are you sure you want to logout?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(false),
-                                child: Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    color: isDark ? colorScheme.primary : Colors.blue,
-                                  ),
-                                ),
+                                child: const Text('Cancel'),
                               ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: maroonVendor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
+                              TextButton(
                                 onPressed: () => Navigator.of(context).pop(true),
                                 child: const Text('Logout'),
                               ),
@@ -321,22 +304,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          // Find and delete the vendor document by email
-                          final vendorQuery = await FirebaseFirestore.instance
-                              .collection('vendors')
-                              .where('email', isEqualTo: widget.vendorEmail)
-                              .limit(1)
-                              .get();
-                          if (vendorQuery.docs.isNotEmpty) {
-                            await FirebaseFirestore.instance
-                                .collection('vendors')
-                                .doc(vendorQuery.docs.first.id)
-                                .delete();
-                          }
-                          // Navigate to login page
-                          if (context.mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false, arguments: 'vendor');
-                          }
+                          final storage = const FlutterSecureStorage();
+                          await storage.delete(key: 'userEmail');
+                          await storage.delete(key: 'loginTimestamp');
+                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                         }
                       },
                       isLogout: true,
