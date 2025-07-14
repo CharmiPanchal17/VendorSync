@@ -4,7 +4,10 @@ import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
+import 'dart:io';
+import 'package:csv/csv.dart';
+import 'package:excel/excel.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -1557,26 +1560,71 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   void _uploadFromCSV(BuildContext context) async {
     Navigator.pop(context);
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['csv', 'xls', 'xlsx'],
+      final XTypeGroup typeGroup = XTypeGroup(
+        label: 'spreadsheet',
+        extensions: ['csv', 'xlsx'],
       );
-      if (result != null && result.files.single.path != null) {
-        String fileName = result.files.single.name;
-        String? filePath = result.files.single.path;
-        // TODO: Parse and process the file as needed
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Selected file: ' + fileName),
-            backgroundColor: maroon,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file != null) {
+        List<List<dynamic>>? rows;
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          final csvString = await file.readAsString();
+          rows = const CsvToListConverter().convert(csvString, eol: '\n');
+        } else if (file.name.toLowerCase().endsWith('.xlsx')) {
+          final bytes = await file.readAsBytes();
+          final excel = Excel.decodeBytes(bytes);
+          final sheet = excel.tables.values.first;
+          rows = sheet.rows;
+        }
+        if (rows != null) {
+          // Expecting header: Product Name,Current Stock,Minimum Stock,Maximum Stock,Supplier Name,Supplier Email
+          int added = 0;
+          for (int i = 1; i < rows.length; i++) {
+            final row = rows[i];
+            if (row.length < 6) continue;
+            final productName = row[0]?.toString() ?? '';
+            final currentStock = int.tryParse(row[1]?.toString() ?? '') ?? 0;
+            final minimumStock = int.tryParse(row[2]?.toString() ?? '') ?? 0;
+            final maximumStock = int.tryParse(row[3]?.toString() ?? '') ?? 0;
+            final supplierName = row[4]?.toString() ?? '';
+            final supplierEmail = row[5]?.toString() ?? '';
+            if (productName.isEmpty) continue;
+            final stockDocId = '${productName}_${widget.vendorEmail}';
+            await FirebaseFirestore.instance.collection('stock_items').doc(stockDocId).set({
+              'productName': productName,
+              'currentStock': currentStock,
+              'minimumStock': minimumStock,
+              'maximumStock': maximumStock,
+              'primarySupplier': supplierName,
+              'primarySupplierEmail': supplierEmail,
+              'vendorEmail': widget.vendorEmail,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+            added++;
+          }
+          await _loadStockData();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully uploaded $added stock items.'),
+              backgroundColor: maroon,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('No valid data found in file.'),
+              backgroundColor: maroon,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('File selection cancelled.'),
+            content: const Text('No file selected.'),
             backgroundColor: maroon,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1586,7 +1634,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error picking file: ' + e.toString()),
+          content: Text('Failed to upload file: $e'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
