@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -205,7 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                           .get();
                                         if (query.docs.isNotEmpty) {
                                           final user = query.docs.first.data();
-                                          if (user['password'] == password) {
+                                          final hashedInputPassword = sha256.convert(utf8.encode(password)).toString();
+                                          if (user['password'] == hashedInputPassword) {
                                             setState(() => _isLoading = false);
                                             if (role == 'vendor') {
                                               Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
