@@ -108,3 +108,4 @@ Bug fix in auth flow
 Implemented Excel upload support
 Excel template download
 Excel upload UI
+Validation for Excel fields
