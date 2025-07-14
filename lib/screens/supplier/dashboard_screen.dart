@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../models/order.dart' as order_model;
 import '../../services/notification_service.dart';
 import 'settings_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Add color constant at the top-level for use throughout the file
 const maroon = Color(0xFF800000);
@@ -810,7 +811,37 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                   _buildMenuItem(
                     icon: Icons.logout,
                     title: 'Logout',
-                    onTap: () => _showLogoutDialog(),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(
+                            'Logout',
+                            style: TextStyle(
+                              color: isDark ? colorScheme.onSurface : Colors.black,
+                            ),
+                          ),
+                          content: const Text('Are you sure you want to logout?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        final storage = const FlutterSecureStorage();
+                        await storage.delete(key: 'userEmail');
+                        await storage.delete(key: 'loginTimestamp');
+                        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                      }
+                    },
                     isLogout: true,
                     textColor: maroon,
                     iconColor: maroon,

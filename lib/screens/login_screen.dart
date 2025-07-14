@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _passwordVisible = false;
+  final storage = const FlutterSecureStorage();
 
   @override
   void didChangeDependencies() {
@@ -210,6 +212,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                           final hashedInputPassword = sha256.convert(utf8.encode(password)).toString();
                                           if (user['password'] == hashedInputPassword) {
                                             setState(() => _isLoading = false);
+                                            // Save session info
+                                            await storage.write(key: 'userEmail', value: email);
+                                            await storage.write(key: 'loginTimestamp', value: DateTime.now().millisecondsSinceEpoch.toString());
                                             if (role == 'vendor') {
                                               Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
                                             } else {
