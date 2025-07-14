@@ -26,7 +26,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   String? _selectedSupplierName;
   String? _selectedSupplierEmail;
   
-  DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
+  DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
@@ -1122,7 +1122,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       _productNameController.clear();
       _quantityController.clear();
       _thresholdController.text = '30';
-      _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
+      _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
       _enableAutoOrder = true;
       _autoOrderQuantity = 0;
       _selectedSupplierId = null;

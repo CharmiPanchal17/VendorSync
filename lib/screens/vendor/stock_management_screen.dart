@@ -7,7 +7,7 @@ import '../../services/notification_service.dart';
 import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as ex;
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -1494,7 +1494,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               'Spreadsheet',
               'Add stock items via spreadsheet',
               Icons.table_view,
-              () => _showManualEntryDialog(context),
+              () => _uploadFromCSV(context),
             ),
           ],
         ),
@@ -1572,7 +1572,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           rows = const CsvToListConverter().convert(csvString, eol: '\n');
         } else if (file.name.toLowerCase().endsWith('.xlsx')) {
           final bytes = await file.readAsBytes();
-          final excel = Excel.decodeBytes(bytes);
+          final excel = ex.Excel.decodeBytes(bytes);
           final sheet = excel.tables.values.first;
           rows = sheet.rows;
         }
