@@ -4,7 +4,9 @@ import 'dart:convert';
 import '../../models/sales.dart';
 import '../../services/sales_service.dart';
 import 'package:csv/csv.dart';
+import 'package:excel/excel.dart' as ex;
 import 'report_screen.dart';
+import 'dart:io';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -342,20 +344,24 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
         isLoading = true;
         errorMessage = null;
       });
-
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx'],
       );
-
       if (result != null) {
         final file = result.files.first;
         setState(() {
           selectedFileName = file.name;
         });
-
-        // Read and parse the CSV file
-        await _parseCSVFile(file);
+        if (file.extension == 'csv') {
+          await _parseCSVFile(file);
+        } else if (file.extension == 'xlsx') {
+          await _parseXLSXFile(file);
+        } else {
+          setState(() {
+            errorMessage = 'Unsupported file type.';
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -370,30 +376,34 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
 
   Future<void> _parseCSVFile(PlatformFile file) async {
     try {
-      print('[CSV] Parsing file: ${file.name}');
-      final content = String.fromCharCodes(file.bytes!);
-      print('[CSV] Raw content:');
-      print(content);
+      String? content;
+      if (file.bytes != null) {
+        content = String.fromCharCodes(file.bytes!);
+      } else if (file.path != null) {
+        content = await File(file.path!).readAsString();
+      }
+      if (content == null || content.isEmpty) {
+        setState(() {
+          errorMessage = 'CSV file is empty or unreadable.';
+        });
+        return;
+      }
       final rows = const CsvToListConverter(eol: '\n').convert(content, eol: '\n');
       if (rows.isEmpty) {
         setState(() {
           errorMessage = 'CSV file is empty.';
         });
-        print('[CSV][ERROR] File is empty.');
         return;
       }
       final header = rows.first.map((e) => e.toString().trim()).toList();
-      print('[CSV] Header: $header');
       final List<SalesItem> items = [];
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        print('[CSV] Row $i: $row');
         if (row.length < 2) continue;
         final productName = row[header.indexOf('productName')].toString().trim();
         final quantity = int.tryParse(row[header.indexOf('quantity')].toString()) ?? 0;
         final unitPrice = header.contains('unitPrice') ? double.tryParse(row[header.indexOf('unitPrice')].toString()) ?? 0.0 : 0.0;
         final notes = header.contains('notes') ? row[header.indexOf('notes')].toString() : null;
-        print('[CSV] Parsed: productName=$productName, quantity=$quantity, unitPrice=$unitPrice, notes=$notes');
         if (productName.isNotEmpty && quantity > 0) {
           items.add(SalesItem(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -409,18 +419,91 @@ class _SpreadsheetUploadScreenState extends State<SpreadsheetUploadScreen> {
       setState(() {
         parsedItems = items;
       });
-      print('[CSV] Parsed items: $parsedItems');
       if (items.isEmpty) {
         setState(() {
           errorMessage = 'No valid items found in the file. Please check the format.';
         });
-        print('[CSV][ERROR] No valid items found.');
       }
     } catch (e) {
       setState(() {
         errorMessage = 'Error parsing file: $e';
       });
-      print('[CSV][EXCEPTION] $e');
+    }
+  }
+
+  Future<void> _parseXLSXFile(PlatformFile file) async {
+    try {
+      List<int>? bytes = file.bytes;
+      if (bytes == null && file.path != null) {
+        bytes = await File(file.path!).readAsBytes();
+      }
+      if (bytes == null) {
+        setState(() {
+          errorMessage = 'File is empty or unreadable.';
+        });
+        return;
+      }
+      final excel = ex.Excel.decodeBytes(bytes);
+      // Find the first non-empty sheet (null-safe)
+      ex.Sheet? sheet;
+      try {
+        sheet = excel.tables.values.firstWhere(
+          (s) => s.maxRows > 0 && s.rows.any((row) => row.any((cell) => cell != null && cell.value.toString().trim().isNotEmpty)),
+        );
+      } catch (_) {
+        sheet = null;
+      }
+      if (sheet == null) {
+        setState(() {
+          errorMessage = 'Spreadsheet is empty.';
+        });
+        return;
+      }
+      // Skip blank rows at the top
+      int headerRowIdx = 0;
+      while (headerRowIdx < sheet.rows.length &&
+        sheet.rows[headerRowIdx].every((cell) => cell == null || cell.value.toString().trim().isEmpty)) {
+        headerRowIdx++;
+      }
+      if (headerRowIdx >= sheet.rows.length) {
+        setState(() {
+          errorMessage = 'No header row found in spreadsheet.';
+        });
+        return;
+      }
+      final header = sheet.rows[headerRowIdx].map((e) => e?.value.toString().trim() ?? '').toList();
+      final List<SalesItem> items = [];
+      for (int i = headerRowIdx + 1; i < sheet.rows.length; i++) {
+        final row = sheet.rows[i];
+        if (row.length < 2) continue;
+        final productName = row.length > header.indexOf('productName') && row[header.indexOf('productName')] != null ? row[header.indexOf('productName')]!.value.toString().trim() : '';
+        final quantity = header.contains('quantity') && row.length > header.indexOf('quantity') ? int.tryParse(row[header.indexOf('quantity')]?.value.toString() ?? '') ?? 0 : 0;
+        final unitPrice = header.contains('unitPrice') && row.length > header.indexOf('unitPrice') ? double.tryParse(row[header.indexOf('unitPrice')]?.value.toString() ?? '') ?? 0.0 : 0.0;
+        final notes = header.contains('notes') && row.length > header.indexOf('notes') ? row[header.indexOf('notes')]?.value.toString() : null;
+        if (productName.isNotEmpty && quantity > 0) {
+          items.add(SalesItem(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            productName: productName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: unitPrice * quantity,
+            soldAt: DateTime.now(),
+            notes: notes,
+          ));
+        }
+      }
+      setState(() {
+        parsedItems = items;
+      });
+      if (items.isEmpty) {
+        setState(() {
+          errorMessage = 'No valid items found in the spreadsheet. Please check the format.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error parsing spreadsheet: $e';
+      });
     }
   }
 

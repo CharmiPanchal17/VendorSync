@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:excel/excel.dart' as ex;
 import '../../services/sales_service.dart';
+import 'dart:io';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -279,14 +281,22 @@ class _InitialStockUploadScreenState extends State<InitialStockUploadScreen> {
       });
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx'],
       );
       if (result != null) {
         final file = result.files.first;
         setState(() {
           selectedFileName = file.name;
         });
-        await _parseCSVFile(file);
+        if (file.extension == 'csv') {
+          await _parseCSVFile(file);
+        } else if (file.extension == 'xlsx') {
+          await _parseXLSXFile(file);
+        } else {
+          setState(() {
+            errorMessage = 'Unsupported file type.';
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -301,7 +311,18 @@ class _InitialStockUploadScreenState extends State<InitialStockUploadScreen> {
 
   Future<void> _parseCSVFile(PlatformFile file) async {
     try {
-      final content = String.fromCharCodes(file.bytes!);
+      String? content;
+      if (file.bytes != null) {
+        content = String.fromCharCodes(file.bytes!);
+      } else if (file.path != null) {
+        content = await File(file.path!).readAsString();
+      }
+      if (content == null || content.isEmpty) {
+        setState(() {
+          errorMessage = 'CSV file is empty or unreadable.';
+        });
+        return;
+      }
       final rows = const CsvToListConverter(eol: '\n').convert(content, eol: '\n');
       if (rows.isEmpty) {
         setState(() {
@@ -340,6 +361,81 @@ class _InitialStockUploadScreenState extends State<InitialStockUploadScreen> {
     } catch (e) {
       setState(() {
         errorMessage = 'Error parsing file: $e';
+      });
+    }
+  }
+
+  Future<void> _parseXLSXFile(PlatformFile file) async {
+    try {
+      List<int>? bytes = file.bytes;
+      if (bytes == null && file.path != null) {
+        bytes = await File(file.path!).readAsBytes();
+      }
+      if (bytes == null) {
+        setState(() {
+          errorMessage = 'File is empty or unreadable.';
+        });
+        return;
+      }
+      final excel = ex.Excel.decodeBytes(bytes);
+      // Find the first non-empty sheet (null-safe)
+      ex.Sheet? sheet;
+      try {
+        sheet = excel.tables.values.firstWhere(
+          (s) => s.maxRows > 0 && s.rows.any((row) => row.any((cell) => cell != null && cell.value.toString().trim().isNotEmpty)),
+        );
+      } catch (_) {
+        sheet = null;
+      }
+      if (sheet == null) {
+        setState(() {
+          errorMessage = 'Spreadsheet is empty.';
+        });
+        return;
+      }
+      // Skip blank rows at the top
+      int headerRowIdx = 0;
+      while (headerRowIdx < sheet.rows.length &&
+        sheet.rows[headerRowIdx].every((cell) => cell == null || cell.value.toString().trim().isEmpty)) {
+        headerRowIdx++;
+      }
+      if (headerRowIdx >= sheet.rows.length) {
+        setState(() {
+          errorMessage = 'No header row found in spreadsheet.';
+        });
+        return;
+      }
+      final header = sheet.rows[headerRowIdx].map((e) => e?.value.toString().trim() ?? '').toList();
+      final List<Map<String, dynamic>> items = [];
+      for (int i = headerRowIdx + 1; i < sheet.rows.length; i++) {
+        final row = sheet.rows[i];
+        if (row.length < 2) continue;
+        final productName = row.length > header.indexOf('productName') && row[header.indexOf('productName')] != null ? row[header.indexOf('productName')]!.value.toString().trim() : '';
+        final initialQuantity = header.contains('initialQuantity') && row.length > header.indexOf('initialQuantity') ? int.tryParse(row[header.indexOf('initialQuantity')]?.value.toString() ?? '') ?? 0 : 0;
+        final unitPrice = header.contains('unitPrice') && row.length > header.indexOf('unitPrice') ? double.tryParse(row[header.indexOf('unitPrice')]?.value.toString() ?? '') ?? 0.0 : 0.0;
+        final supplierName = header.contains('supplierName') && row.length > header.indexOf('supplierName') ? row[header.indexOf('supplierName')]?.value.toString() : null;
+        final notes = header.contains('notes') && row.length > header.indexOf('notes') ? row[header.indexOf('notes')]?.value.toString() : null;
+        if (productName.isNotEmpty && initialQuantity > 0) {
+          items.add({
+            'productName': productName,
+            'initialQuantity': initialQuantity,
+            'unitPrice': unitPrice,
+            'supplierName': supplierName,
+            'notes': notes,
+          });
+        }
+      }
+      setState(() {
+        parsedItems = items;
+      });
+      if (items.isEmpty) {
+        setState(() {
+          errorMessage = 'No valid items found in the spreadsheet. Please check the format.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error parsing spreadsheet: $e';
       });
     }
   }

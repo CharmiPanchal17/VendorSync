@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:excel/excel.dart' as ex;
 import '../../services/sales_service.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-// Add this import only for web
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'dart:convert';
+import 'sales_data_export_stub.dart'
+    if (dart.library.html) 'sales_data_export_web.dart' as sales_export;
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -320,14 +320,22 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
       });
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['csv', 'xlsx'],
       );
       if (result != null) {
         final file = result.files.first;
         setState(() {
           selectedFileName = file.name;
         });
-        await _parseCSVFile(file);
+        if (file.extension == 'csv') {
+          await _parseCSVFile(file);
+        } else if (file.extension == 'xlsx') {
+          await _parseXLSXFile(file);
+        } else {
+          setState(() {
+            errorMessage = 'Unsupported file type.';
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -342,7 +350,18 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
 
   Future<void> _parseCSVFile(PlatformFile file) async {
     try {
-      final content = String.fromCharCodes(file.bytes!);
+      String? content;
+      if (file.bytes != null) {
+        content = String.fromCharCodes(file.bytes!);
+      } else if (file.path != null) {
+        content = await File(file.path!).readAsString();
+      }
+      if (content == null || content.isEmpty) {
+        setState(() {
+          errorMessage = 'CSV file is empty or unreadable.';
+        });
+        return;
+      }
       final rows = const CsvToListConverter(eol: '\n').convert(content, eol: '\n');
       if (rows.isEmpty) {
         setState(() {
@@ -381,6 +400,81 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
     } catch (e) {
       setState(() {
         errorMessage = 'Error parsing file: $e';
+      });
+    }
+  }
+
+  Future<void> _parseXLSXFile(PlatformFile file) async {
+    try {
+      List<int>? bytes = file.bytes;
+      if (bytes == null && file.path != null) {
+        bytes = await File(file.path!).readAsBytes();
+      }
+      if (bytes == null) {
+        setState(() {
+          errorMessage = 'File is empty or unreadable.';
+        });
+        return;
+      }
+      final excel = ex.Excel.decodeBytes(bytes);
+      // Find the first non-empty sheet (null-safe)
+      ex.Sheet? sheet;
+      try {
+        sheet = excel.tables.values.firstWhere(
+          (s) => s.maxRows > 0 && s.rows.any((row) => row.any((cell) => cell != null && cell.value.toString().trim().isNotEmpty)),
+        );
+      } catch (_) {
+        sheet = null;
+      }
+      if (sheet == null) {
+        setState(() {
+          errorMessage = 'Spreadsheet is empty.';
+        });
+        return;
+      }
+      // Skip blank rows at the top
+      int headerRowIdx = 0;
+      while (headerRowIdx < sheet.rows.length &&
+        sheet.rows[headerRowIdx].every((cell) => cell == null || cell.value.toString().trim().isEmpty)) {
+        headerRowIdx++;
+      }
+      if (headerRowIdx >= sheet.rows.length) {
+        setState(() {
+          errorMessage = 'No header row found in spreadsheet.';
+        });
+        return;
+      }
+      final header = sheet.rows[headerRowIdx].map((e) => e?.value.toString().trim() ?? '').toList();
+      final List<Map<String, dynamic>> items = [];
+      for (int i = headerRowIdx + 1; i < sheet.rows.length; i++) {
+        final row = sheet.rows[i];
+        if (row.length < 2) continue;
+        final productName = row.length > header.indexOf('productName') && row[header.indexOf('productName')] != null ? row[header.indexOf('productName')]!.value.toString().trim() : '';
+        final quantity = header.contains('quantity') && row.length > header.indexOf('quantity') ? int.tryParse(row[header.indexOf('quantity')]?.value.toString() ?? '') ?? 0 : 0;
+        final unitPrice = header.contains('unitPrice') && row.length > header.indexOf('unitPrice') ? double.tryParse(row[header.indexOf('unitPrice')]?.value.toString() ?? '') ?? 0.0 : 0.0;
+        final soldAt = header.contains('soldAt') && row.length > header.indexOf('soldAt') ? row[header.indexOf('soldAt')]?.value.toString() : null;
+        final notes = header.contains('notes') && row.length > header.indexOf('notes') ? row[header.indexOf('notes')]?.value.toString() : null;
+        if (productName.isNotEmpty && quantity > 0 && soldAt != null && soldAt.isNotEmpty) {
+          items.add({
+            'productName': productName,
+            'quantity': quantity,
+            'unitPrice': unitPrice,
+            'soldAt': soldAt,
+            'notes': notes,
+          });
+        }
+      }
+      setState(() {
+        parsedSales = items;
+      });
+      if (items.isEmpty) {
+        setState(() {
+          errorMessage = 'No valid items found in the spreadsheet. Please check the format.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error parsing spreadsheet: $e';
       });
     }
   }
@@ -503,14 +597,7 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
     ]).toList();
     final csvData = const ListToCsvConverter().convert([headers, ...dataRows]);
     if (kIsWeb) {
-      // Web: trigger download
-      final bytes = utf8.encode(csvData);
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'sales_analysis_report.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      await sales_export.exportCSV(csvData);
     } else {
       await Printing.sharePdf(bytes: Uint8List.fromList(csvData.codeUnits), filename: 'sales_analysis_report.csv');
     }
@@ -557,12 +644,7 @@ class _SalesDataUploadScreenState extends State<SalesDataUploadScreen> {
     );
     if (kIsWeb) {
       final bytes = await pdf.save();
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'sales_analysis_report.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      await sales_export.exportPDF(bytes);
     } else {
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
     }

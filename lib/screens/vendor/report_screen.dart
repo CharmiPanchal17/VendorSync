@@ -7,10 +7,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:csv/csv.dart';
 import 'package:flutter/foundation.dart';
-// Add this import only for web
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'dart:convert';
+import 'report_export_stub.dart'
+    if (dart.library.html) 'report_export_web.dart' as report_export;
 
 const maroonVendor = Color(0xFF800000);
 
@@ -324,17 +323,9 @@ class _ReportScreenState extends State<ReportScreen> {
     ]).toList();
     final csvData = const ListToCsvConverter().convert([headers, ...dataRows]);
     if (kIsWeb) {
-      // Web: trigger download
-      final bytes = utf8.encode(csvData);
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'stock_report.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      await report_export.exportCSV(csvData);
     } else {
-      // Mobile/Desktop: use Printing.sharePdf (fallback)
-      await Printing.sharePdf(bytes: Uint8List.fromList(csvData.codeUnits), filename: 'stock_report.csv');
+      await Printing.sharePdf(bytes: Uint8List.fromList(csvData.codeUnits), filename: 'sales_report.csv');
     }
   }
 
@@ -383,12 +374,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
     if (kIsWeb) {
       final bytes = await pdf.save();
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'stock_report.pdf')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      await report_export.exportPDF(bytes);
     } else {
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
     }
