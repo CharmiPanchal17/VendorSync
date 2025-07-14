@@ -147,7 +147,7 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
             onPressed: () async {
               if (formKey.currentState!.validate()) {
                 await FirebaseFirestore.instance.collection('suppliers').add({'name': name, 'email': email});
-                Navigator.pop(context, {'name': name, 'email': email});
+                Navigator.pop(context, {'name': name ?? '', 'email': email ?? ''});
               }
             },
             child: const Text('Add'),
@@ -774,6 +774,7 @@ class _BelowThresholdScreenState extends State<BelowThresholdScreen> {
       children: [
         Expanded(
           child: DropdownButtonFormField<Map<String, String>>(
+            isExpanded: true,
             value: selected,
             hint: const Text('Select Supplier'),
             items: [
