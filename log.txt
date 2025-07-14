@@ -140,3 +140,4 @@ Backend Excel parser
 Improved Excel UX
 Fixed duplicate rows issue
 Integrated CSV upload module
+Created upload history view
