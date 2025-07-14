@@ -78,29 +78,22 @@ class AnalyticsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildSummaryCard(
-                        'Total Revenue',
-                        '\$${totalRevenue.toStringAsFixed(2)}',
-                        Icons.attach_money,
-                        isDark,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildSummaryCard(
                         'Items Sold',
                         totalItemsSold.toString(),
                         Icons.shopping_cart,
                         isDark,
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        'Transactions',
+                        totalTransactions.toString(),
+                        Icons.receipt_long,
+                        isDark,
+                      ),
+                    ),
                   ],
-                ),
-                const SizedBox(height: 16),
-                _buildSummaryCard(
-                  'Transactions',
-                  totalTransactions.toString(),
-                  Icons.receipt_long,
-                  isDark,
                 ),
                 const SizedBox(height: 24),
                 // Sales Trend Graph
@@ -112,7 +105,7 @@ class AnalyticsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sales Trend',
+                          'Sales Trend (Quantity Sold)',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
