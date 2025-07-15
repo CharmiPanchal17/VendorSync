@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
-import '../../models/order.dart' show DeliveryRecord, StockItem;
 import '../../services/notification_service.dart';
+import '../../services/delivery_tracking_service.dart';
+import '../../services/auto_reorder_service.dart';
+import '../../widgets/auto_reorder_dashboard.dart';
 import 'suppliers_list_screen.dart';
 import 'settings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,7 +13,13 @@ import 'package:intl/intl.dart';
 import 'stock_management_screen.dart';
 import 'analytics_screen.dart';
 import 'create_order_screen.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../services/auth_service.dart';
+import 'real_time_sales_screen.dart';
+import 'spreadsheet_upload_screen.dart';
+import '../../services/sales_service.dart';
+import 'report_screen.dart';
+import 'below_threshold_screen.dart';
+
 
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
@@ -28,70 +36,52 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   String? vendorName;
-  int _pendingOrdersCount = 0;
+
+  List<Map<String, dynamic>> draftOrders = [];
+
 
   @override
   void initState() {
     super.initState();
     _fetchVendorName();
-    _checkThresholdAlerts();
-    _loadPendingOrdersCount();
-  }
+    _checkAndLoadDraftOrders();
 
-  Future<void> _checkThresholdAlerts() async {
-    // Check for threshold alerts when dashboard loads
-    await NotificationService.checkThresholdAlerts(widget.vendorEmail);
   }
 
   Future<void> _fetchVendorName() async {
-    final vendorQuery = await FirebaseFirestore.instance
+    try {
+      final query = await FirebaseFirestore.instance
         .collection('vendors')
         .where('email', isEqualTo: widget.vendorEmail)
         .limit(1)
         .get();
-    if (vendorQuery.docs.isNotEmpty) {
-      setState(() {
-        vendorName = vendorQuery.docs.first['name'];
-      });
-    }
-  }
-
-  Future<void> _loadPendingOrdersCount() async {
-    try {
-      final stockSnapshot = await FirebaseFirestore.instance
-          .collection('stock_items')
-          .where('vendorEmail', isEqualTo: widget.vendorEmail)
-          .get();
-
-      int count = 0;
-      for (final doc in stockSnapshot.docs) {
-        final data = doc.data();
-        final currentStock = data['currentStock'] as int? ?? 0;
-        final thresholdLevel = data['thresholdLevel'] as int? ?? 0;
-        final minimumStock = data['minimumStock'] as int? ?? 0;
-
-        if (thresholdLevel > 0) {
-          if (currentStock <= (minimumStock * 0.5) || 
-              currentStock <= thresholdLevel || 
-              currentStock <= (minimumStock * 1.2)) {
-            count++;
-          }
-        }
+      if (query.docs.isNotEmpty) {
+        setState(() {
+          vendorName = query.docs.first['name'] ?? 'Vendor';
+        });
+      } else {
+        setState(() {
+          vendorName = 'Vendor';
+        });
       }
-
-      setState(() {
-        _pendingOrdersCount = count;
-      });
     } catch (e) {
-      print('Error loading pending orders count: $e');
-    }
-  }
+      print('Error fetching vendor name: $e');
+      setState(() {
+        vendorName = 'Vendor';
+      });
+   
+  Future<void> _checkAndLoadDraftOrders() async {
+    await SalesService.checkAndCreateDraftOrders(widget.vendorEmail);
+    final drafts = await SalesService.getDraftOrders(widget.vendorEmail);
+    setState(() {
+      draftOrders = drafts;
+    });
+
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       drawer: Drawer(
         child: Container(
@@ -198,11 +188,33 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
-                      icon: Icons.warning,
-                      title: 'Threshold Management',
+
+                      icon: Icons.auto_awesome,
+                      title: 'Auto Settings',
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.of(context).pushNamed('/vendor-threshold-management', arguments: widget.vendorEmail);
+                        Navigator.of(context).pushNamed('/auto-settings', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.bar_chart,
+                      title: 'Monitor Stock',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/monitor-stock', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.warning,
+                      title: 'Below Threshold',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/below-threshold', arguments: widget.vendorEmail);
+
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
@@ -328,6 +340,25 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         foregroundColor: isDark ? colorScheme.onSurface : maroonVendor,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.summarize),
+            tooltip: 'View Stock Report',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => ReportScreen(vendorEmail: widget.vendorEmail),
+              ));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () async {
+              await _checkAndLoadDraftOrders();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Dashboard refreshed.'), backgroundColor: maroonVendor),
+              );
+            },
+          ),
           // Notification Bell with Badge
           Stack(
             children: [
@@ -674,13 +705,18 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   
+                  // Auto-Reorder Dashboard
+                  AutoReorderDashboard(vendorEmail: widget.vendorEmail),
+                  
+                  const SizedBox(height: 24),
+                  
                   // Status Filter
                   Text(
                     'Filter Orders',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      color: isDark ? colorScheme.onSurface : Colors.grey.shade800,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1039,10 +1075,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => StockManagementScreen(vendorEmail: widget.vendorEmail),
-          ));
+        onPress
+          _showUpdateStockOptions(context);
+
         },
         icon: const Icon(Icons.inventory),
         label: const Text('Update Stock'),
@@ -1466,8 +1501,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         'approvedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update stock management data
-      await _updateStockAfterDelivery(productName, quantity, supplierName, supplierEmail, unitPrice, orderId);
+      // Update stock management data automatically
+      await DeliveryTrackingService.recordDelivery(
+        orderId: orderId,
+        productName: productName,
+        quantity: quantity,
+        supplierName: supplierName,
+        supplierEmail: supplierEmail,
+        deliveryDate: DateTime.now(),
+        unitPrice: unitPrice,
+        notes: 'Approved by vendor',
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1491,6 +1535,56 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         );
       }
     }
+  }
+
+  void _showUpdateStockOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Stock'),
+        content: const Text('How would you like to update the stock?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroonVendor,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => RealTimeSalesScreen(
+                  vendorEmail: widget.vendorEmail,
+                ),
+              ));
+            },
+            child: const Text('Real-time Sales'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: maroonVendor,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _showSpreadsheetUpload(context);
+            },
+            child: const Text('Upload Spreadsheet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSpreadsheetUpload(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SpreadsheetUploadScreen(
+        vendorEmail: widget.vendorEmail,
+      ),
+    ));
   }
 
   Future<void> _updateStockAfterDelivery(String productName, int quantity, String supplierName, String supplierEmail, double? unitPrice, String orderId) async {
@@ -1588,5 +1682,143 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             return deliveryDate?.toDate() ?? DateTime.now();
           }).toList();
         });
+  }
+
+  Widget _buildDraftOrdersSection(bool isDark) {
+    if (draftOrders.isEmpty) return const SizedBox.shrink();
+    return Card(
+      color: isDark ? Colors.white10 : Colors.white,
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: maroonVendor, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.assignment, color: maroonVendor),
+                const SizedBox(width: 8),
+                Text('Draft Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...draftOrders.map((order) => _buildDraftOrderCard(order, isDark)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDraftOrderCard(Map<String, dynamic> order, bool isDark) {
+    final analysis = order['analysis'] as Map<String, dynamic>?;
+    final TextEditingController qtyController = TextEditingController(text: order['suggestedQuantity'].toString());
+    Color getPriorityColor(String? priority) {
+      switch (priority) {
+        case 'High':
+          return Colors.red;
+        case 'Medium':
+          return Colors.orange;
+        case 'Low':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+    return Card(
+      color: isDark ? Colors.white24 : Colors.grey[100],
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: maroonVendor.withOpacity(0.5), width: 1.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.shopping_cart, color: maroonVendor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(order['productName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, color: maroonVendor)),
+                ),
+                if (analysis != null)
+                  Chip(
+                    label: Text(
+                      analysis['priority'] ?? '',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    backgroundColor: getPriorityColor(analysis['priority']),
+                  ),
+              ],
+            ),
+            Text('Current Stock: ${order['currentStock']}'),
+            Text('Suggested Quantity: ${order['suggestedQuantity']}'),
+            if (analysis != null) ...[
+              Text('Priority: ${analysis['priority']}'),
+              Text('Sales Velocity: ${analysis['salesVelocity'].toStringAsFixed(2)} units/week'),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: qtyController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Edit Quantity'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: 'Edit suggested quantity',
+                  child: IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.orange),
+                    onPressed: () async {
+                      final newQty = int.tryParse(qtyController.text) ?? order['suggestedQuantity'];
+                      await SalesService.editDraftOrder(order['id'], newQty);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Draft order updated.'), backgroundColor: maroonVendor),
+                      );
+                    },
+                  ),
+                ),
+                Tooltip(
+                  message: 'Approve and create order',
+                  child: IconButton(
+                    icon: const Icon(Icons.check_circle, color: Colors.green),
+                    onPressed: () async {
+                      await SalesService.approveDraftOrder(order['id']);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Order approved!'), backgroundColor: Colors.green),
+                      );
+                    },
+                  ),
+                ),
+                Tooltip(
+                  message: 'Reject draft order',
+                  child: IconButton(
+                    icon: const Icon(Icons.cancel, color: Colors.red),
+                    onPressed: () async {
+                      await SalesService.rejectDraftOrder(order['id']);
+                      await _checkAndLoadDraftOrders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Draft order rejected.'), backgroundColor: Colors.red),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 } 

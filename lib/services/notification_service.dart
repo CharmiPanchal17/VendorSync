@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification.dart';
+import '../services/auth_service.dart'; // Added missing import for AuthService
 
 class NotificationService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Mock notifications data
+  static final Map<String, List<AppNotification>> _mockNotifications = {};
 
   // Create a new notification
   static Future<void> createNotification({
@@ -35,77 +37,58 @@ class NotificationService {
       });
     } catch (e) {
       print('Error creating notification: $e');
-      rethrow;
     }
   }
 
   // Get notifications for a specific user
   static Stream<List<AppNotification>> getNotificationsForUser(String userEmail) {
-    return _firestore
-        .collection('notifications')
-        .where('recipientEmail', isEqualTo: userEmail)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return AppNotification.fromMap(doc.id, doc.data());
-      }).toList();
-    });
+    return Stream.value(_mockNotifications[userEmail] ?? []);
   }
 
   // Mark notification as read
   static Future<void> markNotificationAsRead(String notificationId) async {
     try {
-      await _firestore
-          .collection('notifications')
-          .doc(notificationId)
-          .update({'isRead': true});
+      for (var notifications in _mockNotifications.values) {
+        for (var notification in notifications) {
+          if (notification.id == notificationId) {
+            notification.isRead = true;
+            break;
+          }
+        }
+      }
     } catch (e) {
       print('Error marking notification as read: $e');
-      rethrow;
     }
   }
 
   // Mark all notifications as read for a user
   static Future<void> markAllNotificationsAsRead(String userEmail) async {
     try {
-      final notifications = await _firestore
-          .collection('notifications')
-          .where('recipientEmail', isEqualTo: userEmail)
-          .where('isRead', isEqualTo: false)
-          .get();
-
-      final batch = _firestore.batch();
-      for (var doc in notifications.docs) {
-        batch.update(doc.reference, {'isRead': true});
+      if (_mockNotifications.containsKey(userEmail)) {
+        for (var notification in _mockNotifications[userEmail]!) {
+          notification.isRead = true;
+        }
       }
-      await batch.commit();
     } catch (e) {
       print('Error marking all notifications as read: $e');
-      rethrow;
     }
   }
 
   // Get unread notification count
   static Stream<int> getUnreadNotificationCount(String userEmail) {
-    return _firestore
-        .collection('notifications')
-        .where('recipientEmail', isEqualTo: userEmail)
-        .where('isRead', isEqualTo: false)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    final notifications = _mockNotifications[userEmail] ?? [];
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+    return Stream.value(unreadCount);
   }
 
   // Delete a notification
   static Future<void> deleteNotification(String notificationId) async {
     try {
-      await _firestore
-          .collection('notifications')
-          .doc(notificationId)
-          .delete();
+      for (var notifications in _mockNotifications.values) {
+        notifications.removeWhere((n) => n.id == notificationId);
+      }
     } catch (e) {
       print('Error deleting notification: $e');
-      rethrow;
     }
   }
 
@@ -117,17 +100,19 @@ class NotificationService {
     required String productName,
     required int quantity,
   }) async {
-    final vendorQuery = await _firestore
+    String vendorName = 'A vendor';
+    try {
+      final query = await FirebaseFirestore.instance
         .collection('vendors')
         .where('email', isEqualTo: vendorEmail)
         .limit(1)
         .get();
-
-    String vendorName = 'A vendor';
-    if (vendorQuery.docs.isNotEmpty) {
-      vendorName = vendorQuery.docs.first['name'] ?? 'A vendor';
+      if (query.docs.isNotEmpty) {
+        vendorName = query.docs.first['name'] ?? 'A vendor';
+      }
+    } catch (e) {
+      print('Error fetching vendor name: $e');
     }
-
     await createNotification(
       title: 'New Order Received',
       message: '$vendorName has placed a new order for $quantity $productName',
@@ -146,17 +131,19 @@ class NotificationService {
     required String productName,
     required int quantity,
   }) async {
-    final supplierQuery = await _firestore
+    String supplierName = 'A supplier';
+    try {
+      final query = await FirebaseFirestore.instance
         .collection('suppliers')
         .where('email', isEqualTo: supplierEmail)
         .limit(1)
         .get();
-
-    String supplierName = 'A supplier';
-    if (supplierQuery.docs.isNotEmpty) {
-      supplierName = supplierQuery.docs.first['name'] ?? 'A supplier';
+      if (query.docs.isNotEmpty) {
+        supplierName = query.docs.first['name'] ?? 'A supplier';
+      }
+    } catch (e) {
+      print('Error fetching supplier name: $e');
     }
-
     await createNotification(
       title: 'Order Confirmed',
       message: '$supplierName has confirmed your order for $quantity $productName',
@@ -328,6 +315,74 @@ class NotificationService {
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 3),
       ),
+    );
+  }
+
+  // Notify supplier of auto-order
+  static Future<void> notifySupplierOfAutoOrder({
+    required String vendorEmail,
+    required String supplierEmail,
+    required String orderId,
+    required String productName,
+    required int quantity,
+    required int currentStock,
+    required int threshold,
+  }) async {
+    String vendorName = 'A vendor';
+    try {
+      final query = await FirebaseFirestore.instance
+        .collection('vendors')
+        .where('email', isEqualTo: vendorEmail)
+        .limit(1)
+        .get();
+      if (query.docs.isNotEmpty) {
+        vendorName = query.docs.first['name'] ?? 'A vendor';
+      }
+    } catch (e) {
+      print('Error fetching vendor name: $e');
+    }
+
+    await createNotification(
+      title: 'Auto-Order Generated',
+      message: 'An automatic order has been generated for $quantity $productName due to low stock levels (current: $currentStock, threshold: $threshold)',
+      type: NotificationType.orderPlaced,
+      recipientEmail: supplierEmail,
+      senderEmail: vendorEmail,
+      orderId: orderId,
+    );
+  }
+
+  // Notify vendor of auto-order
+  static Future<void> notifyVendorOfAutoOrder({
+    required String vendorEmail,
+    required String supplierEmail,
+    required String orderId,
+    required String productName,
+    required int quantity,
+    required int currentStock,
+    required int threshold,
+  }) async {
+    String supplierName = 'A supplier';
+    try {
+      final query = await FirebaseFirestore.instance
+        .collection('suppliers')
+        .where('email', isEqualTo: supplierEmail)
+        .limit(1)
+        .get();
+      if (query.docs.isNotEmpty) {
+        supplierName = query.docs.first['name'] ?? 'A supplier';
+      }
+    } catch (e) {
+      print('Error fetching supplier name: $e');
+    }
+
+    await createNotification(
+      title: 'Auto-Order Created',
+      message: 'An automatic order for $quantity $productName has been sent to $supplierName due to low stock (current: $currentStock, threshold: $threshold)',
+      type: NotificationType.stockThreshold,
+      recipientEmail: vendorEmail,
+      senderEmail: supplierEmail,
+      orderId: orderId,
     );
   }
 } 

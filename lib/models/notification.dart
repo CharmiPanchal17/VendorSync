@@ -1,3 +1,4 @@
+// Trigger rebuild: file touched to clear build cache issues
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum NotificationType {
@@ -5,15 +6,10 @@ enum NotificationType {
   orderStatusChanged,
   orderDelivered,
   supplierAdded,
+
   thresholdAlert,
   stockLow,
   stockCritical,
-  general
-}
-
-class AppNotification {
-  final String id;
-  final String title;
   final String message;
   final NotificationType type;
   final String recipientEmail;
@@ -23,8 +19,7 @@ class AppNotification {
   final int? stockLevel;
   final int? thresholdLevel;
   final DateTime createdAt;
-  final bool isRead;
-  final Map<String, dynamic>? actionData;
+
 
   AppNotification({
     required this.id,
@@ -39,8 +34,7 @@ class AppNotification {
     this.thresholdLevel,
     required this.createdAt,
     this.isRead = false,
-    this.actionData,
-  });
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -55,11 +49,20 @@ class AppNotification {
       'thresholdLevel': thresholdLevel,
       'createdAt': createdAt,
       'isRead': isRead,
-      'actionData': actionData,
+
     };
   }
 
   factory AppNotification.fromMap(String id, Map<String, dynamic> map) {
+    DateTime createdAt;
+    if (map['createdAt'] is Timestamp) {
+      createdAt = (map['createdAt'] as Timestamp).toDate();
+    } else if (map['createdAt'] is DateTime) {
+      createdAt = map['createdAt'] as DateTime;
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return AppNotification(
       id: id,
       title: map['title'] ?? '',
@@ -70,7 +73,7 @@ class AppNotification {
       ),
       recipientEmail: map['recipientEmail'] ?? '',
       senderEmail: map['senderEmail'],
-      orderId: map['orderId'],
+
       productName: map['productName'],
       stockLevel: map['stockLevel'],
       thresholdLevel: map['thresholdLevel'],

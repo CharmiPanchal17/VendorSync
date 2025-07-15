@@ -413,7 +413,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                         ),
                                       
                                       // Supplier Selection Dropdown
-                                      Container(
+                                      SizedBox(
                                         width: double.infinity,
                                         child: DropdownButtonFormField<String>(
                                           decoration: InputDecoration(
@@ -598,7 +598,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                                   ),
                                                 ),
                                               );
-                                            }).toList(),
+                                            }),
                                           ],
                                           onChanged: (value) {
                                             print('Dropdown changed to: $value'); // Debug print
@@ -794,6 +794,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: maroon.withOpacity(0.3)),
                             ),
+
                             child: Text(
                               'You will be notified when stock reaches ${_thresholdController.text}% of initial quantity',
                               style: TextStyle(

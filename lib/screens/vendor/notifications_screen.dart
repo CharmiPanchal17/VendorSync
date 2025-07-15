@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification.dart';
 import 'package:intl/intl.dart';
+import '../../services/sales_service.dart'; // Added import for SalesService
+
+const _maroonVendor = Color(0xFF800000);
+const _lightCyanVendor = Color(0xFFAFFFFF);
 
 class VendorNotificationsScreen extends StatefulWidget {
   final String vendorEmail;
@@ -17,7 +21,8 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const maroonNotification = Color(0xFF800000);
+
+    const maroonNotification = Color(0xFF8000
     
     return Scaffold(
       appBar: AppBar(
@@ -33,6 +38,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               end: Alignment.bottomRight,
               colors: isDark 
                 ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+
                 : [maroonNotification, maroonNotification.withOpacity(0.8)],
             ),
           ),
@@ -125,7 +131,9 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+
                           color: isDark ? colorScheme.onSurface : maroonNotification,
+
                         ),
                       ),
                     ],
@@ -172,7 +180,9 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+
                           color: isDark ? colorScheme.onSurface : maroonNotification,
+
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -181,7 +191,8 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroonNotification.withOpacity(0.7),
+
+                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroonNotification.withOpac
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -196,6 +207,7 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               itemCount: notifications.length,
               itemBuilder: (context, index) {
                 final notification = notifications[index];
+
                 return _buildNotificationCard(notification, isDark);
               },
             );
@@ -282,7 +294,9 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
                         fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                         color: notification.isRead 
                             ? (isDark ? colorScheme.onSurface.withOpacity(0.6) : Colors.grey.shade600)
+
                                                 : (isDark ? colorScheme.onSurface : maroonNotification),
+
                       ),
                     ),
                     subtitle: Column(
@@ -487,12 +501,14 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
         return Icons.local_shipping;
       case NotificationType.supplierAdded:
         return Icons.person_add;
+
       case NotificationType.thresholdAlert:
         return Icons.warning_amber;
       case NotificationType.stockLow:
         return Icons.info;
       case NotificationType.stockCritical:
         return Icons.warning;
+
       case NotificationType.general:
         return Icons.notifications;
     }
@@ -553,6 +569,92 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleOrderNow(AppNotification notification) async {
+    final productName = notification.title.replaceFirst('Stock Alert: ', '');
+    final quantity = notification.suggestedQuantity ?? 1;
+    final supplierName = notification.supplierName;
+    final supplierEmail = notification.supplierEmail;
+    final vendorEmail = notification.recipientEmail;
+    await SalesService.placeAutomaticOrder(
+      productName: productName,
+      quantity: quantity,
+      supplierName: supplierName,
+      supplierEmail: supplierEmail,
+      vendorEmail: vendorEmail,
+    );
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _maroonVendor,
+        title: const Text('Order Placed', style: TextStyle(color: Colors.white)),
+        content: Text('Order for $quantity units has been placed successfully!', style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK', style: TextStyle(color: _lightCyanVendor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleAdjustQuantity(AppNotification notification) async {
+    int quantity = notification.suggestedQuantity ?? 1;
+    final controller = TextEditingController(text: quantity.toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _maroonVendor,
+        title: const Text('Adjust Quantity', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Quantity'),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: _lightCyanVendor)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: _lightCyanVendor, foregroundColor: _maroonVendor),
+            onPressed: () async {
+              quantity = int.tryParse(controller.text) ?? 1;
+              Navigator.of(context).pop();
+              final productName = notification.title.replaceFirst('Stock Alert: ', '');
+              final supplierName = notification.supplierName;
+              final supplierEmail = notification.supplierEmail;
+              final vendorEmail = notification.recipientEmail;
+              await SalesService.placeAutomaticOrder(
+                productName: productName,
+                quantity: quantity,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
+                vendorEmail: vendorEmail,
+              );
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: _maroonVendor,
+                  title: const Text('Order Placed', style: TextStyle(color: Colors.white)),
+                  content: Text('Order for $quantity units has been placed successfully!', style: TextStyle(color: Colors.white)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK', style: TextStyle(color: _lightCyanVendor)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Place Order'),
+          ),
+        ],
       ),
     );
   }

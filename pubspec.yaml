@@ -40,6 +40,12 @@ dependencies:
   cloud_firestore: ^4.13.6
   table_calendar: ^3.0.9
   fl_chart: ^0.66.0
+  file_picker: ^8.0.0+1
+  csv: ^5.0.2
+  pdf: ^3.10.4
+  printing: ^5.11.0
+  flutter_svg: ^2.0.9
+  excel: ^2.0.6
   firebase_auth: ^4.17.4
   excel: ^2.1.0
 
