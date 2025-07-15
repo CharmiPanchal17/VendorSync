@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -28,10 +30,11 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
       });
       _formKey.currentState!.reset();
       // Save to Firestore
+      final hashedPassword = sha256.convert(utf8.encode(suppliers.last['password']!)).toString();
       await FirebaseFirestore.instance.collection('suppliers').add({
         'name': suppliers.last['name'],
         'email': suppliers.last['email'],
-        'password': suppliers.last['password'],
+        'password': hashedPassword, // Store hashed password
         'vendorEmail': widget.vendorEmail,
         'createdAt': FieldValue.serverTimestamp(),
       });

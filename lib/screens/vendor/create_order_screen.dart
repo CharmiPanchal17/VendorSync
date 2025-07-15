@@ -1,484 +1,1427 @@
 import 'package:flutter/material.dart';
-import '../../mock_data/mock_users.dart';
-import '../../models/user.dart';
-import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import '../../services/notification_service.dart';
 
-class VendorCreateOrderScreen extends StatefulWidget {
+const maroon = Color(0xFF800000);
+const lightCyan = Color(0xFFAFFFFF);
+
+class CreateOrderScreen extends StatefulWidget {
   final String vendorEmail;
-  const VendorCreateOrderScreen({super.key, required this.vendorEmail});
+  
+  const CreateOrderScreen({super.key, required this.vendorEmail});
 
   @override
-  State<VendorCreateOrderScreen> createState() => _VendorCreateOrderScreenState();
+  State<CreateOrderScreen> createState() => _CreateOrderScreenState();
 }
 
-class _VendorCreateOrderScreenState extends State<VendorCreateOrderScreen> {
+class _CreateOrderScreenState extends State<CreateOrderScreen> {
   final _formKey = GlobalKey<FormState>();
-  String productName = '';
-  int quantity = 1;
-  User? selectedSupplier;
-  DateTime? preferredDate;
-  List<User> firestoreSuppliers = [];
+  final _productNameController = TextEditingController();
+  final _quantityController = TextEditingController();
+  final _thresholdController = TextEditingController();
+  
+  // Supplier selection
+  String? _selectedSupplierId;
+  String? _selectedSupplierName;
+  String? _selectedSupplierEmail;
+  
+  DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
   bool _isLoading = false;
   String? _errorMessage;
+  String? _successMessage;
+  
+  // Auto-order settings
+  // Remove auto-ordering toggle and related logic
+  // 1. Remove the _enableAutoOrder variable and its usage
+  // 2. Remove SwitchListTile for enabling auto-ordering
+  // 3. Always show the threshold field and make it required
+  // 4. Remove auto-ordering references in dialogs and order creation
+  // Remove: bool _enableAutoOrder = true;
+  // Remove: int _autoOrderQuantity = 0;
+  // Remove: SwitchListTile for enabling auto-ordering
+  // In the threshold TextFormField, remove if (_enableAutoOrder) ... and always show it
+  // In the validator, remove the _enableAutoOrder check, always require threshold
+  // In _createOrder, remove all _enableAutoOrder and autoOrderEnabled logic
+  // In the success dialog, remove auto-ordering info
 
   @override
   void initState() {
     super.initState();
-    _fetchSuppliers();
+    // Set default threshold to 30% of initial quantity
+    _thresholdController.text = '30';
   }
 
-  Future<void> _fetchSuppliers() async {
-    // Get supplier IDs from vendor_suppliers
-    final vendorSuppliersQuery = await FirebaseFirestore.instance
-        .collection('vendor_suppliers')
-        .where('vendorEmail', isEqualTo: widget.vendorEmail)
-        .get();
-    final supplierIds = vendorSuppliersQuery.docs.map((doc) => doc['supplierId'] as String).toList();
-    if (supplierIds.isEmpty) {
-      setState(() {
-        firestoreSuppliers = [];
-      });
-      return;
-    }
-    // Get supplier details from suppliers collection
-    final suppliersQuery = await FirebaseFirestore.instance
-        .collection('suppliers')
-        .where(FieldPath.documentId, whereIn: supplierIds)
-        .get();
-    setState(() {
-      firestoreSuppliers = suppliersQuery.docs.map((doc) => User(
-        id: doc.id,
-        name: doc['name'],
-        email: doc['email'],
-        role: UserRole.supplier,
-      )).toList();
-    });
+  @override
+  void dispose() {
+    _productNameController.dispose();
+    _quantityController.dispose();
+    _thresholdController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Order'),
-        centerTitle: true,
-        elevation: 0,
+        title: const Text('Create Initial Order'),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        elevation: 0,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
-        ),
+        color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
         child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-        child: Card(
-          margin: EdgeInsets.zero,
-                elevation: 0,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero,
-                ),
-                color: Colors.transparent,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Icon(Icons.add_shopping_cart, size: 40, color: Colors.white),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Card
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: maroon.withOpacity(0.2),
+                                child: Icon(Icons.add_shopping_cart, color: maroon),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Create Initial Order',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Set up initial order and auto-ordering',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isDark ? Colors.white70 : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                      const Text(
-                        'Create New Order',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                    Text(
-                        'Fill in the details to create your order',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Form(
-                      key: _formKey,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Product Information Section
+                  _buildSectionHeader('Product Information', Icons.inventory, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                                StreamBuilder<QuerySnapshot>(
-                                  stream: FirebaseFirestore.instance
-                                      .collection('vendor_suppliers')
-                                      .where('vendorEmail', isEqualTo: widget.vendorEmail)
-                                      .snapshots(),
-                                  builder: (context, vendorSuppliersSnapshot) {
-                                    if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey.shade300),
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey.shade50,
-                                        ),
-                                        child: const Row(
-                                          children: [
-                                            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                            SizedBox(width: 12),
-                                            Text('Loading suppliers...'),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
-                                    final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
-                                    if (supplierIds.isEmpty) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.shade50,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: Colors.red.shade200),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.warning, color: Colors.red.shade600, size: 20),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                'No suppliers found. Please add a supplier first.',
-                                                style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    return StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('suppliers')
-                                          .where(FieldPath.documentId, whereIn: supplierIds)
-                                          .snapshots(),
-                                      builder: (context, suppliersSnapshot) {
-                                        if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
-                                          return Container(
-                                            padding: const EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(color: Colors.grey.shade300),
-                                              borderRadius: BorderRadius.circular(12),
-                                              color: Colors.grey.shade50,
-                                            ),
-                                            child: const Row(
-                                              children: [
-                                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                                SizedBox(width: 12),
-                                                Text('Loading suppliers...'),
-                                              ],
-                                            ),
-                                          );
-                                        }
-                                        final supplierDocs = suppliersSnapshot.data?.docs ?? [];
-                                        final suppliers = supplierDocs.map((doc) => User(
-                                          id: doc.id,
-                                          name: doc['name'],
-                                          email: doc['email'],
-                                          role: UserRole.supplier,
-                                        )).toList();
-                                        return DropdownButtonFormField<User>(
-                                          decoration: InputDecoration(
-                              labelText: 'Select Supplier',
-                                            prefixIcon: Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                                ),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Icon(Icons.person_outline, color: Colors.white, size: 20),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: Colors.grey.shade300),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: BorderSide(color: Colors.grey.shade300),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.grey.shade50,
-                                          ),
-                                          value: selectedSupplier != null && suppliers.any((s) => s.id == selectedSupplier!.id)
-                                              ? suppliers.firstWhere((s) => s.id == selectedSupplier!.id)
-                                              : null,
-                                          items: suppliers
-                                .map((s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text(s.name),
-                                    ))
-                                .toList(),
-                            onChanged: (val) => setState(() => selectedSupplier = val),
-                            validator: (val) => val == null ? 'Select supplier' : null,
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Product Name',
-                                    prefixIcon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey.shade50,
-                                  ),
-                                  onChanged: (val) => productName = val,
-                                  validator: (val) => val == null || val.isEmpty ? 'Enter product name' : null,
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Quantity',
-                                    prefixIcon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.numbers, color: Colors.white, size: 20),
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey.shade50,
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (val) => quantity = int.tryParse(val) ?? 1,
-                                  validator: (val) => val == null || val.isEmpty ? 'Enter quantity' : null,
-                                ),
-                                const SizedBox(height: 20),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.grey.shade50,
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    leading: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF2196F50), Color(0xFF43E97B)],
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(Icons.calendar_today, color: Colors.white, size: 20),
-                                    ),
-                                    title: Text(
-                                      preferredDate == null
-                                          ? 'Preferred Delivery Date'
-                                          : 'Preferred Delivery Date: ${DateFormat.yMMMd().format(preferredDate!)}',
-                                      style: TextStyle(
-                                        color: preferredDate == null ? Colors.grey.shade600 : Colors.black,
-                                        fontWeight: preferredDate == null ? FontWeight.normal : FontWeight.w500,
-                                      ),
-                                    ),
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                        builder: (context, child) {
-                                          return Theme(
-                                            data: Theme.of(context).copyWith(
-                                              colorScheme: const ColorScheme.light(
-                                                primary: Color(0xFF2196F3),
-                                                onPrimary: Colors.white,
-                                                surface: Colors.white,
-                                                onSurface: Colors.black,
-                                              ),
-                                            ),
-                                            child: child!,
-                                          );
-                                        },
-                              );
-                              if (picked != null) {
-                                setState(() => preferredDate = picked);
+                          TextFormField(
+                            controller: _productNameController,
+                            decoration: _buildInputDecoration(
+                              'Product Name',
+                              Icons.inventory,
+                              isDark,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter product name';
                               }
+                              return null;
                             },
                           ),
-                                ),
-                                const SizedBox(height: 32),
-                          FilledButton.icon(
-                                  icon: _isLoading 
-                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Icon(Icons.check_circle),
-                                  label: _isLoading ? const Text('Creating Order...') : const Text('Create Order'),
-                                  style: FilledButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: const Color(0xFF2196F3),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    elevation: 2,
-                                  ),
-                            onPressed: _isLoading ? null : () async {
-                              if (_formKey.currentState!.validate() && preferredDate != null) {
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-                                try {
-                                  await FirebaseFirestore.instance.collection('orders').add({
-                                    'productName': productName,
-                                    'quantity': quantity,
-                                    'supplierId': selectedSupplier?.id,
-                                    'supplierName': selectedSupplier?.name,
-                                    'supplierEmail': selectedSupplier?.email,
-                                    'vendorEmail': widget.vendorEmail,
-                                    'preferredDeliveryDate': preferredDate,
-                                    'status': 'Pending',
-                                    'createdAt': FieldValue.serverTimestamp(),
-                                  });
-                                  setState(() => _isLoading = false);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: const Text('Order created successfully!'),
-                                              backgroundColor: Colors.green,
-                                              behavior: SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            ),
-                                          );
-                                  Navigator.of(context).pop();
-                                        }
-                                } catch (e) {
-                                  setState(() {
-                                    _isLoading = false;
-                                    _errorMessage = 'Failed to create order. Please try again.';
-                                  });
-                                }
-                                    } else if (preferredDate == null) {
-                                      setState(() {
-                                        _errorMessage = 'Please select a preferred delivery date.';
-                                      });
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _quantityController,
+                            decoration: _buildInputDecoration(
+                              'Initial Quantity',
+                              Icons.format_list_numbered,
+                              isDark,
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter initial quantity';
                               }
+                              final quantity = int.tryParse(value);
+                              if (quantity == null || quantity <= 0) {
+                                return 'Please enter a valid quantity';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              // _updateAutoOrderQuantity(); // No longer needed
                             },
                           ),
-                          if (_errorMessage != null) ...[
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.shade50,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.red.shade200),
-                                    ),
-                                    child: Row(
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Supplier Information Section
+                  _buildSectionHeader('Supplier Information', Icons.person, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('vendor_suppliers')
+                                .where('vendorEmail', isEqualTo: widget.vendorEmail)
+                                .snapshots(),
+                            builder: (context, vendorSuppliersSnapshot) {
+                              if (vendorSuppliersSnapshot.connectionState == ConnectionState.waiting) {
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  child: const Center(
+                                    child: Column(
                                       children: [
-                                        Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            _errorMessage!,
-                                            style: TextStyle(color: Colors.red.shade700, fontSize: 14),
-                                          ),
-                                        ),
+                                        CircularProgressIndicator(),
+                                        SizedBox(height: 8),
+                                        Text('Loading suppliers...'),
                                       ],
                                     ),
                                   ),
-                                ],
-                              ],
-                            ),
+                                );
+                              }
+                              
+                              if (vendorSuppliersSnapshot.hasError) {
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Error loading suppliers',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Error: ${vendorSuppliersSnapshot.error}',
+                                        style: TextStyle(color: Colors.red, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final vendorSupplierDocs = vendorSuppliersSnapshot.data?.docs ?? [];
+                              
+                              if (vendorSupplierDocs.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'No suppliers found',
+                                              style: TextStyle(
+                                                color: Colors.orange,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Please add suppliers from the "My Suppliers" page first.',
+                                        style: TextStyle(
+                                          color: Colors.orange.withOpacity(0.8),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).pushNamed('/vendor-suppliers', arguments: widget.vendorEmail);
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        label: const Text('Add Suppliers'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: maroon,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              
+                              final supplierIds = vendorSupplierDocs.map((doc) => doc['supplierId'] as String).toList();
+                              
+                              return StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('suppliers')
+                                    .where(FieldPath.documentId, whereIn: supplierIds)
+                                    .snapshots(),
+                                builder: (context, suppliersSnapshot) {
+                                  if (suppliersSnapshot.connectionState == ConnectionState.waiting) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: const Center(
+                                        child: Column(
+                                          children: [
+                                            CircularProgressIndicator(),
+                                            SizedBox(height: 8),
+                                            Text('Loading supplier details...'),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  
+                                  if (suppliersSnapshot.hasError) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  'Error loading supplier details',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Error: ${suppliersSnapshot.error}',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  final supplierDocs = suppliersSnapshot.data?.docs ?? [];
+                                  
+                                  if (supplierDocs.isEmpty) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.error_outline, color: Colors.red, size: 20),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  'No supplier data found',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Found ${supplierIds.length} supplier IDs but no supplier data.',
+                                            style: TextStyle(color: Colors.red, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Debug info (remove in production)
+                                      if (supplierDocs.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          margin: const EdgeInsets.only(bottom: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            'Found ${supplierDocs.length} suppliers',
+                                            style: TextStyle(fontSize: 12, color: Colors.blue),
+                                          ),
+                                        ),
+                                      
+                                      // Supplier Selection Dropdown
+                                      Container(
+                                        width: double.infinity,
+                                        child: DropdownButtonFormField<String>(
+                                          decoration: InputDecoration(
+                                            labelText: 'Select Supplier',
+                                            labelStyle: TextStyle(
+                                              color: isDark ? Colors.white70 : Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            prefixIcon: Container(
+                                              margin: const EdgeInsets.only(right: 8),
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: maroon.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Icon(Icons.person, color: maroon, size: 20),
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(color: maroon, width: 2),
+                                            ),
+                                            filled: true,
+                                            fillColor: isDark ? Colors.white10 : Colors.white,
+                                          ),
+                                          value: _selectedSupplierId,
+
+                                          items: [
+                                            // Add a placeholder item
+                                            DropdownMenuItem<String>(
+                                              value: null,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                                child: Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Text(
+                                                      _selectedSupplierId == null 
+                                                          ? 'Choose a supplier...'
+                                                          : 'Change supplier...',
+                                                      style: TextStyle(
+                                                        color: isDark ? Colors.white70 : Colors.grey[600],
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            // Add actual supplier items
+                                            ...supplierDocs.map((doc) {
+                                              final data = doc.data() as Map<String, dynamic>;
+                                              final supplierName = data['name'] ?? 'Unknown Supplier';
+                                              final supplierEmail = data['email'] ?? 'No email';
+                                              final supplierPhone = data['phone'] ?? '';
+                                              
+                                              return DropdownMenuItem<String>(
+                                                value: doc.id,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      bottom: BorderSide(
+                                                        color: isDark ? Colors.white10 : Colors.grey.shade200,
+                                                        width: 0.5,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      // Supplier Avatar
+                                                      Container(
+                                                        width: 40,
+                                                        height: 40,
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.2),
+                                                          borderRadius: BorderRadius.circular(20),
+                                                        ),
+                                                        child: Center(
+                                                          child: Text(
+                                                            supplierName.isNotEmpty ? supplierName[0].toUpperCase() : 'S',
+                                                            style: TextStyle(
+                                                              color: maroon,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      // Supplier Details
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Text(
+                                                              supplierName,
+                                                              style: TextStyle(
+                                                                color: isDark ? Colors.white : Colors.black87,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 14,
+                                                              ),
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                            const SizedBox(height: 2),
+                                                            Row(
+                                                              children: [
+                                                                Icon(
+                                                                  Icons.email_outlined,
+                                                                  size: 12,
+                                                                  color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                ),
+                                                                const SizedBox(width: 4),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    supplierEmail,
+                                                                    style: TextStyle(
+                                                                      color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                      fontSize: 12,
+                                                                    ),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            if (supplierPhone.isNotEmpty) ...[
+                                                              const SizedBox(height: 2),
+                                                              Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons.phone_outlined,
+                                                                    size: 12,
+                                                                    color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                  ),
+                                                                  const SizedBox(width: 4),
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      supplierPhone,
+                                                                      style: TextStyle(
+                                                                        color: isDark ? Colors.white60 : Colors.grey[600],
+                                                                        fontSize: 12,
+                                                                      ),
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      // Selection indicator
+                                                      Container(
+                                                        padding: const EdgeInsets.all(4),
+                                                        decoration: BoxDecoration(
+                                                          color: maroon.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.check_circle_outline,
+                                                          color: maroon,
+                                                          size: 16,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ],
+                                          onChanged: (value) {
+                                            print('Dropdown changed to: $value'); // Debug print
+                                            if (value != null) {
+                                              final selectedDoc = supplierDocs.firstWhere((doc) => doc.id == value);
+                                              final data = selectedDoc.data() as Map<String, dynamic>;
+                                              setState(() {
+                                                _selectedSupplierId = value;
+                                                _selectedSupplierName = data['name'] ?? 'Unknown Supplier';
+                                                _selectedSupplierEmail = data['email'] ?? 'No email';
+                                              });
+                                              print('Selected supplier: $_selectedSupplierName ($_selectedSupplierEmail)'); // Debug print
+                                            } else {
+                                              setState(() {
+                                                _selectedSupplierId = null;
+                                                _selectedSupplierName = null;
+                                                _selectedSupplierEmail = null;
+                                              });
+                                            }
+                                          },
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'Please select a supplier';
+                                            }
+                                            return null;
+                                          },
+                                          menuMaxHeight: 300,
+                                          isExpanded: true,
+                                          dropdownColor: isDark ? const Color(0xFF3D3D3D) : Colors.white,
+                                          icon: Icon(
+                                            Icons.arrow_drop_down,
+                                            color: maroon,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      if (_selectedSupplierName != null && _selectedSupplierEmail != null) ...[
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: maroon.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: maroon.withOpacity(0.3)),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.check_circle, color: maroon, size: 20),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    'Selected Supplier',
+                                                    style: TextStyle(
+                                                      color: maroon,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Name: $_selectedSupplierName',
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.white : Colors.black87,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Email: $_selectedSupplierEmail',
+                                                style: TextStyle(
+                                                  color: isDark ? Colors.white70 : Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
+                              );
+                            },
                           ),
+                        ],
                       ),
                     ),
-                  ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  
+                  // Delivery Information Section
+                  _buildSectionHeader('Delivery Information', Icons.local_shipping, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: InkWell(
+                        onTap: () => _selectDeliveryDate(context, isDark),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: maroon.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.calendar_today, color: maroon),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Preferred Delivery Date',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark ? Colors.white70 : Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat.yMMMd().format(_preferredDeliveryDate),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios, size: 16, color: isDark ? Colors.white70 : Colors.grey[600]),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Auto-Order Settings Section
+                  _buildSectionHeader('Set Threshold', Icons.settings, isDark),
+                  const SizedBox(height: 16),
+                  
+                  Card(
+                    color: isDark ? Colors.white10 : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          // Remove auto-ordering toggle and related logic
+                          // 1. Remove the _enableAutoOrder variable and its usage
+                          // 2. Remove SwitchListTile for enabling auto-ordering
+                          // 3. Always show the threshold field and make it required
+                          // 4. Remove auto-ordering references in dialogs and order creation
+                          // Remove: bool _enableAutoOrder = true;
+                          // Remove: int _autoOrderQuantity = 0;
+                          // Remove: SwitchListTile for enabling auto-ordering
+                          // In the threshold TextFormField, remove if (_enableAutoOrder) ... and always show it
+                          // In the validator, remove the _enableAutoOrder check, always require threshold
+                          // In _createOrder, remove all _enableAutoOrder and autoOrderEnabled logic
+                          // In the success dialog, remove auto-ordering info
+                          TextFormField(
+                            controller: _thresholdController,
+                            decoration: _buildInputDecoration(
+                              'Set Threshold (%)',
+                              Icons.warning,
+                              isDark,
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter threshold percentage';
+                              }
+                              final threshold = int.tryParse(value);
+                              if (threshold == null || threshold <= 0 || threshold >= 100) {
+                                return 'Please enter a valid percentage (1-99)';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              setState(() {});
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: maroon.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: maroon.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              'You will be notified when stock reaches ${_thresholdController.text}% of initial quantity',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: maroon,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Error/Success Messages
+                  if (_errorMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  if (_successMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _successMessage!,
+                              style: const TextStyle(color: Colors.green),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Create Order Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return;
+                        }
+                        final productName = _productNameController.text.trim();
+                        final quantity = _quantityController.text.trim();
+                        final supplierName = _selectedSupplierName ?? '';
+                        final supplierEmail = _selectedSupplierEmail ?? '';
+                        // final autoOrderEnabled = _enableAutoOrder; // No longer needed
+                        final threshold = _thresholdController.text.trim();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirm Order'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Product: $productName'),
+                                Text('Quantity: $quantity'),
+                                Text('Supplier: $supplierName'),
+                                Text('Supplier Email: $supplierEmail'),
+                                // Text('Auto Re-ordering: ${autoOrderEnabled ? 'Enabled' : 'Disabled'}'), // No longer needed
+                                if (false) // Always show threshold
+                                  Text('Auto Order Threshold: $threshold'),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: maroon, foregroundColor: Colors.white),
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('Confirm'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          _createOrder();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: maroon,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Create Order',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 100), // Extra space for floating action button
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon, bool isDark) {
+    return Row(
+      children: [
+        Icon(icon, color: maroon, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String label, IconData icon, bool isDark) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.white70 : Colors.grey[600],
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: maroon.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: maroon, size: 20),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: maroon, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: isDark ? Colors.white10 : Colors.white,
+    );
+  }
+
+  Future<void> _selectDeliveryDate(BuildContext context, bool isDark) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _preferredDeliveryDate,
+      firstDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: isDark ? Colors.white : maroon,
+              onPrimary: isDark ? Colors.black : Colors.white,
+              surface: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+              onSurface: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _preferredDeliveryDate = picked;
+      });
+    }
+  }
+
+  void _updateAutoOrderQuantity() {
+    final quantity = int.tryParse(_quantityController.text);
+    final threshold = int.tryParse(_thresholdController.text);
+    
+    if (quantity != null && threshold != null && threshold > 0 && threshold < 100) {
+      setState(() {
+        // _autoOrderQuantity = (quantity * threshold / 100).round(); // No longer needed
+      });
+    }
+  }
+
+  Future<void> _createOrder() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
+
+    try {
+      final quantity = int.parse(_quantityController.text);
+      final threshold = int.parse(_thresholdController.text);
+      
+      // Create the order document
+      final orderRef = await FirebaseFirestore.instance.collection('orders').add({
+        'productName': _productNameController.text.trim(),
+        'quantity': quantity,
+        'supplierName': _selectedSupplierName,
+        'supplierEmail': _selectedSupplierEmail,
+        'vendorEmail': widget.vendorEmail,
+        'status': 'Pending',
+        'preferredDeliveryDate': _preferredDeliveryDate,
+        'threshold': threshold,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create product inventory record for auto-ordering
+      await FirebaseFirestore.instance.collection('product_inventory').add({
+        'productName': _productNameController.text.trim(),
+        'supplierName': _selectedSupplierName,
+        'supplierEmail': _selectedSupplierEmail,
+        'vendorEmail': widget.vendorEmail,
+        'initialQuantity': quantity,
+        'currentStock': quantity,
+        'lowStockThreshold': threshold,
+        // 'autoOrderEnabled': _enableAutoOrder, // No longer needed
+        // 'autoOrderQuantity': _autoOrderQuantity, // No longer needed
+        'lastOrderId': orderRef.id,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Send notification to supplier
+      await NotificationService.notifySupplierOfNewOrder(
+        vendorEmail: widget.vendorEmail,
+        supplierEmail: _selectedSupplierEmail!,
+        orderId: orderRef.id,
+        productName: _productNameController.text.trim(),
+        quantity: quantity,
+      );
+
+      setState(() {
+        _isLoading = false;
+        _successMessage = 'Order created successfully! Supplier has been notified.';
+      });
+
+      // Show success dialog BEFORE clearing form fields
+      if (context.mounted) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _buildSuccessDialog(context, orderRef.id, isDark),
+        );
+      }
+
+      // Clear form after successful creation
+      _formKey.currentState!.reset();
+      _productNameController.clear();
+      _quantityController.clear();
+      _thresholdController.text = '30';
+      _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
+      // _enableAutoOrder = true; // No longer needed
+      // _autoOrderQuantity = 0; // No longer needed
+      _selectedSupplierId = null;
+      _selectedSupplierName = null;
+      _selectedSupplierEmail = null;
+
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to create order. Please try again.';
+      });
+    }
+  }
+
+  Widget _buildSuccessDialog(BuildContext context, String orderId, bool isDark) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [Colors.white, Colors.grey.shade50],
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+            // Success Animation Container
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [maroon, maroon.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: maroon.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 50,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Success Title
+            Text(
+              'Order Created Successfully!',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            
+            // Success Message
+            Text(
+              'Your order has been placed and the supplier has been notified.',
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white70 : Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            
+            // Order Details Card
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: maroon.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: maroon.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Product Info
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.inventory, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Product',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _productNameController.text.trim(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                                     const SizedBox(height: 10),
+                   
+                   // Order ID
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.receipt, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Order ID',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              orderId,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: maroon,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                                     ),
+                   const SizedBox(height: 10),
+                   
+                   // Supplier Info
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: maroon.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.person, color: maroon, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Supplier',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.white60 : Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _selectedSupplierName ?? 'Unknown',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            if (_selectedSupplierEmail != null && _selectedSupplierEmail!.isNotEmpty)
+                              Text(
+                                _selectedSupplierEmail!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.white60 : Colors.grey[600],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                   
+                   // Auto-order info if enabled
+                   // if (_enableAutoOrder) ...[ // No longer needed
+                   //   const SizedBox(height: 10),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.green.withOpacity(0.2),
+                  //     borderRadius: BorderRadius.circular(20),
+                  //     border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  //   ),
+                  //   child: Row(
+                  //     mainAxisSize: MainAxisSize.min,
+                  //     children: [
+                  //       Icon(Icons.auto_awesome, color: Colors.green, size: 16),
+                  //       const SizedBox(width: 6),
+                  //       Text(
+                  //         'Auto-ordering enabled',
+                  //         style: TextStyle(
+                  //           color: Colors.green,
+                  //           fontWeight: FontWeight.w600,
+                  //           fontSize: 12,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/vendor-dashboard', arguments: widget.vendorEmail);
+                    },
+                    icon: const Icon(Icons.dashboard),
+                    label: const Text('Go to Dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: maroon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Another'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: maroon,
+                      side: BorderSide(color: maroon),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+);
   }
 } 
