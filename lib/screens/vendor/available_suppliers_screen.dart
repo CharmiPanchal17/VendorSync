@@ -1,42 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Rename color constant to avoid export conflicts
+const maroonPopupAvailableSuppliers = Color(0xFF800000);
+
 class AvailableSuppliersScreen extends StatelessWidget {
   final String vendorEmail;
   const AvailableSuppliersScreen({super.key, required this.vendorEmail});
 
-  @override
+  @override 
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const maroon = Color(0xFF800000);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Available Suppliers'),
+        title: const Text('Available Suppliers', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2196F3), // Blue
-                Color(0xFF43E97B), // Green
-              ],
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [maroon, maroon.withOpacity(0.8)],
             ),
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2196F3), // Blue
-              Color(0xFF43E97B), // Green
-            ],
-          ),
+        decoration: BoxDecoration(
+          color: isDark ? null : const Color(0xFFAFFFFF),
+          gradient: isDark
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)],
+                )
+              : null,
         ),
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -56,27 +63,27 @@ class AvailableSuppliersScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(20),
+                    color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red),
-                      SizedBox(height: 16),
+                      Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                      const SizedBox(height: 16),
                       Text(
                         'Error loading your suppliers',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: isDark ? colorScheme.onSurface : maroon,
                         ),
                       ),
                     ],
@@ -104,27 +111,27 @@ class AvailableSuppliersScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
+                        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: const Column(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline, size: 48, color: Colors.red),
-                          SizedBox(height: 16),
+                          Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                          const SizedBox(height: 16),
                           Text(
                             'Error loading available suppliers',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                         ],
@@ -138,13 +145,13 @@ class AvailableSuppliersScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(24),
+                        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
@@ -154,20 +161,22 @@ class AvailableSuppliersScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF2196F3), Color(0xFF43E97B)],
+                              gradient: LinearGradient(
+                                colors: isDark 
+                                  ? [colorScheme.primary, colorScheme.secondary]
+                                  : [maroon, maroon.withOpacity(0.8)],
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(Icons.people_outline, size: 48, color: Colors.white),
                           ),
                           const SizedBox(height: 24),
-                          const Text(
+                          Text(
                             'No Suppliers Available',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: isDark ? colorScheme.onSurface : maroon,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -175,7 +184,8 @@ class AvailableSuppliersScreen extends StatelessWidget {
                             'Suppliers need to register first before they appear here',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? colorScheme.onSurface.withOpacity(0.7) : maroon.withOpacity(0.7),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -197,20 +207,13 @@ class AvailableSuppliersScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF4CAF50), // Green
-                              Color(0xFF66BB6A), // Lighter green
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
+                          color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                              color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
                             ),
                           ],
                         ),
@@ -219,18 +222,18 @@ class AvailableSuppliersScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.add_business, size: 32, color: Colors.white),
+                                Icon(Icons.add_business, size: 32, color: isDark ? colorScheme.onSurface : maroon),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Available Suppliers',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: isDark ? colorScheme.onSurface : maroon,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -238,7 +241,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                         '${availableSuppliers.length} supplier${availableSuppliers.length == 1 ? '' : 's'} available to add',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: Colors.white.withOpacity(0.8),
+                                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                         ),
                                       ),
                                     ],
@@ -247,14 +250,16 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: isDark ? colorScheme.primary.withOpacity(0.2) : Colors.green.shade50,
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                    border: Border.all(
+                                      color: isDark ? colorScheme.primary.withOpacity(0.3) : Colors.green.shade200,
+                                    ),
                                   ),
                                   child: Text(
                                     '${availableSuppliers.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: isDark ? colorScheme.primary : Colors.green.shade700,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                     ),
@@ -269,9 +274,9 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.white.withOpacity(0.3),
-                                      Colors.white.withOpacity(0.1),
-                                      Colors.white.withOpacity(0.3),
+                                      isDark ? colorScheme.primary.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+                                      isDark ? colorScheme.primary.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                                      isDark ? colorScheme.primary.withOpacity(0.3) : Colors.green.withOpacity(0.3),
                                     ],
                                   ),
                                 ),
@@ -279,13 +284,13 @@ class AvailableSuppliersScreen extends StatelessWidget {
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  const Icon(Icons.check_circle, size: 20, color: Colors.white),
+                                  Icon(Icons.check_circle, size: 20, color: isDark ? colorScheme.primary : Colors.green.shade600),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${addedSuppliers.length} supplier${addedSuppliers.length == 1 ? '' : 's'} already added',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                     ),
                                   ),
                                 ],
@@ -303,7 +308,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isDark ? colorScheme.onSurface : Colors.white,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -316,11 +321,11 @@ class AvailableSuppliersScreen extends StatelessWidget {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.95),
-                                  borderRadius: BorderRadius.circular(20),
+                                  color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
                                       offset: const Offset(0, 5),
                                     ),
@@ -331,8 +336,10 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                   leading: Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                                      gradient: LinearGradient(
+                                        colors: isDark 
+                                          ? [colorScheme.primary, colorScheme.secondary]
+                                          : [maroon, maroon.withOpacity(0.8)],
                                       ),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
@@ -340,10 +347,10 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                   ),
                                   title: Text(
                                     data['name'] ?? 'Unknown Supplier',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Color(0xFF1A1A1A),
+                                      color: isDark ? colorScheme.onSurface : maroon,
                                     ),
                                   ),
                                   subtitle: Column(
@@ -353,7 +360,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                       Text(
                                         data['email'] ?? 'No email provided',
                                         style: TextStyle(
-                                          color: Colors.grey.shade600,
+                                          color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -361,9 +368,11 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                   ),
                                   trailing: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.green.shade50,
+                                      color: isDark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.green.shade200),
+                                      border: Border.all(
+                                        color: isDark ? Colors.green.shade400 : Colors.green.shade200,
+                                      ),
                                     ),
                                     child: IconButton(
                                       icon: Icon(Icons.add_circle, color: Colors.green.shade600, size: 24),
@@ -372,8 +381,8 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                         final confirm = await showDialog<bool>(
                                           context: context,
                                           builder: (context) => AlertDialog(
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                            backgroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                            backgroundColor: maroonPopupAvailableSuppliers,
                                             elevation: 20,
                                             contentPadding: const EdgeInsets.all(24),
                                             content: Column(
@@ -382,20 +391,22 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                                 Container(
                                                   padding: const EdgeInsets.all(16),
                                                   decoration: BoxDecoration(
-                                                    gradient: const LinearGradient(
-                                                      colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                                                    gradient: LinearGradient(
+                                                      colors: isDark 
+                                                        ? [colorScheme.primary, colorScheme.secondary]
+                                                        : [maroon, maroon.withOpacity(0.8)],
                                                     ),
                                                     borderRadius: BorderRadius.circular(20),
                                                   ),
                                                   child: const Icon(Icons.person_add, size: 32, color: Colors.white),
                                                 ),
                                                 const SizedBox(height: 20),
-                                                const Text(
+                                                Text(
                                                   'Add Supplier',
                                                   style: TextStyle(
                                                     fontSize: 24,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF1A1A1A),
+                                                    color: isDark ? colorScheme.onSurface : maroon,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 12),
@@ -403,7 +414,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                                   'Are you sure you want to add ${data['name']} to your suppliers list?',
                                                   style: TextStyle(
                                                     fontSize: 16,
-                                                    color: Colors.grey.shade600,
+                                                    color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                                   ),
                                                   textAlign: TextAlign.center,
                                                 ),
@@ -414,13 +425,17 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                                       child: OutlinedButton(
                                                         onPressed: () => Navigator.of(context).pop(false),
                                                         style: OutlinedButton.styleFrom(
-                                                          side: const BorderSide(color: Colors.grey),
+                                                          side: BorderSide(
+                                                            color: isDark ? colorScheme.onSurface.withOpacity(0.3) : Colors.grey,
+                                                          ),
                                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                                           padding: const EdgeInsets.symmetric(vertical: 12),
                                                         ),
-                                                        child: const Text(
+                                                        child: Text(
                                                           'Cancel',
-                                                          style: TextStyle(color: Colors.grey),
+                                                          style: TextStyle(
+                                                            color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -447,7 +462,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                             ),
                                           ),
                                         );
-                                        if (confirm == true) {
+                                        if (confirm == true && vendorEmail.isNotEmpty) {
                                           await FirebaseFirestore.instance.collection('vendor_suppliers').add({
                                             'vendorEmail': vendorEmail,
                                             'supplierId': docId,
@@ -477,13 +492,13 @@ class AvailableSuppliersScreen extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.all(32),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.95),
-                                borderRadius: BorderRadius.circular(24),
+                                color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
+                                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
                                   ),
                                 ],
                               ),
@@ -493,20 +508,22 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+                                      gradient: LinearGradient(
+                                        colors: isDark 
+                                          ? [colorScheme.primary, colorScheme.secondary]
+                                          : [maroon, maroon.withOpacity(0.8)],
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: const Icon(Icons.check_circle, size: 48, color: Colors.white),
                                   ),
                                   const SizedBox(height: 24),
-                                  const Text(
+                                  Text(
                                     'All Suppliers Added!',
                                     style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1A1A1A),
+                                      color: isDark ? colorScheme.onSurface : maroon,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -514,7 +531,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                     'You have added all available suppliers to your network',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey.shade600,
+                                      color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),

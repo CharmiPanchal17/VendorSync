@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +18,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String role = 'vendor';
   bool _isLoading = false;
   String? _errorMessage;
+  bool _passwordVisible = false;
+  final storage = const FlutterSecureStorage();
 
   @override
   void didChangeDependencies() {
@@ -28,25 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    const maroon = Color(0xFF800000);
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
+          // Solid light cyan background to match welcome page
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
-          ),
-          // White overlay to soften the gradient
-          Container(
-            color: Colors.white.withOpacity(0.6),
+            color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
             child: Center(
@@ -71,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: IconButton(
-                                      icon: const Icon(Icons.arrow_back),
+                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
                                       onPressed: () => Navigator.of(context).pop(),
                                     ),
                                   ),
@@ -80,11 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
+                          backgroundColor: const Color(0xFF800000).withOpacity(0.1),
                           child: Icon(
                             role == 'supplier' ? Icons.local_shipping : Icons.store,
                             size: 40,
-                            color: role == 'supplier' ? Colors.green : Colors.blue,
+                            color: Color(0xFF800000),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -92,7 +85,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           role == 'supplier' ? 'Supplier Login' : 'Vendor Login',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: role == 'supplier' ? Colors.green : Colors.blue,
+                            color: Color(0xFF800000),
+                            fontSize: 32,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -102,9 +96,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               children: [
                                 TextFormField(
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     labelText: 'Email',
-                                    prefixIcon: Icon(Icons.email_outlined),
+                                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                    ),
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onChanged: (val) => email = val,
@@ -120,11 +129,34 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 TextFormField(
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     labelText: 'Password',
-                                    prefixIcon: Icon(Icons.lock_outline),
+                                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                      onPressed: () {
+                                        setState(() {
+                                          _passwordVisible = !_passwordVisible;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                  obscureText: true,
+                                  obscureText: !_passwordVisible,
                                   onChanged: (val) => password = val,
                                   validator: (val) {
                                     if (val == null || val.isEmpty) {
@@ -143,22 +175,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: () {
                                       Navigator.of(context).pushNamed('/reset-password', arguments: role);
                                     },
-                                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.red)),
+                                    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold)),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 FilledButton.icon(
-                                  icon: const Icon(Icons.login),
+                                  icon: Icon(Icons.login, color: Colors.white),
                                   label: _isLoading
                                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Text('Login'),
+                                      : const Text('Login', style: TextStyle(fontWeight: FontWeight.bold)),
                                   style: FilledButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                    backgroundColor: Color(0xFF800000),
                                     foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     elevation: 2,
+                                    overlayColor: Color(0xFF0D1333),
                                   ),
                                   onPressed: _isLoading ? null : () async {
                                     if (_formKey.currentState!.validate()) {
@@ -176,8 +209,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                           .get();
                                         if (query.docs.isNotEmpty) {
                                           final user = query.docs.first.data();
-                                          if (user['password'] == password) {
+                                          final hashedInputPassword = sha256.convert(utf8.encode(password)).toString();
+                                          if (user['password'] == hashedInputPassword) {
                                             setState(() => _isLoading = false);
+                                            // Save session info
+                                            await storage.write(key: 'userEmail', value: email);
+                                            await storage.write(key: 'loginTimestamp', value: DateTime.now().millisecondsSinceEpoch.toString());
                                             if (role == 'vendor') {
                                               Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
                                             } else {
@@ -208,18 +245,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(height: 8),
                                   Text(
                                     _errorMessage!,
-                                    style: const TextStyle(color: Colors.red),
+                                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                                 if (role == 'vendor') ...[
                                   const SizedBox(height: 16),
                                   OutlinedButton.icon(
-                                    icon: const Icon(Icons.person_add_alt_1, color: Colors.blue),
-                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Colors.blue)),
+                                    icon: const Icon(Icons.person_add_alt_1, color: Color(0xFF800000)),
+                                    label: const Text('Don\'t have an account? Register', style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold)),
                                     style: OutlinedButton.styleFrom(
                                       minimumSize: const Size.fromHeight(48),
-                                      side: const BorderSide(color: Colors.blue),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      side: const BorderSide(color: Color(0xFF800000)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                       textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     onPressed: () {

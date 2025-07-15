@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -14,6 +16,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool submitted = false;
   String newPassword = '';
   String? _errorMessage;
+  bool _newPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -22,22 +25,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Gradient background
+          // Solid light cyan background to match welcome page
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2196F3), // Blue
-                  Color(0xFF43E97B), // Green
-                ],
-              ),
-            ),
-          ),
-          // White overlay to soften the gradient
-          Container(
-            color: Colors.white.withOpacity(0.6),
+            color: const Color(0xFFAFFFFF),
           ),
           SafeArea(
             child: Center(
@@ -63,7 +53,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                         child: Align(
                                           alignment: Alignment.topLeft,
                                           child: IconButton(
-                                            icon: const Icon(Icons.arrow_back),
+                                            icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
                                             onPressed: () => Navigator.of(context).pop(),
                                           ),
                                         ),
@@ -72,24 +62,48 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               CircleAvatar(
                                 radius: 40,
-                                backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
-                                child: Icon(Icons.lock_reset, size: 40, color: role == 'supplier' ? Colors.green : Colors.blue),
+                                backgroundColor: const Color(0xFF800000).withOpacity(0.1),
+                                child: Icon(Icons.lock_reset, size: 40, color: Color(0xFF800000)),
                               ),
                               const SizedBox(height: 24),
                               Text(
                                 submitted ? 'Set New Password' : 'Reset Password',
                                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: role == 'supplier' ? Colors.green : Colors.blue,
+                                  color: Color(0xFF800000),
+                                  fontSize: 32,
                                 ),
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'New Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
+                                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                  prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_newPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _newPasswordVisible = !_newPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_newPasswordVisible,
                                 onChanged: (val) {
                                   newPassword = val;
                                   if (_errorMessage != null) setState(() => _errorMessage = null);
@@ -97,15 +111,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               const SizedBox(height: 24),
                               FilledButton.icon(
-                                icon: const Icon(Icons.save),
-                                label: const Text('Submit'),
+                                icon: const Icon(Icons.save, color: Colors.white),
+                                label: const Text('Submit', style: TextStyle(fontWeight: FontWeight.bold)),
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(48),
-                                  backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                  backgroundColor: Color(0xFF800000),
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                   elevation: 2,
+                                  overlayColor: Color(0xFF0D1333),
                                 ),
                                 onPressed: () async {
                                   if (newPassword.length < 6) {
@@ -119,10 +134,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                       .limit(1)
                                       .get();
                                   if (query.docs.isNotEmpty) {
+                                    final hashedPassword = sha256.convert(utf8.encode(newPassword)).toString();
                                     await FirebaseFirestore.instance
                                         .collection(collection)
                                         .doc(query.docs.first.id)
-                                        .update({'password': newPassword});
+                                        .update({'password': hashedPassword});
                                     setState(() {
                                       _errorMessage = null;
                                     });
@@ -136,7 +152,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                           children: [
                                             Icon(
                                               Icons.check_circle,
-                                              color: role == 'supplier' ? Colors.green : Colors.blue,
+                                              color: Color(0xFF800000),
                                               size: 64,
                                             ),
                                             const SizedBox(height: 16),
@@ -145,7 +161,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                               style: TextStyle(
                                                 fontSize: 24,
                                                 fontWeight: FontWeight.bold,
-                                                color: role == 'supplier' ? Colors.green : Colors.blue,
+                                                color: Color(0xFF800000),
                                               ),
                                             ),
                                             const SizedBox(height: 12),
@@ -159,16 +175,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                               width: double.infinity,
                                               child: ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                                  backgroundColor: Color(0xFF800000),
                                                   foregroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                                 ),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                   Navigator.of(context).pop();
                                                 },
-                                                child: const Text('OK'),
+                                                child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
                                               ),
                                             ),
                                           ],
@@ -197,7 +213,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                         child: Align(
                                           alignment: Alignment.topLeft,
                                           child: IconButton(
-                                            icon: const Icon(Icons.arrow_back),
+                                            icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
                                             onPressed: () => Navigator.of(context).pop(),
                                           ),
                                         ),
@@ -206,15 +222,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               CircleAvatar(
                                 radius: 40,
-                                backgroundColor: (role == 'supplier' ? Colors.green : Colors.blue).withOpacity(0.1),
-                                child: Icon(Icons.lock_reset, size: 40, color: role == 'supplier' ? Colors.green : Colors.blue),
+                                backgroundColor: const Color(0xFF800000).withOpacity(0.1),
+                                child: Icon(Icons.lock_reset, size: 40, color: Color(0xFF800000)),
                               ),
                               const SizedBox(height: 24),
                               Text(
                                 submitted ? 'Set New Password' : 'Reset Password',
                                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: role == 'supplier' ? Colors.green : Colors.blue,
+                                  color: Color(0xFF800000),
+                                  fontSize: 32,
                                 ),
                               ),
                               const SizedBox(height: 24),
@@ -224,14 +241,29 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                   children: [
                                     Text(
                                       'Enter your ${role ?? ''} email to receive a reset link:',
-                                      style: const TextStyle(fontSize: 16),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                       textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 24),
                                     TextFormField(
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         labelText: 'Email',
-                                        prefixIcon: Icon(Icons.email_outlined),
+                                        labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                                        prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                        ),
                                       ),
                                       keyboardType: TextInputType.emailAddress,
                                       onChanged: (val) {
@@ -242,15 +274,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     ),
                                     const SizedBox(height: 24),
                                     FilledButton.icon(
-                                      icon: const Icon(Icons.send),
-                                      label: const Text('Submit'),
+                                      icon: const Icon(Icons.send, color: Colors.white),
+                                      label: const Text('Submit', style: TextStyle(fontWeight: FontWeight.bold)),
                                       style: FilledButton.styleFrom(
                                         minimumSize: const Size.fromHeight(48),
-                                        backgroundColor: role == 'supplier' ? Colors.green : Colors.blue,
+                                        backgroundColor: Color(0xFF800000),
                                         foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                         textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                         elevation: 2,
+                                        overlayColor: Color(0xFF0D1333),
                                       ),
                                       onPressed: () async {
                                         if (_formKey.currentState!.validate()) {
