@@ -6,24 +6,20 @@ enum NotificationType {
   orderStatusChanged,
   orderDelivered,
   supplierAdded,
-  stockThreshold, // Added for stock threshold alerts
-  general
-}
 
-class AppNotification {
-  final String id;
-  final String title;
+  thresholdAlert,
+  stockLow,
+  stockCritical,
   final String message;
   final NotificationType type;
   final String recipientEmail;
   final String? senderEmail;
   final String? orderId;
+  final String? productName;
+  final int? stockLevel;
+  final int? thresholdLevel;
   final DateTime createdAt;
-  bool isRead; // Removed final to make it mutable
-  final bool? showOrderNowButton;
-  final int? suggestedQuantity;
-  final String? supplierName;
-  final String? supplierEmail;
+
 
   AppNotification({
     required this.id,
@@ -33,13 +29,12 @@ class AppNotification {
     required this.recipientEmail,
     this.senderEmail,
     this.orderId,
+    this.productName,
+    this.stockLevel,
+    this.thresholdLevel,
     required this.createdAt,
     this.isRead = false,
-    this.showOrderNowButton,
-    this.suggestedQuantity,
-    this.supplierName,
-    this.supplierEmail,
-  });
+
 
   Map<String, dynamic> toMap() {
     return {
@@ -49,12 +44,12 @@ class AppNotification {
       'recipientEmail': recipientEmail,
       'senderEmail': senderEmail,
       'orderId': orderId,
+      'productName': productName,
+      'stockLevel': stockLevel,
+      'thresholdLevel': thresholdLevel,
       'createdAt': createdAt,
       'isRead': isRead,
-      'showOrderNowButton': showOrderNowButton,
-      'suggestedQuantity': suggestedQuantity,
-      'supplierName': supplierName,
-      'supplierEmail': supplierEmail,
+
     };
   }
 
@@ -78,13 +73,13 @@ class AppNotification {
       ),
       recipientEmail: map['recipientEmail'] ?? '',
       senderEmail: map['senderEmail'],
-      orderId: map['orderId'],
-      createdAt: createdAt,
+
+      productName: map['productName'],
+      stockLevel: map['stockLevel'],
+      thresholdLevel: map['thresholdLevel'],
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
       isRead: map['isRead'] ?? false,
-      showOrderNowButton: map['showOrderNowButton'],
-      suggestedQuantity: map['suggestedQuantity'],
-      supplierName: map['supplierName'],
-      supplierEmail: map['supplierEmail'],
+      actionData: map['actionData'],
     );
   }
 } 

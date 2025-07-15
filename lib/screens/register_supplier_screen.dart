@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'welcome_screen.dart';
@@ -18,6 +20,8 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
   String confirmPassword = '';
   bool _isLoading = false;
   String? _errorMessage;
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
   Future<void> _registerSupplier() async {
     if (_formKey.currentState!.validate()) {
@@ -103,20 +107,48 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                           child: Column(
                             children: [
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Supplier Name',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.person_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 onChanged: (val) => name = val,
                                 validator: (val) => val == null || val.isEmpty ? 'Enter supplier name' : null,
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Email',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
                                 ),
                                 keyboardType: TextInputType.emailAddress,
                                 onChanged: (val) => email = val,
@@ -132,12 +164,34 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _passwordVisible = !_passwordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_passwordVisible,
                                 onChanged: (val) => password = val,
                                 validator: (val) {
                                   if (val == null || val.isEmpty) {
@@ -151,12 +205,34 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'Confirm Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_confirmPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _confirmPasswordVisible = !_confirmPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_confirmPasswordVisible,
                                 onChanged: (val) => confirmPassword = val,
                                 validator: (val) {
                                   if (val == null || val.isEmpty) {
@@ -184,7 +260,30 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                   overlayColor: Color(0xFF0D1333), // Dark blue on press
                                 ),
                                 onPressed: _isLoading ? null : () async {
-                                  await _registerSupplier();
+
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() {
+                                      _isLoading = true;
+                                      _errorMessage = null;
+                                    });
+                                    try {
+                                      final hashedPassword = sha256.convert(utf8.encode(password)).toString();
+                                      await FirebaseFirestore.instance.collection('suppliers').add({
+                                        'name': name,
+                                        'email': email,
+                                        'password': hashedPassword, // Store hashed password
+                                        'role': 'supplier',
+                                        'createdAt': FieldValue.serverTimestamp(),
+                                      });
+                                      setState(() => _isLoading = false);
+                                      Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+                                    } catch (e) {
+                                      setState(() {
+                                        _isLoading = false;
+                                        _errorMessage = 'Failed to register. Please try again.';
+                                      });
+                                    }
+                                  }
                                 },
                               ),
                               if (_errorMessage != null) ...[

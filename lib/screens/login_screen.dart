@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'welcome_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String role = 'vendor';
   bool _isLoading = false;
   String? _errorMessage;
+  bool _passwordVisible = false;
+  final storage = const FlutterSecureStorage();
 
   @override
   void didChangeDependencies() {
@@ -130,6 +135,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                     labelText: 'Email',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                    ),
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onChanged: (val) => email = val,
@@ -149,8 +168,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                     labelText: 'Password',
                                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                                     prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                                      borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                      onPressed: () {
+                                        setState(() {
+                                          _passwordVisible = !_passwordVisible;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                  obscureText: true,
+                                  obscureText: !_passwordVisible,
                                   onChanged: (val) => password = val,
                                   validator: (val) {
                                     if (val == null || val.isEmpty) {
@@ -187,7 +228,54 @@ class _LoginScreenState extends State<LoginScreen> {
                                     elevation: 2,
                                     overlayColor: Color(0xFF0D1333),
                                   ),
-                                  onPressed: _isLoading ? null : _login,
+
+                                  onPressed: _isLoading ? null : () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      setState(() {
+                                        _isLoading = true;
+                                        _errorMessage = null;
+                                      });
+                                      try {
+                                        final collection = role == 'vendor' ? 'vendors' : 'suppliers';
+                                        final dashboardRoute = role == 'vendor' ? '/vendor-dashboard' : '/supplier-dashboard';
+                                        final query = await FirebaseFirestore.instance
+                                          .collection(collection)
+                                          .where('email', isEqualTo: email)
+                                          .limit(1)
+                                          .get();
+                                        if (query.docs.isNotEmpty) {
+                                          final user = query.docs.first.data();
+                                          final hashedInputPassword = sha256.convert(utf8.encode(password)).toString();
+                                          if (user['password'] == hashedInputPassword) {
+                                            setState(() => _isLoading = false);
+                                            // Save session info
+                                            await storage.write(key: 'userEmail', value: email);
+                                            await storage.write(key: 'loginTimestamp', value: DateTime.now().millisecondsSinceEpoch.toString());
+                                            if (role == 'vendor') {
+                                              Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
+                                            } else {
+                                              Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+                                            }
+                                          } else {
+                                            setState(() {
+                                              _isLoading = false;
+                                              _errorMessage = 'Incorrect password.';
+                                            });
+                                          }
+                                        } else {
+                                          setState(() {
+                                            _isLoading = false;
+                                            _errorMessage = 'No account found with this email.';
+                                          });
+                                        }
+                                      } catch (e) {
+                                        setState(() {
+                                          _isLoading = false;
+                                          _errorMessage = 'Login failed. Please try again.';
+                                        });
+                                      }
+                                    }
+                                  },
                                 ),
                                 if (_errorMessage != null) ...[
                                   const SizedBox(height: 8),

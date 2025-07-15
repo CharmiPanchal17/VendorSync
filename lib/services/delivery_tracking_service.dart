@@ -1,6 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeliveryTrackingService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,143 +13,109 @@ class DeliveryTrackingService {
     required String supplierName,
     required String supplierEmail,
     required DateTime deliveryDate,
+    required String vendorEmail, // NEW PARAM
     double? unitPrice,
     String? notes,
   }) async {
-    try {
-      // Create a delivery record
-      final deliveryRecord = DeliveryRecord(
-        id: 'del_${DateTime.now().millisecondsSinceEpoch}',
-        orderId: orderId,
-        productName: productName,
-        quantity: quantity,
-        supplierName: supplierName,
-        supplierEmail: supplierEmail,
-        deliveryDate: deliveryDate,
-        unitPrice: unitPrice,
-        notes: notes,
-        status: 'Completed',
-      );
+    // 1. Create a DeliveryRecord (optional: you can store delivery history in stock_items or a separate collection)
+    // 2. Update the corresponding StockItem (add or update)
+    // 3. Update order status to 'Delivered'
+    // 4. Trigger notifications if needed (not implemented here)
 
-      // Update stock levels automatically
-      await updateStockLevels(
-        productName: productName,
-        deliveredQuantity: quantity,
-        deliveryRecord: deliveryRecord,
-      );
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
+    final orderRef = FirebaseFirestore.instance.collection('orders').doc(orderId);
 
+    // Use a transaction to ensure consistency
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final stockSnapshot = await transaction.get(stockRef);
+      if (stockSnapshot.exists) {
+        // Update existing stock item
+        final currentStock = stockSnapshot['currentStock'] ?? 0;
+        final deliveryHistory = List.from(stockSnapshot['deliveryHistory'] ?? []);
+        deliveryHistory.add({
+          'quantity': quantity,
+          'deliveryDate': Timestamp.fromDate(deliveryDate),
+          'supplierName': supplierName,
+          'supplierEmail': supplierEmail,
+          'vendorEmail': vendorEmail, // NEW FIELD
+          'notes': notes ?? '',
+        });
+        transaction.update(stockRef, {
+          'currentStock': currentStock + quantity,
+          'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + quantity,
+          'lastDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'deliveryHistory': deliveryHistory,
+          'vendorEmail': vendorEmail, // NEW FIELD
+        });
+      } else {
+        // Create new stock item
+        transaction.set(stockRef, {
+          'productName': productName,
+          'currentStock': quantity,
+          'minimumStock': (quantity * 0.1).round(),
+          'maximumStock': quantity,
+          'firstDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'lastDeliveryDate': Timestamp.fromDate(deliveryDate),
+          'deliveryHistory': [
+            {
+              'quantity': quantity,
+              'deliveryDate': Timestamp.fromDate(deliveryDate),
+              'supplierName': supplierName,
+              'supplierEmail': supplierEmail,
+              'vendorEmail': vendorEmail, // NEW FIELD
+              'notes': notes ?? '',
+            }
+          ],
+          'vendorEmail': vendorEmail, // NEW FIELD
+        });
+      }
       // Update order status to 'Delivered'
-      await _firestore.collection('orders').doc(orderId).update({
+      transaction.update(orderRef, {
         'status': 'Delivered',
-        'actualDeliveryDate': Timestamp.fromDate(deliveryDate),
-        'updatedAt': FieldValue.serverTimestamp(),
+        'deliveredAt': Timestamp.fromDate(deliveryDate),
       });
-
-      print('Delivery recorded: $productName - $quantity units from $supplierName');
-    } catch (e) {
-      throw Exception('Failed to record delivery: $e');
-    }
+    });
+    print('Delivery recorded: $productName - $quantity units from $supplierName');
   }
   
   static Future<void> updateStockLevels({
     required String productName,
     required int deliveredQuantity,
-    DeliveryRecord? deliveryRecord,
+    required String vendorEmail, // NEW PARAM
   }) async {
-    try {
-      // Find the stock item for the product
-      final stockQuery = await _firestore
-          .collection('stock_items')
-          .where('productName', isEqualTo: productName)
-          .get();
-
-      if (stockQuery.docs.isNotEmpty) {
-        final stockDoc = stockQuery.docs.first;
-        final data = stockDoc.data();
-        
-        final currentStock = data['currentStock'] as int;
-        final newCurrentStock = currentStock + deliveredQuantity;
-        final newMaximumStock = newCurrentStock;
-
-        // Update delivery history
-        final deliveryHistory = List<Map<String, dynamic>>.from(data['deliveryHistory'] ?? []);
-        if (deliveryRecord != null) {
-          deliveryHistory.add({
-            'id': deliveryRecord.id,
-            'orderId': deliveryRecord.orderId,
-            'productName': deliveryRecord.productName,
-            'quantity': deliveryRecord.quantity,
-            'supplierName': deliveryRecord.supplierName,
-            'supplierEmail': deliveryRecord.supplierEmail,
-            'deliveryDate': Timestamp.fromDate(deliveryRecord.deliveryDate),
-            'unitPrice': deliveryRecord.unitPrice,
-            'notes': deliveryRecord.notes,
-            'status': deliveryRecord.status,
-          });
-        }
-
-        // Calculate new average unit price
-        final totalPrice = deliveryHistory
-            .where((record) => record['unitPrice'] != null)
-            .fold(0.0, (sum, record) => sum + (record['unitPrice'] as double));
-        final totalDeliveries = deliveryHistory.length;
-        final newAveragePrice = totalDeliveries > 0 ? totalPrice / totalDeliveries : deliveryRecord?.unitPrice;
-
-        // Update the stock item
-        await stockDoc.reference.update({
-          'currentStock': newCurrentStock,
-          'maximumStock': newMaximumStock,
-          'deliveryHistory': deliveryHistory,
-          'lastDeliveryDate': Timestamp.fromDate(DateTime.now()),
-          'averageUnitPrice': newAveragePrice,
-          'updatedAt': FieldValue.serverTimestamp(),
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final stockSnapshot = await transaction.get(stockRef);
+      if (stockSnapshot.exists) {
+        final currentStock = stockSnapshot['currentStock'] ?? 0;
+        transaction.update(stockRef, {
+          'currentStock': currentStock + deliveredQuantity,
+          'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
+          'vendorEmail': vendorEmail, // NEW FIELD
         });
-
-        // Check if auto-order should be triggered
-        final shouldAutoOrder = await shouldTriggerAutoOrder(productName);
-        if (shouldAutoOrder) {
-          // TODO: Implement auto-order creation
-          print('Auto-order should be triggered for $productName');
-        }
-
-        print('Stock updated: $productName - Added $deliveredQuantity units');
       } else {
-        // Create new stock item if it doesn't exist
-        if (deliveryRecord != null) {
-          final newStockItem = {
-            'productName': productName,
-            'currentStock': deliveredQuantity,
-            'minimumStock': 20, // Default minimum stock
-            'maximumStock': deliveredQuantity,
-            'deliveryHistory': [{
-              'id': deliveryRecord.id,
-              'orderId': deliveryRecord.orderId,
-              'productName': deliveryRecord.productName,
-              'quantity': deliveryRecord.quantity,
-              'supplierName': deliveryRecord.supplierName,
-              'supplierEmail': deliveryRecord.supplierEmail,
-              'deliveryDate': Timestamp.fromDate(deliveryRecord.deliveryDate),
-              'unitPrice': deliveryRecord.unitPrice,
-              'notes': deliveryRecord.notes,
-              'status': deliveryRecord.status,
-            }],
-            'primarySupplier': deliveryRecord.supplierName,
-            'primarySupplierEmail': deliveryRecord.supplierEmail,
-            'firstDeliveryDate': Timestamp.fromDate(DateTime.now()),
-            'lastDeliveryDate': Timestamp.fromDate(DateTime.now()),
-            'autoOrderEnabled': false,
-            'averageUnitPrice': deliveryRecord.unitPrice,
-            'createdAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          };
-
-          await _firestore.collection('stock_items').add(newStockItem);
-          print('New stock item created: $productName');
-        }
+        transaction.set(stockRef, {
+          'productName': productName,
+          'currentStock': deliveredQuantity,
+          'minimumStock': (deliveredQuantity * 0.1).round(),
+          'maximumStock': deliveredQuantity,
+          'firstDeliveryDate': Timestamp.now(),
+          'lastDeliveryDate': Timestamp.now(),
+          'deliveryHistory': [
+            {
+              'quantity': deliveredQuantity,
+              'deliveryDate': Timestamp.now(),
+              'supplierName': '',
+              'supplierEmail': '',
+              'vendorEmail': vendorEmail, // NEW FIELD
+              'notes': '',
+            }
+          ],
+          'vendorEmail': vendorEmail, // NEW FIELD
+        });
       }
-    } catch (e) {
-      throw Exception('Failed to update stock levels: $e');
-    }
+    });
+    print('Stock updated: $productName - Added $deliveredQuantity units');
   }
   
   static Future<bool> shouldTriggerAutoOrder(String productName) async {

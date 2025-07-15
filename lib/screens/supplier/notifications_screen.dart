@@ -295,8 +295,13 @@ class _SupplierNotificationsScreenState extends State<SupplierNotificationsScree
         return Icons.local_shipping;
       case NotificationType.supplierAdded:
         return Icons.person_add;
-      case NotificationType.stockThreshold:
-        return Icons.warning_amber_rounded;
+
+      case NotificationType.thresholdAlert:
+        return Icons.warning_amber;
+      case NotificationType.stockLow:
+        return Icons.info;
+      case NotificationType.stockCritical:
+        return Icons.war
       case NotificationType.general:
         return Icons.notifications;
     }

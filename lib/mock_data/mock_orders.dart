@@ -47,9 +47,10 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier C',
     supplierEmail: 'supplierC@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 1)),
-    unitPrice: 12.75,
+    unitPrice: null, // Removed price
     notes: 'First delivery - excellent quality',
     status: 'Completed',
+    vendorEmail: 'demo@vendor.com',
   ),
   DeliveryRecord(
     id: 'del_2',
@@ -59,9 +60,10 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier A',
     supplierEmail: 'supplierA@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 5)),
-    unitPrice: 15.50,
+    unitPrice: null, // Removed price
     notes: 'Second delivery - good condition',
     status: 'Completed',
+    vendorEmail: 'demo@vendor.com',
   ),
   DeliveryRecord(
     id: 'del_3',
@@ -71,9 +73,10 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier B',
     supplierEmail: 'supplierB@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 8)),
-    unitPrice: 25.00,
+    unitPrice: null, // Removed price
     notes: 'First delivery - premium quality',
     status: 'Completed',
+    vendorEmail: 'demo@vendor.com',
   ),
   DeliveryRecord(
     id: 'del_4',
@@ -83,9 +86,10 @@ final List<DeliveryRecord> mockDeliveryRecords = [
     supplierName: 'Supplier A',
     supplierEmail: 'supplierA@example.com',
     deliveryDate: DateTime.now().subtract(Duration(days: 12)),
-    unitPrice: 15.50,
+    unitPrice: null, // Removed price
     notes: 'First delivery - standard quality',
     status: 'Completed',
+    vendorEmail: 'demo@vendor.com',
   ),
 ];
 
@@ -103,34 +107,7 @@ final List<StockItem> mockStockItems = [
     firstDeliveryDate: DateTime.now().subtract(Duration(days: 12)),
     lastDeliveryDate: DateTime.now().subtract(Duration(days: 5)),
     autoOrderEnabled: true,
-    averageUnitPrice: 15.50,
-  ),
-  StockItem(
-    id: 'stock_2',
-    productName: 'Gadgets',
-    currentStock: 10,
-    minimumStock: 15,
-    maximumStock: 100,
-    deliveryHistory: mockDeliveryRecords.where((record) => record.productName == 'Gadgets').toList(),
-    primarySupplier: 'Supplier B',
-    primarySupplierEmail: 'supplierB@example.com',
-    firstDeliveryDate: DateTime.now().subtract(Duration(days: 8)),
-    lastDeliveryDate: DateTime.now().subtract(Duration(days: 8)),
-    autoOrderEnabled: true,
-    averageUnitPrice: 25.00,
-  ),
-  StockItem(
-    id: 'stock_3',
-    productName: 'Thingamajigs',
-    currentStock: 180,
-    minimumStock: 50,
-    maximumStock: 300,
-    deliveryHistory: mockDeliveryRecords.where((record) => record.productName == 'Thingamajigs').toList(),
-    primarySupplier: 'Supplier C',
-    primarySupplierEmail: 'supplierC@example.com',
-    firstDeliveryDate: DateTime.now().subtract(Duration(days: 1)),
-    lastDeliveryDate: DateTime.now().subtract(Duration(days: 1)),
-    autoOrderEnabled: false,
-    averageUnitPrice: 12.75,
+    averageUnitPrice: null, // Removed price
+    vendorEmail: 'demo@vendor.com',
   ),
 ]; 

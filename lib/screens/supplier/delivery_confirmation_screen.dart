@@ -332,6 +332,8 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
     });
 
     try {
+      // TODO: Replace with actual vendor email from auth/user provider
+      final vendorEmail = 'CURRENT_VENDOR_EMAIL';
       // Record the delivery
       await DeliveryTrackingService.recordDelivery(
         orderId: widget.order.id,
@@ -340,6 +342,7 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
         supplierName: widget.order.supplierName,
         supplierEmail: widget.order.supplierEmail,
         deliveryDate: _deliveryDate,
+        vendorEmail: vendorEmail, // NEW FIELD
         unitPrice: widget.order.unitPrice,
         notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       );
@@ -348,12 +351,10 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
       await DeliveryTrackingService.recordDelivery(
         orderId: widget.order.id,
         productName: widget.order.productName,
-        quantity: widget.order.quantity,
-        supplierName: widget.order.supplierName,
-        supplierEmail: widget.order.supplierEmail,
-        deliveryDate: _deliveryDate,
-        unitPrice: widget.order.unitPrice,
-        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+
+        deliveredQuantity: widget.order.quantity,
+        vendorEmail: vendorEmail, // NEW FIELD
+
       );
 
       // Show success message

@@ -15,32 +15,26 @@ class NotificationService {
     required String recipientEmail,
     String? senderEmail,
     String? orderId,
-    bool? showOrderNowButton,
-    int? suggestedQuantity,
-    String? supplierName,
-    String? supplierEmail,
+    String? productName,
+    int? stockLevel,
+    int? thresholdLevel,
+    Map<String, dynamic>? actionData,
   }) async {
     try {
-      final notification = AppNotification(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: title,
-        message: message,
-        type: type,
-        recipientEmail: recipientEmail,
-        senderEmail: senderEmail,
-        orderId: orderId,
-        createdAt: DateTime.now(),
-        isRead: false,
-        showOrderNowButton: showOrderNowButton,
-        suggestedQuantity: suggestedQuantity,
-        supplierName: supplierName,
-        supplierEmail: supplierEmail,
-      );
-
-      if (!_mockNotifications.containsKey(recipientEmail)) {
-        _mockNotifications[recipientEmail] = [];
-      }
-      _mockNotifications[recipientEmail]!.add(notification);
+      await _firestore.collection('notifications').add({
+        'title': title,
+        'message': message,
+        'type': type.toString().split('.').last,
+        'recipientEmail': recipientEmail,
+        'senderEmail': senderEmail,
+        'orderId': orderId,
+        'productName': productName,
+        'stockLevel': stockLevel,
+        'thresholdLevel': thresholdLevel,
+        'actionData': actionData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
     } catch (e) {
       print('Error creating notification: $e');
     }
@@ -160,30 +154,157 @@ class NotificationService {
     );
   }
 
-  // Send a stock threshold notification to the vendor
-  static Future<void> sendStockThresholdNotification({
+  // Create threshold alert notification
+  static Future<void> createThresholdAlert({
     required String vendorEmail,
     required String productName,
     required int currentStock,
-    required int threshold,
-    required String? supplierName,
-    required String? supplierEmail,
-    required int suggestedQuantity,
+    required int thresholdLevel,
+    required String thresholdStatus,
+    String? supplierEmail,
+    String? supplierName,
+    int? suggestedQuantity,
   }) async {
-    final title = 'Stock Alert: $productName';
-    final message =
-        'Stock for $productName has reached the threshold ($currentStock left, threshold: $threshold). Supplier: ${supplierName ?? 'N/A'}.';
+    String title;
+    String message;
+    NotificationType type;
+
+    switch (thresholdStatus) {
+      case 'critical':
+        title = 'Critical Stock Alert';
+        message = '$productName is critically low! Current stock: $currentStock (Threshold: $thresholdLevel)';
+        type = NotificationType.stockCritical;
+        break;
+      case 'warning':
+        title = 'Stock Threshold Alert';
+        message = '$productName has reached threshold level. Current stock: $currentStock (Threshold: $thresholdLevel)';
+        type = NotificationType.thresholdAlert;
+        break;
+      default:
+        title = 'Low Stock Alert';
+        message = '$productName stock is running low. Current stock: $currentStock (Threshold: $thresholdLevel)';
+        type = NotificationType.stockLow;
+    }
+
+    final actionData = {
+      'productName': productName,
+      'currentStock': currentStock,
+      'thresholdLevel': thresholdLevel,
+      'supplierEmail': supplierEmail,
+      'supplierName': supplierName,
+      'suggestedQuantity': suggestedQuantity,
+      'actionType': 'order_now',
+    };
+
     await createNotification(
-      recipientEmail: vendorEmail,
       title: title,
       message: message,
-      type: NotificationType.stockThreshold,
-      showOrderNowButton: true,
-      suggestedQuantity: suggestedQuantity,
-      supplierName: supplierName,
-      supplierEmail: supplierEmail,
-      // Optionally, you can add more fields to AppNotification if needed
+      type: type,
+      recipientEmail: vendorEmail,
+      productName: productName,
+      stockLevel: currentStock,
+      thresholdLevel: thresholdLevel,
+      actionData: actionData,
     );
+  }
+
+  // Check and create threshold alerts for all products (no auto-ordering)
+  static Future<void> checkThresholdAlerts(String vendorEmail) async {
+    try {
+      final stockSnapshot = await _firestore
+          .collection('stock_items')
+          .where('vendorEmail', isEqualTo: vendorEmail)
+          .where('thresholdNotificationsEnabled', isEqualTo: true)
+          .get();
+
+      for (final doc in stockSnapshot.docs) {
+        final data = doc.data();
+        final currentStock = data['currentStock'] as int? ?? 0;
+        final thresholdLevel = data['thresholdLevel'] as int? ?? 0;
+        final minimumStock = data['minimumStock'] as int? ?? 0;
+        final productName = data['productName'] as String? ?? '';
+        final lastThresholdAlert = data['lastThresholdAlert'] as Timestamp?;
+        final supplierEmail = data['primarySupplierEmail'] as String?;
+        final supplierName = data['primarySupplier'] as String?;
+
+        // Skip if no threshold is set
+        if (thresholdLevel == 0) continue;
+
+        // Check if we should send an alert
+        bool shouldAlert = false;
+        String thresholdStatus = '';
+
+        if (currentStock <= (minimumStock * 0.5)) {
+          shouldAlert = true;
+          thresholdStatus = 'critical';
+        } else if (currentStock <= thresholdLevel) {
+          shouldAlert = true;
+          thresholdStatus = 'warning';
+        } else if (currentStock <= (minimumStock * 1.2)) {
+          shouldAlert = true;
+          thresholdStatus = 'info';
+        }
+
+        if (shouldAlert) {
+          // Check if we've already alerted recently (within 24 hours)
+          final lastAlert = lastThresholdAlert?.toDate();
+          final shouldSendAlert = lastAlert == null || 
+              DateTime.now().difference(lastAlert).inHours >= 24;
+
+          if (shouldSendAlert) {
+            // Calculate suggested quantity for reference only
+            final suggestedQuantity = _calculateSuggestedQuantity(data);
+
+            await createThresholdAlert(
+              vendorEmail: vendorEmail,
+              productName: productName,
+              currentStock: currentStock,
+              thresholdLevel: thresholdLevel,
+              thresholdStatus: thresholdStatus,
+              supplierEmail: supplierEmail,
+              supplierName: supplierName,
+              suggestedQuantity: suggestedQuantity,
+            );
+
+            // Update last threshold alert timestamp
+            await _firestore
+                .collection('stock_items')
+                .doc(doc.id)
+                .update({'lastThresholdAlert': FieldValue.serverTimestamp()});
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking threshold alerts: $e');
+    }
+  }
+
+  // Calculate suggested order quantity based on historical data
+  static int _calculateSuggestedQuantity(Map<String, dynamic> stockData) {
+    final deliveryHistory = stockData['deliveryHistory'] as List<dynamic>? ?? [];
+    final minimumStock = stockData['minimumStock'] as int? ?? 0;
+
+    if (deliveryHistory.isEmpty) return minimumStock;
+
+    // Calculate average daily usage from recent deliveries (last 30 days)
+    final now = DateTime.now();
+    final thirtyDaysAgo = now.subtract(const Duration(days: 30));
+    
+    final recentDeliveries = deliveryHistory.where((delivery) {
+      final deliveryDate = (delivery['deliveryDate'] as Timestamp).toDate();
+      return deliveryDate.isAfter(thirtyDaysAgo);
+    }).toList();
+
+    if (recentDeliveries.isEmpty) return minimumStock;
+
+    final totalQuantity = recentDeliveries.fold<int>(0, (sum, delivery) {
+      return sum + (delivery['quantity'] as int? ?? 0);
+    });
+
+    final avgDailyUsage = totalQuantity / 30; // Assume 30 days
+    final suggestedQuantity = (avgDailyUsage * 14 * 1.2).round(); // 2 weeks + 20% buffer
+    
+    return suggestedQuantity > 0 ? suggestedQuantity : minimumStock;
   }
 
   // Show a simple notification (for delivery confirmation)

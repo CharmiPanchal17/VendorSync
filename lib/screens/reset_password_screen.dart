@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -14,6 +16,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool submitted = false;
   String newPassword = '';
   String? _errorMessage;
+  bool _newPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -73,12 +76,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: 'New Password',
                                   labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                   prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF800000)),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                                    borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_newPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Color(0xFF800000)),
+                                    onPressed: () {
+                                      setState(() {
+                                        _newPasswordVisible = !_newPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                obscureText: true,
+                                obscureText: !_newPasswordVisible,
                                 onChanged: (val) {
                                   newPassword = val;
                                   if (_errorMessage != null) setState(() => _errorMessage = null);
@@ -109,10 +134,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                       .limit(1)
                                       .get();
                                   if (query.docs.isNotEmpty) {
+                                    final hashedPassword = sha256.convert(utf8.encode(newPassword)).toString();
                                     await FirebaseFirestore.instance
                                         .collection(collection)
                                         .doc(query.docs.first.id)
-                                        .update({'password': newPassword});
+                                        .update({'password': hashedPassword});
                                     setState(() {
                                       _errorMessage = null;
                                     });
@@ -220,10 +246,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     ),
                                     const SizedBox(height: 24),
                                     TextFormField(
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         labelText: 'Email',
                                         labelStyle: TextStyle(fontWeight: FontWeight.bold),
                                         prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                                          borderSide: BorderSide(color: Color(0xFF800000), width: 2),
+                                        ),
                                       ),
                                       keyboardType: TextInputType.emailAddress,
                                       onChanged: (val) {
