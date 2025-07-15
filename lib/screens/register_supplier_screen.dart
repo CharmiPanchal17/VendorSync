@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
+import 'welcome_screen.dart';
 
 class RegisterSupplierScreen extends StatefulWidget {
   const RegisterSupplierScreen({super.key});
@@ -12,6 +13,7 @@ class RegisterSupplierScreen extends StatefulWidget {
 
 class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   String name = '';
   String email = '';
   String password = '';
@@ -20,6 +22,35 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
   String? _errorMessage;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
+
+  Future<void> _registerSupplier() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        final success = await _authService.register(name, email, password, 'supplier');
+        
+        if (success) {
+          setState(() => _isLoading = false);
+          Navigator.of(context).pushReplacementNamed('/supplier-dashboard', arguments: email);
+        } else {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'A supplier with this email already exists.';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to register. Please try again.';
+        });
+        print('Registration error: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,18 +78,18 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                       children: [
                         Builder(
                           builder: (context) =>
-                            Navigator.canPop(context)
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
-                                      onPressed: () => Navigator.of(context).pop(),
-                                    ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                              child: Align(
+                                alignment: Alignment.topLeft,
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
+                                  onPressed: () => Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
                                   ),
-                                )
-                              : const SizedBox.shrink(),
+                                ),
+                              ),
+                            ),
                         ),
                         CircleAvatar(
                           radius: 40,
@@ -229,6 +260,7 @@ class _RegisterSupplierScreenState extends State<RegisterSupplierScreen> {
                                   overlayColor: Color(0xFF0D1333), // Dark blue on press
                                 ),
                                 onPressed: _isLoading ? null : () async {
+
                                   if (_formKey.currentState!.validate()) {
                                     setState(() {
                                       _isLoading = true;

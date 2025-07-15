@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart';
 import 'package:file_selector/file_selector.dart';
@@ -9,12 +10,15 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as ex;
 
+
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class StockManagementScreen extends StatefulWidget {
   final String vendorEmail;
+
   StockManagementScreen({Key? key, required this.vendorEmail}) : super(key: key);
+
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -23,11 +27,13 @@ class StockManagementScreen extends StatefulWidget {
 class _StockManagementScreenState extends State<StockManagementScreen> {
   List<StockItem> stockItems = [];
   bool isLoading = true;
+  List<Map<String, dynamic>> thresholdAnalysis = [];
 
   @override
   void initState() {
     super.initState();
     _loadStockData();
+    _loadThresholdAnalysis();
   }
 
   Future<void> _loadStockData() async {
@@ -231,6 +237,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     }
   }
 
+  Future<void> _loadThresholdAnalysis() async {
+    try {
+      final analysis = await SalesService.getThresholdAndAutoOrderAnalysis(vendorEmail: widget.vendorEmail);
+      setState(() {
+        thresholdAnalysis = analysis;
+      });
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
+
   List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> historyData) {
     return historyData.map((record) {
       return DeliveryRecord(
@@ -408,8 +425,78 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () async {
+              await _loadStockData();
+              await _loadThresholdAnalysis();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Stock data refreshed.'), backgroundColor: maroon),
+              );
+            },
+          ),
+        ],
       ),
-      body: Container(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Upload Initial Stock'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: maroon,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => InitialStockUploadScreen(vendorEmail: widget.vendorEmail),
+                          ));
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.analytics),
+                        label: const Text('Upload Sales Data for Analysis'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: maroon,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => SalesDataUploadScreen(vendorEmail: widget.vendorEmail),
+                          ));
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
         child: isLoading
             ? const Center(
@@ -422,9 +509,151 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 itemCount: stockItems.length,
                 itemBuilder: (context, index) {
                   final stockItem = stockItems[index];
-                  return _buildStockCard(context, stockItem, isDark, index);
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildStockItemWithAnalysis(stockItem, isDark),
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStockItemWithAnalysis(StockItem stockItem, bool isDark) {
+    final analysis = thresholdAnalysis.firstWhere(
+      (a) => a['productName'] == stockItem.productName.toLowerCase(),
+      orElse: () => <String, dynamic>{},
+    );
+    Color getPriorityColor(String? priority) {
+      switch (priority) {
+        case 'High':
+          return Colors.red;
+        case 'Medium':
+          return Colors.orange;
+        case 'Low':
+          return Colors.green;
+        default:
+          return Colors.grey;
+      }
+    }
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: analysis['priority'] == 'High'
+              ? Colors.red.withOpacity(0.3)
+              : analysis['priority'] == 'Medium'
+                  ? Colors.orange.withOpacity(0.3)
+                  : analysis['priority'] == 'Low'
+                      ? Colors.green.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.1),
+          width: 2,
+        ),
+      ),
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(stockItem.productName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: isDark ? Colors.white : Colors.black87)),
+              ),
+              if (analysis.isNotEmpty)
+                Tooltip(
+                  message: 'Auto-Order Priority is based on sales velocity and stock status. High means reorder is urgent.',
+                  child: Chip(
+                    label: Text(
+                      analysis['priority'] ?? '',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    backgroundColor: getPriorityColor(analysis['priority']),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('Current Stock: ${stockItem.currentStock}', style: const TextStyle(fontSize: 16)),
+          if (analysis.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.flag, color: maroon, size: 20),
+                const SizedBox(width: 6),
+                Text('Recommended Threshold: ${analysis['recommendedThreshold']}', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(Icons.speed, color: maroon, size: 20),
+                const SizedBox(width: 6),
+                Text('Sales Velocity: ${analysis['salesVelocity'].toStringAsFixed(2)} units/week', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (analysis['priority'] == 'High')
+              ElevatedButton.icon(
+                icon: const Icon(Icons.shopping_cart),
+                label: const Text('Create Order'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: maroon,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () async {
+                  // Show supplier selection dialog before placing order
+                  final supplier = await showDialog<Map<String, String>>(
+                    context: context,
+                    builder: (context) => _SupplierSelectDialog(
+                      currentSupplier: stockItem.primarySupplier,
+                      currentSupplierEmail: stockItem.primarySupplierEmail,
+                    ),
+                  );
+                  if (supplier == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please select a supplier before placing an order.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  await SalesService.placeAutomaticOrder(
+                    productName: stockItem.productName,
+                    quantity: stockItem.minimumStock,
+                    supplierName: supplier['name'],
+                    supplierEmail: supplier['email'],
+                    vendorEmail: 'vendor@example.com', // TODO: Replace with actual vendor email
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Order created for ${stockItem.productName} with supplier ${supplier['name']}'),
+                        backgroundColor: maroon,
+                      ),
+                    );
+                  }
                 },
               ),
+          ],
+        ],
       ),
     );
   }
@@ -1076,7 +1305,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ...stockItem.deliveryHistory
                 .take(3)
                 .map((record) => _buildDeliveryRecord(record, isDark))
-                .toList(),
+                ,
           ],
         ],
       ),
@@ -1180,6 +1409,32 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () async {
+              // Call the auto-order logic for this stock item
+              final productName = stockItem.productName;
+              final quantity = stockItem.minimumStock; // or any test quantity
+              final supplierName = stockItem.primarySupplier;
+              final supplierEmail = stockItem.primarySupplierEmail;
+              final vendorEmail = 'vendor@example.com'; // TODO: Replace with actual vendor email from context or user session
+              await SalesService.placeAutomaticOrder(
+                productName: productName,
+                quantity: quantity,
+                supplierName: supplierName,
+                supplierEmail: supplierEmail,
+                vendorEmail: vendorEmail,
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Auto-order triggered for $productName')),
+                );
+              }
+            },
+            child: Text('Test Auto-Order'),
           ),
         ),
       ],
@@ -1308,6 +1563,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   }
 
   void _showEditStockDialog(BuildContext context, StockItem stockItem, int index) {
+
     final controller = TextEditingController();
     String? errorText;
     showDialog(
@@ -1324,12 +1580,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 decoration: InputDecoration(hintText: 'Quantity', errorText: errorText),
               ),
             ],
+
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
             ),
+pload Spreadsheet'),
+          ),
+        ],
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: maroon,
@@ -1383,6 +1643,23 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         ),
       ),
     );
+  }
+
+  void _showRealTimeSalesOption(BuildContext context) {
+    // Navigate to real-time sales screen
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => RealTimeSalesScreen(
+        vendorEmail: widget.vendorEmail,
+      ),
+    ));
+  }
+
+  void _showSpreadsheetUploadOption(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SpreadsheetUploadScreen(
+        vendorEmail: widget.vendorEmail,
+      ),
+    ));
   }
 
   Widget _buildMetricItem(String label, String value, IconData icon, bool isDark) {
@@ -1800,6 +2077,87 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           ),
         ],
       ),
+    );
+  }
+} 
+
+class _SupplierSelectDialog extends StatefulWidget {
+  final String? currentSupplier;
+  final String? currentSupplierEmail;
+  const _SupplierSelectDialog({this.currentSupplier, this.currentSupplierEmail});
+  @override
+  State<_SupplierSelectDialog> createState() => _SupplierSelectDialogState();
+}
+
+class _SupplierSelectDialogState extends State<_SupplierSelectDialog> {
+  String? selectedSupplierName;
+  String? selectedSupplierEmail;
+  List<Map<String, String>> suppliers = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSuppliers();
+  }
+
+  Future<void> _loadSuppliers() async {
+    // Load suppliers from Firestore
+    final snapshot = await FirebaseFirestore.instance.collection('suppliers').get();
+    setState(() {
+      suppliers = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'name': (data['name'] ?? 'Unknown').toString(),
+          'email': (data['email'] ?? '').toString(),
+        };
+      }).toList();
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Select Supplier'),
+      content: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SizedBox(
+              width: 300,
+              child: DropdownButtonFormField<String>(
+                value: selectedSupplierEmail,
+                hint: const Text('Choose a supplier'),
+                items: suppliers.map((s) => DropdownMenuItem<String>(
+                  value: s['email'],
+                  child: Text('${s['name']} (${s['email']})'),
+                )).toList(),
+                onChanged: (value) {
+                  final supplier = suppliers.firstWhere((s) => s['email'] == value);
+                  setState(() {
+                    selectedSupplierName = supplier['name'];
+                    selectedSupplierEmail = supplier['email'];
+                  });
+                },
+              ),
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: maroon),
+          onPressed: selectedSupplierEmail == null
+              ? null
+              : () {
+                  Navigator.of(context).pop({
+                    'name': selectedSupplierName,
+                    'email': selectedSupplierEmail,
+                  });
+                },
+          child: const Text('Select'),
+        ),
+      ],
     );
   }
 } 

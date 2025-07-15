@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeliveryTrackingService {
-  // This service handles tracking deliveries and updating stock information
-  // In a real app, this would integrate with Firestore
-  
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   static Future<void> recordDelivery({
     required String orderId,
     required String productName,
@@ -119,10 +119,24 @@ class DeliveryTrackingService {
   }
   
   static Future<bool> shouldTriggerAutoOrder(String productName) async {
-    // TODO: Implement auto-order logic
-    // This would check if stock is below minimum threshold
-    // and if auto-order is enabled for the product
-    
-    return false;
+    try {
+      final stockQuery = await _firestore
+          .collection('stock_items')
+          .where('productName', isEqualTo: productName)
+          .get();
+
+      if (stockQuery.docs.isNotEmpty) {
+        final data = stockQuery.docs.first.data();
+        final currentStock = data['currentStock'] as int;
+        final minimumStock = data['minimumStock'] as int;
+        final autoOrderEnabled = data['autoOrderEnabled'] as bool? ?? false;
+
+        return autoOrderEnabled && currentStock <= minimumStock;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking auto-order trigger: $e');
+      return false;
+    }
   }
 } 

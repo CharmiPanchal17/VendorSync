@@ -195,7 +195,12 @@ class AvailableSuppliersScreen extends StatelessWidget {
                   );
                 }
                 
-                final availableSuppliers = docs.where((doc) => !addedSupplierIds.contains(doc.id)).toList();
+                final availableSuppliers = docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return !addedSupplierIds.contains(doc.id) &&
+                         data['email'] != vendorEmail &&
+                         (data['role'] == null || data['role'] == 'supplier');
+                }).toList();
                 final addedSuppliers = docs.where((doc) => addedSupplierIds.contains(doc.id)).toList();
                 
                 return Padding(

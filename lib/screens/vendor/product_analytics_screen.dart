@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'product_report_screen.dart';
+
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class ProductAnalyticsScreen extends StatelessWidget {
   final String productName;
+  final String vendorEmail;
   
-  const ProductAnalyticsScreen({super.key, required this.productName});
+  const ProductAnalyticsScreen({super.key, required this.productName, required this.vendorEmail});
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +42,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
       ),
       body: Container(
         color: isDark ? const Color(0xFF2D2D2D) : lightCyan,
+
         child: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('sales_history')
@@ -48,6 +54,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
+
               return Center(child: Text('Error loading sales data'));
             }
             final salesDocs = snapshot.data?.docs ?? [];
@@ -87,6 +94,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                 }
                 return ListView(
                   padding: const EdgeInsets.all(16),
+
                   children: [
                     // Product Summary Card
                     Card(
@@ -352,8 +360,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                );
-              },
+
             );
           },
         ),

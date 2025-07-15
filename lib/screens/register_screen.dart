@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
@@ -16,6 +17,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
   String name = '';
   String email = '';
   String password = '';
@@ -34,43 +36,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       try {
-        // Check if vendor with this email already exists
-        final existingVendors = await FirebaseFirestore.instance
-            .collection('vendors')
-            .where('email', isEqualTo: email)
-            .get();
-
-        if (existingVendors.docs.isNotEmpty) {
+        final success = await _authService.register(name, email, password, 'vendor');
+        
+        if (success) {
+          setState(() => _isLoading = false);
+          
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Registration successful! Welcome to VendorSync.'),
+                backgroundColor: maroonPopup,
+              ),
+            );
+            
+            // Navigate to vendor dashboard
+            Navigator.of(context).pushReplacementNamed('/vendor-dashboard', arguments: email);
+          }
+        } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'A vendor with trhis email already exists.';
+            _errorMessage = 'A vendor with this email already exists.';
           });
-          return;
-        }
 
-        // Add new vendor to Firestore
-        final hashedPassword = sha256.convert(utf8.encode(password)).toString();
-        await FirebaseFirestore.instance.collection('vendors').add({
-          'name': name,
-          'email': email,
-          'password': hashedPassword, // Store hashed password
-          'role': 'vendor',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        setState(() => _isLoading = false);
-        
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Registration successful! Welcome to VendorSync.'),
-              backgroundColor: maroonPopup,
-            ),
-          );
-          
-          // Navigate to vendor dashboard
-          Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
         }
       } catch (e) {
         setState(() {
@@ -108,18 +96,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Builder(
                           builder: (context) =>
-                            Navigator.canPop(context)
-                              ? Padding(
-                                  padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
-                                      onPressed: () => Navigator.of(context).pop(),
-                                    ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 0, left: 0, right: 0, bottom: 0),
+                              child: Align(
+                                alignment: Alignment.topLeft,
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Color(0xFF800000)),
+                                  onPressed: () => Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const WelcomeScreen()),
                                   ),
-                                )
-                              : const SizedBox.shrink(),
+                                ),
+                              ),
+                            ),
                         ),
                         CircleAvatar(
                           radius: 40,
