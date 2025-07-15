@@ -467,7 +467,7 @@ class AvailableSuppliersScreen extends StatelessWidget {
                                             ),
                                           ),
                                         );
-                                        if (confirm == true) {
+                                        if (confirm == true && vendorEmail.isNotEmpty) {
                                           await FirebaseFirestore.instance.collection('vendor_suppliers').add({
                                             'vendorEmail': vendorEmail,
                                             'supplierId': docId,

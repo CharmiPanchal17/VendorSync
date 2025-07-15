@@ -20,9 +20,9 @@ import '../../services/sales_service.dart';
 import 'report_screen.dart';
 import 'below_threshold_screen.dart';
 
+
 // Rename color constant to avoid export conflicts
 const maroonVendor = Color(0xFF800000);
-
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key, this.vendorEmail = 'vendor@example.com'});
   final String vendorEmail;
@@ -36,13 +36,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   String? vendorName;
+
   List<Map<String, dynamic>> draftOrders = [];
+
 
   @override
   void initState() {
     super.initState();
     _fetchVendorName();
     _checkAndLoadDraftOrders();
+
   }
 
   Future<void> _fetchVendorName() async {
@@ -66,16 +69,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       setState(() {
         vendorName = 'Vendor';
       });
-    }
-  }
-
+   
   Future<void> _checkAndLoadDraftOrders() async {
     await SalesService.checkAndCreateDraftOrders(widget.vendorEmail);
     final drafts = await SalesService.getDraftOrders(widget.vendorEmail);
     setState(() {
       draftOrders = drafts;
     });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +153,17 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
+                      icon: Icons.shopping_cart,
+                      title: 'Orders',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).pushNamed('/vendor-orders', arguments: widget.vendorEmail);
+                      },
+                      textColor: isDark ? Colors.white : Color(0xFF800000),
+                      badge: _pendingOrdersCount > 0 ? _pendingOrdersCount.toString() : null,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
                       icon: Icons.add_shopping_cart,
                       title: 'Create Initial Order',
                       onTap: () {
@@ -176,6 +188,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
+
                       icon: Icons.auto_awesome,
                       title: 'Auto Settings',
                       onTap: () {
@@ -201,6 +214,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/below-threshold', arguments: widget.vendorEmail);
+
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
                     ),
@@ -211,7 +225,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const AnalyticsScreen(),
+                          builder: (context) => AnalyticsScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
                       textColor: isDark ? Colors.white : Color(0xFF800000),
@@ -288,30 +302,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                                 color: isDark ? colorScheme.onSurface : Colors.black,
                               ),
                             ),
-                            content: Text(
-                              'Are you sure you want to logout? This will remove your vendor details from the system.',
-                              style: TextStyle(
-                                color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade600,
-                              ),
-                            ),
-                            backgroundColor: maroonVendor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            content: const Text('Are you sure you want to logout?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(false),
-                                child: Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    color: isDark ? colorScheme.primary : Colors.blue,
-                                  ),
-                                ),
+                                child: const Text('Cancel'),
                               ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: maroonVendor,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
+                              TextButton(
                                 onPressed: () => Navigator.of(context).pop(true),
                                 child: const Text('Logout'),
                               ),
@@ -319,22 +316,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          // Find and delete the vendor document by email
-                          final vendorQuery = await FirebaseFirestore.instance
-                              .collection('vendors')
-                              .where('email', isEqualTo: widget.vendorEmail)
-                              .limit(1)
-                              .get();
-                          if (vendorQuery.docs.isNotEmpty) {
-                            await FirebaseFirestore.instance
-                                .collection('vendors')
-                                .doc(vendorQuery.docs.first.id)
-                                .delete();
-                          }
-                          // Navigate to login page
-                          if (context.mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false, arguments: 'vendor');
-                          }
+                          final storage = const FlutterSecureStorage();
+                          await storage.delete(key: 'userEmail');
+                          await storage.delete(key: 'loginTimestamp');
+                          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                         }
                       },
                       isLogout: true,
@@ -1090,8 +1075,9 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPress
           _showUpdateStockOptions(context);
+
         },
         icon: const Icon(Icons.inventory),
         label: const Text('Update Stock'),
@@ -1206,6 +1192,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     bool isLogout = false,
     Color? textColor,
     Color? iconColor,
+    String? badge,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1243,6 +1230,23 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             fontSize: 16,
           ),
         ),
+        trailing: badge != null
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : null,
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -1597,6 +1601,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         unitPrice: unitPrice,
         notes: 'Delivered and approved by vendor',
         status: 'Completed',
+        vendorEmail: widget.vendorEmail,
       );
 
       // Find and update the corresponding stock item
@@ -1632,6 +1637,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           lastDeliveryDate: DateTime.now(),
           autoOrderEnabled: currentStockItem.autoOrderEnabled,
           averageUnitPrice: newAveragePrice,
+          vendorEmail: widget.vendorEmail,
         );
 
         // If using Firestore, you would also update the stock collection here
@@ -1651,6 +1657,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           lastDeliveryDate: DateTime.now(),
           autoOrderEnabled: false,
           averageUnitPrice: unitPrice,
+          vendorEmail: widget.vendorEmail,
         );
         
         mockStockItems.add(newStockItem);

@@ -26,14 +26,24 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   String? _selectedSupplierName;
   String? _selectedSupplierEmail;
   
-  DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
+  DateTime _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
   
   // Auto-order settings
-  bool _enableAutoOrder = true;
-  int _autoOrderQuantity = 0;
+  // Remove auto-ordering toggle and related logic
+  // 1. Remove the _enableAutoOrder variable and its usage
+  // 2. Remove SwitchListTile for enabling auto-ordering
+  // 3. Always show the threshold field and make it required
+  // 4. Remove auto-ordering references in dialogs and order creation
+  // Remove: bool _enableAutoOrder = true;
+  // Remove: int _autoOrderQuantity = 0;
+  // Remove: SwitchListTile for enabling auto-ordering
+  // In the threshold TextFormField, remove if (_enableAutoOrder) ... and always show it
+  // In the validator, remove the _enableAutoOrder check, always require threshold
+  // In _createOrder, remove all _enableAutoOrder and autoOrderEnabled logic
+  // In the success dialog, remove auto-ordering info
 
   @override
   void initState() {
@@ -171,7 +181,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               return null;
                             },
                             onChanged: (value) {
-                              _updateAutoOrderQuantity();
+                              // _updateAutoOrderQuantity(); // No longer needed
                             },
                           ),
                         ],
@@ -286,7 +296,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                         icon: const Icon(Icons.add),
                                         label: const Text('Add Suppliers'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.orange,
+                                          backgroundColor: maroon,
                                           foregroundColor: Colors.white,
                                         ),
                                       ),
@@ -733,7 +743,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                   const SizedBox(height: 24),
                   
                   // Auto-Order Settings Section
-                  _buildSectionHeader('Auto-Order Settings', Icons.settings, isDark),
+                  _buildSectionHeader('Set Threshold', Icons.settings, isDark),
                   const SizedBox(height: 16),
                   
                   Card(
@@ -742,79 +752,58 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          SwitchListTile(
-                            title: Text(
-                              'Enable Auto-Ordering',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
+                          // Remove auto-ordering toggle and related logic
+                          // 1. Remove the _enableAutoOrder variable and its usage
+                          // 2. Remove SwitchListTile for enabling auto-ordering
+                          // 3. Always show the threshold field and make it required
+                          // 4. Remove auto-ordering references in dialogs and order creation
+                          // Remove: bool _enableAutoOrder = true;
+                          // Remove: int _autoOrderQuantity = 0;
+                          // Remove: SwitchListTile for enabling auto-ordering
+                          // In the threshold TextFormField, remove if (_enableAutoOrder) ... and always show it
+                          // In the validator, remove the _enableAutoOrder check, always require threshold
+                          // In _createOrder, remove all _enableAutoOrder and autoOrderEnabled logic
+                          // In the success dialog, remove auto-ordering info
+                          TextFormField(
+                            controller: _thresholdController,
+                            decoration: _buildInputDecoration(
+                              'Set Threshold (%)',
+                              Icons.warning,
+                              isDark,
                             ),
-                            subtitle: Text(
-                              'Automatically place orders when stock is low',
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.grey[600],
-                              ),
-                            ),
-                            value: _enableAutoOrder,
-                            onChanged: (value) {
-                              setState(() {
-                                _enableAutoOrder = value;
-                              });
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter threshold percentage';
+                              }
+                              final threshold = int.tryParse(value);
+                              if (threshold == null || threshold <= 0 || threshold >= 100) {
+                                return 'Please enter a valid percentage (1-99)';
+                              }
+                              return null;
                             },
-                            activeColor: maroon,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
                           ),
-                          if (_enableAutoOrder) ...[
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _thresholdController,
-                              decoration: _buildInputDecoration(
-                                'Low Stock Threshold (%)',
-                                Icons.warning,
-                                isDark,
-                              ),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (!_enableAutoOrder) return null;
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter threshold percentage';
-                                }
-                                final threshold = int.tryParse(value);
-                                if (threshold == null || threshold <= 0 || threshold >= 100) {
-                                  return 'Please enter a valid percentage (1-99)';
-                                }
-                                return null;
-                              },
-                              onChanged: (value) {
-                                _updateAutoOrderQuantity();
-                              },
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: maroon.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: maroon.withOpacity(0.3)),
                             ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: maroon.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: maroon.withOpacity(0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: maroon, size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Auto-order will be placed when stock reaches ${_thresholdController.text}% of initial quantity ($_autoOrderQuantity units)',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: maroon,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+
+                            child: Text(
+                              'You will be notified when stock reaches ${_thresholdController.text}% of initial quantity',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: maroon,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
@@ -883,7 +872,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                         final quantity = _quantityController.text.trim();
                         final supplierName = _selectedSupplierName ?? '';
                         final supplierEmail = _selectedSupplierEmail ?? '';
-                        final autoOrderEnabled = _enableAutoOrder;
+                        // final autoOrderEnabled = _enableAutoOrder; // No longer needed
                         final threshold = _thresholdController.text.trim();
                         final confirmed = await showDialog<bool>(
                           context: context,
@@ -897,8 +886,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                 Text('Quantity: $quantity'),
                                 Text('Supplier: $supplierName'),
                                 Text('Supplier Email: $supplierEmail'),
-                                Text('Auto Re-ordering: ${autoOrderEnabled ? 'Enabled' : 'Disabled'}'),
-                                if (autoOrderEnabled)
+                                // Text('Auto Re-ordering: ${autoOrderEnabled ? 'Enabled' : 'Disabled'}'), // No longer needed
+                                if (false) // Always show threshold
                                   Text('Auto Order Threshold: $threshold'),
                               ],
                             ),
@@ -1042,7 +1031,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
     
     if (quantity != null && threshold != null && threshold > 0 && threshold < 100) {
       setState(() {
-        _autoOrderQuantity = (quantity * threshold / 100).round();
+        // _autoOrderQuantity = (quantity * threshold / 100).round(); // No longer needed
       });
     }
   }
@@ -1060,7 +1049,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
 
     try {
       final quantity = int.parse(_quantityController.text);
-      final threshold = _enableAutoOrder ? int.parse(_thresholdController.text) : 0;
+      final threshold = int.parse(_thresholdController.text);
       
       // Create the order document
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
@@ -1071,8 +1060,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': _preferredDeliveryDate,
-        'autoOrderEnabled': _enableAutoOrder,
-        'autoOrderThreshold': threshold,
+        'threshold': threshold,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -1086,8 +1074,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'initialQuantity': quantity,
         'currentStock': quantity,
         'lowStockThreshold': threshold,
-        'autoOrderEnabled': _enableAutoOrder,
-        'autoOrderQuantity': _autoOrderQuantity,
+        // 'autoOrderEnabled': _enableAutoOrder, // No longer needed
+        // 'autoOrderQuantity': _autoOrderQuantity, // No longer needed
         'lastOrderId': orderRef.id,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -1122,9 +1110,9 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       _productNameController.clear();
       _quantityController.clear();
       _thresholdController.text = '30';
-      _preferredDeliveryDate = DateTime.now().add(const Duration(days: 7));
-      _enableAutoOrder = true;
-      _autoOrderQuantity = 0;
+      _preferredDeliveryDate = DateTime.now().add(const Duration(days: 1));
+      // _enableAutoOrder = true; // No longer needed
+      // _autoOrderQuantity = 0; // No longer needed
       _selectedSupplierId = null;
       _selectedSupplierName = null;
       _selectedSupplierEmail = null;
@@ -1357,32 +1345,32 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                   ),
                    
                    // Auto-order info if enabled
-                   if (_enableAutoOrder) ...[
-                     const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.green.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome, color: Colors.green, size: 16),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Auto-ordering enabled',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                   // if (_enableAutoOrder) ...[ // No longer needed
+                   //   const SizedBox(height: 10),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.green.withOpacity(0.2),
+                  //     borderRadius: BorderRadius.circular(20),
+                  //     border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  //   ),
+                  //   child: Row(
+                  //     mainAxisSize: MainAxisSize.min,
+                  //     children: [
+                  //       Icon(Icons.auto_awesome, color: Colors.green, size: 16),
+                  //       const SizedBox(width: 6),
+                  //       Text(
+                  //         'Auto-ordering enabled',
+                  //         style: TextStyle(
+                  //           color: Colors.green,
+                  //           fontWeight: FontWeight.w600,
+                  //           fontSize: 12,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // ],
                 ],
               ),
             ),
