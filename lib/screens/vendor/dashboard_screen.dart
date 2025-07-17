@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../mock_data/mock_orders.dart';
-import '../../models/order.dart';
 
 class VendorDashboardScreen extends StatelessWidget {
   const VendorDashboardScreen({super.key});
