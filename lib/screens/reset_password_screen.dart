@@ -17,7 +17,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final role = ModalRoute.of(context)?.settings.arguments as String?;
     return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
       body: SafeArea(
         child: Card(
           margin: EdgeInsets.zero,
