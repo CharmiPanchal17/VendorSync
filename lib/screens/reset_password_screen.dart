@@ -23,13 +23,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final role = ModalRoute.of(context)?.settings.arguments as String?;
     return Scaffold(
-      body: Stack(
-        children: [
-          // Solid light cyan background to match welcome page
-          Container(
-            color: const Color(0xFFAFFFFF),
-          ),
-          SafeArea(
+
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
+      body: SafeArea(
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 8,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40)
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),

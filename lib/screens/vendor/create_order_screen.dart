@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../services/notification_service.dart';
@@ -935,9 +936,9 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     ),
                   ),
                   const SizedBox(height: 100), // Extra space for floating action button
-                ],
+                ]
               ),
-            ),
+            ],
           ),
         ),
       ),

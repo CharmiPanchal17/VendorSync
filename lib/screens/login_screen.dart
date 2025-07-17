@@ -69,14 +69,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     const maroon = Color(0xFF800000);
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Solid light cyan background to match welcome page
-          Container(
-            color: const Color(0xFFAFFFFF),
-          ),
-          SafeArea(
+    return Scaffold
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
+      body: SafeArea(
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 8,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),

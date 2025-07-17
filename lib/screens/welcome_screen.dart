@@ -7,11 +7,13 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Solid light cyan background to match login page
-          Container(
-            color: const Color(0xFFAFFFFF),
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
+      body: SafeArea(
+        child: Card(
+          margin: EdgeInsets.zero,
+          elevation: 8,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
           ),
           SafeArea(
             child: Column(
