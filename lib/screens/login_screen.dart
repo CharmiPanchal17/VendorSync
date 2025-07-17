@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
       body: SafeArea(
         child: Card(
           margin: EdgeInsets.zero,
