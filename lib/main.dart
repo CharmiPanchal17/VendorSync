@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'screens.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'screens/vendor/edit_profile_screen.dart';
+import 'screens/supplier/edit_profile_screen.dart';
+import 'screens/vendor/settings_screen.dart';
+import 'screens/supplier/settings_screen.dart';
 
-void main() {
-  runApp(const VendorSyncApp());
-}
+import 'models/order.dart' as order_model;
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
+import 'screens/splash_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class VendorSyncApp extends StatelessWidget {
-  const VendorSyncApp({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +44,8 @@ class VendorSyncApp extends StatelessWidget {
         '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
         '/supplier-profile': (context) => const SupplierProfileScreen(),
         '/create-order': (context) => CreateOrderScreen(),
+
       },
-      debugShowCheckedModeBanner: false,
     );
   }
 }

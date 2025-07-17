@@ -2,40 +2,166 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import 'package:intl/intl.dart';
 
+// Add color constants at the top-level for use throughout the file
+const maroonVendorOrderDetails = Color(0xFF800000);
+const lightCyanVendorOrderDetails = Color(0xFFAFFFFF);
+
 class VendorOrderDetailsScreen extends StatelessWidget {
   const VendorOrderDetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final order = ModalRoute.of(context)!.settings.arguments as Order;
-    final statusIndex = _statusIndex(order.status);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Details')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Product: ${order.productName}', style: const TextStyle(fontSize: 18)),
-            Text('Supplier: ${order.supplierName}'),
-            Text('Quantity: ${order.quantity}'),
-            Text('Preferred Delivery: ${DateFormat.yMMMd().format(order.preferredDeliveryDate)}'),
-            if (order.actualDeliveryDate != null)
-              Text('Delivered: ${DateFormat.yMMMd().format(order.actualDeliveryDate!)}'),
-            const SizedBox(height: 24),
-            Stepper(
-              currentStep: statusIndex,
-              controlsBuilder: (context, details) => const SizedBox.shrink(),
-              steps: const [
-                Step(title: Text('Placed'), content: SizedBox()),
-                Step(title: Text('Confirmed'), content: SizedBox()),
-                Step(title: Text('Shipped'), content: SizedBox()),
-                Step(title: Text('Delivered'), content: SizedBox()),
-              ],
+      appBar: AppBar(
+        title: Text(
+          'Order Details',
+          style: TextStyle(
+            color: isDark ? colorScheme.onSurface : Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(
+          color: isDark ? colorScheme.onSurface : Colors.white,
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                : [maroonVendorOrderDetails, maroonVendorOrderDetails.withOpacity(0.8)],
             ),
-          ],
+          ),
         ),
       ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2D2D2D) : lightCyanVendorOrderDetails,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Card with order info
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? colorScheme.surface : Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Order Information',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildInfoRow(Icons.shopping_bag, 'Product', order.productName, isDark, colorScheme),
+                            const SizedBox(height: 12),
+                            _buildInfoRow(Icons.person, 'Supplier', order.supplierName, isDark, colorScheme),
+                            const SizedBox(height: 12),
+                            _buildInfoRow(Icons.format_list_numbered, 'Quantity', order.quantity.toString(), isDark, colorScheme),
+                            const SizedBox(height: 12),
+                            _buildInfoRow(Icons.calendar_today, 'Delivery Date', DateFormat.yMMMd().format(order.preferredDeliveryDate), isDark, colorScheme),
+                            if (order.actualDeliveryDate != null) ...[
+                              const SizedBox(height: 12),
+                              _buildInfoRow(Icons.check_circle, 'Delivered', DateFormat.yMMMd().format(order.actualDeliveryDate!), isDark, colorScheme),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Status Chip
+                    Center(
+                      child: Chip(
+                        label: Text(
+                          order.status,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        backgroundColor: _getStatusColor(order.status),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        elevation: 4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, bool isDark, ColorScheme colorScheme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isDark ? colorScheme.primary.withOpacity(0.2) : maroonVendorOrderDetails.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon, 
+            color: isDark ? colorScheme.primary : maroonVendorOrderDetails, 
+            size: 20
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? colorScheme.onSurface.withOpacity(0.7) : Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? colorScheme.onSurface : const Color(0xFF1A1A1A),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -51,6 +177,21 @@ class VendorOrderDetailsScreen extends StatelessWidget {
         return 3;
       default:
         return 0;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Pending':
+        return Colors.orange;
+      case 'Confirmed':
+        return Colors.blue;
+      case 'Shipped':
+        return Colors.purple;
+      case 'Delivered':
+        return maroonVendorOrderDetails;
+      default:
+        return Colors.grey;
     }
   }
 } 

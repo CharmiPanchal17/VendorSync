@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "373771725567",
+    "project_id": "vendorsync-9aab6",
+    "storage_bucket": "vendorsync-9aab6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373771725567:android:ec8e958358dcb016697aca",
+        "android_client_info": {
+          "package_name": "com.example.vendorsync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF2O4ADyKrc7qY5N2W6yejRxFytm0qndI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
