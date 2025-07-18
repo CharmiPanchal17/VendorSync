@@ -34,9 +34,9 @@ class ProductReportScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.print),
+            icon: const Icon(Icons.download),
             onPressed: () => _printReport(context),
-            tooltip: 'Print Report',
+            tooltip: 'Download Report',
           ),
         ],
       ),

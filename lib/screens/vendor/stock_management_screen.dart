@@ -3,7 +3,7 @@ import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/notification_service.dart';
+import '../../services/notification_service.dart'; 
 import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
@@ -360,22 +360,25 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       });
       // Mark auto-order as pending to prevent duplicates
       await inventory.reference.update({'autoOrderPending': true, 'lastOrderId': orderRef.id});
-      // Notify supplier
-      await NotificationService.notifySupplierOfNewOrder(
-        vendorEmail: updatedStockItem.vendorEmail,
-        supplierEmail: supplierEmail,
+      // Notify vendor (not supplier) that an auto-order is pending their confirmation
+      await NotificationService.createNotification(
+        title: 'Auto-Order Pending Confirmation',
+        message: 'An auto-order for ${updatedStockItem.productName} (${autoOrderQuantity} units) has been created and is pending your confirmation.',
+        type: NotificationType.orderPlaced,
+        recipientEmail: updatedStockItem.vendorEmail,
+        senderEmail: supplierEmail,
         orderId: orderRef.id,
         productName: updatedStockItem.productName,
-        quantity: autoOrderQuantity,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Auto-order placed for ${updatedStockItem.productName} (${autoOrderQuantity} units). Supplier notified.'),
+            content: Text('Auto-order placed for ${updatedStockItem.productName} (${autoOrderQuantity} units). Vendor notified for confirmation.'),
             backgroundColor: Colors.green,
           ),
         );
       }
+      return;
     }
     await _saveStockDataToFirestore();
   }
