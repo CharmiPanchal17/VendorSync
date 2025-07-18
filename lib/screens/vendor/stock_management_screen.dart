@@ -88,20 +88,35 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        // If no stock data exists, create it from actual orders
-        await _createStockFromOrders();
+        // If no stock data exists, create it from actual orders (first setup only)
+        final ordersSnapshot = await FirebaseFirestore.instance
+            .collection('orders')
+            .where('status', isEqualTo: 'Delivered')
+            .where('vendorEmail', isEqualTo: currentVendorEmail)
+            .get();
+        if (ordersSnapshot.docs.isNotEmpty) {
+          await _createStockFromOrders(initialSetup: true);
+        } else {
+          // Only use mock data if Firestore and orders are both empty (first setup)
+          setState(() {
+            stockItems = _sortStockItems(List.from(mockStockItems));
+            isLoading = false;
+          });
+          // Do NOT call _saveStockDataToFirestore here
+        }
       }
     } catch (e) {
       print('Error loading stock data: $e');
-      // Fallback to mock data
+      // Only use mock data if Firestore fails and it's first setup
       setState(() {
         stockItems = List.from(mockStockItems);
         isLoading = false;
       });
+      // Do NOT call _saveStockDataToFirestore here
     }
   }
 
-  Future<void> _createStockFromOrders() async {
+  Future<void> _createStockFromOrders({bool initialSetup = false}) async {
     try {
       final currentVendorEmail = widget.vendorEmail;
       if (currentVendorEmail == null) {
@@ -115,12 +130,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           .get();
 
       if (ordersSnapshot.docs.isEmpty) {
-        // No delivered orders, use mock data
+        // No delivered orders, use mock data (first setup only)
         setState(() {
           stockItems = _sortStockItems(List.from(mockStockItems));
           isLoading = false;
         });
-        await _saveStockDataToFirestore();
+        // Do NOT call _saveStockDataToFirestore here
         return;
       }
 
@@ -219,16 +234,18 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         isLoading = false;
       });
 
-      // Save the real stock data to Firestore
-      await _saveStockDataToFirestore();
+      // Only save to Firestore if this is the first setup
+      if (initialSetup) {
+        await _saveStockDataToFirestore();
+      }
 
     } catch (e) {
       print('Error creating stock from orders: $e');
-      // Fallback to mock data
       setState(() {
         stockItems = _sortStockItems(List.from(mockStockItems));
         isLoading = false;
       });
+      // Do NOT call _saveStockDataToFirestore here
     }
   }
 
