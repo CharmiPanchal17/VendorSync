@@ -26,6 +26,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _loadStockData() async {
     try {
+      if (!mounted) return;
       setState(() { isLoading = true; });
       final currentVendorEmail = widget.vendorEmail;
       final stockSnapshot = await FirebaseFirestore.instance
@@ -33,6 +34,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
       if (stockSnapshot.docs.isNotEmpty) {
+        if (!mounted) return;
         setState(() {
           stockData = stockSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
           isLoading = false;
@@ -85,6 +87,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               'vendorEmail': currentVendorEmail,
             });
           }
+          if (!mounted) return;
           setState(() {
             stockData = realStockData;
             isLoading = false;
@@ -92,6 +95,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           await _saveStockDataToFirestore(realStockData);
         } else {
           // Fallback to mock data
+          if (!mounted) return;
           setState(() {
             stockData = mockStockItems.map((item) => {
               'productName': item.productName,
@@ -107,6 +111,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         stockData = mockStockItems.map((item) => {
           'productName': item.productName,
