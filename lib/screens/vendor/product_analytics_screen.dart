@@ -269,9 +269,28 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                           FlSpot(i.toDouble(), (dailySalesData[i]['sales'] as int).toDouble()),
                                       ],
                                       isCurved: true,
-                                      color: maroon,
-                                      barWidth: 3,
-                                      dotData: FlDotData(show: true),
+                                      preventCurveOverShooting: true,
+                                      gradient: LinearGradient(
+                                        colors: [maroon, Colors.purple],
+                                      ),
+                                      barWidth: 4,
+                                      belowBarData: BarAreaData(
+                                        show: true,
+                                        gradient: LinearGradient(
+                                          colors: [maroon.withOpacity(0.3), Colors.purple.withOpacity(0.1)],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                      dotData: FlDotData(
+                                        show: true,
+                                        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                                          radius: 5,
+                                          color: Colors.white,
+                                          strokeWidth: 3,
+                                          strokeColor: maroon,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
