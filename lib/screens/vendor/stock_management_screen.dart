@@ -306,6 +306,23 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Re-sort the list after updating to maintain threshold items first
       stockItems = _sortStockItems(List.from(stockItems));
     });
+    // Persist the update to Firestore
+    final docRef = FirebaseFirestore.instance.collection('stock_items').doc(updatedStockItem.id);
+    await docRef.update({
+      'productName': updatedStockItem.productName,
+      'currentStock': updatedStockItem.currentStock,
+      'minimumStock': updatedStockItem.minimumStock,
+      'maximumStock': updatedStockItem.maximumStock,
+      'primarySupplier': updatedStockItem.primarySupplier,
+      'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
+      'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
+      'averageUnitPrice': updatedStockItem.averageUnitPrice,
+      'thresholdLevel': updatedStockItem.thresholdLevel,
+      'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
+      'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
+      'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
     print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
