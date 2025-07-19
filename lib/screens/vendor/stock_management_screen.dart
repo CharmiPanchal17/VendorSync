@@ -76,7 +76,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
             vendorEmail: currentVendorEmail,
-            thresholdLevel: data['thresholdLevel'],
+            thresholdLevel: data['thresholdLevel'] ?? 0,
             thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
             lastThresholdAlert: data['lastThresholdAlert'] != null 
                 ? (data['lastThresholdAlert'] as Timestamp).toDate() 
@@ -90,18 +90,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        // Only use mock data in debug mode
-        if (kDebugMode) {
-          setState(() {
-            stockItems = _sortStockItems(List.from(mockStockItems));
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            stockItems = [];
-            isLoading = false;
-          });
-        }
+        setState(() {
+          stockItems = [];
+          isLoading = false;
+        });
       }
     } catch (e) {
       print('Error loading stock data: $e');

@@ -1468,11 +1468,24 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
       // Update or create the stock_items document for this product/vendor
       final stockDocId = '${productName}_${widget.vendorEmail}';
-      await FirebaseFirestore.instance.collection('stock_items').doc(stockDocId).set({
+      final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(stockDocId);
+      final stockSnapshot = await stockRef.get();
+
+      int newStock;
+      if (stockSnapshot.exists) {
+        final data = stockSnapshot.data()!;
+        final existingStock = data['currentStock'] ?? 0;
+        newStock = existingStock + quantity;
+      } else {
+        newStock = quantity;
+      }
+
+      // Always set thresholdLevel from the delivered order
+      await stockRef.set({
         'productName': productName,
-        'currentStock': quantity,
-        'minimumStock': (quantity * 0.1).round(),
-        'maximumStock': quantity,
+        'currentStock': newStock,
+        'minimumStock': (newStock * 0.1).round(),
+        'maximumStock': newStock,
         'primarySupplier': supplierName,
         'primarySupplierEmail': supplierEmail,
         'autoOrderEnabled': false,
