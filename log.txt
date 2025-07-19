@@ -159,3 +159,4 @@ Excel upload UI
 Loading spinner for uploads
 Backend  parser
 Improved  UX
+Fixed duplicate rows issue
