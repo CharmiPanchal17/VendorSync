@@ -450,7 +450,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         'productName': updatedStockItem.productName,
         'quantity': autoOrderQuantity,
         'supplierName': supplierName,
-        'supplierEmail': supplierEmail,
+        'supplierEmail': supplierEmail, // Ensure supplierEmail is included
         'vendorEmail': updatedStockItem.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': DateTime.now().add(const Duration(days: 7)),
@@ -460,6 +460,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
         'isAutoOrder': true,
       });
+      print('DEBUG: Auto-order created with supplierEmail: $supplierEmail');
       // Mark auto-order as pending to prevent duplicates
       await inventory.reference.update({'autoOrderPending': true, 'lastOrderId': orderRef.id});
       // Notify vendor (not supplier) that an auto-order is pending their confirmation
