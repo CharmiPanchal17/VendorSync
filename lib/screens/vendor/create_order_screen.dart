@@ -1071,7 +1071,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'supplierEmail': _selectedSupplierEmail,
         'vendorEmail': widget.vendorEmail,
         'initialQuantity': quantity,
-        'currentStock': quantity,
+        // 'currentStock': quantity, // Do NOT store currentStock here; only in stock_items
         'lowStockThreshold': threshold,
         // 'autoOrderEnabled': _enableAutoOrder, // No longer needed
         // 'autoOrderQuantity': _autoOrderQuantity, // No longer needed

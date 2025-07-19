@@ -84,35 +84,47 @@ class DeliveryTrackingService {
     required String vendorEmail, // NEW PARAM
   }) async {
     final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
+    print('DEBUG: Attempting to update stock_items/${productName + '_' + vendorEmail} with deliveredQuantity: $deliveredQuantity');
+    // Use a transaction to ensure consistency
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final stockSnapshot = await transaction.get(stockRef);
       if (stockSnapshot.exists) {
         final currentStock = stockSnapshot['currentStock'] ?? 0;
-        transaction.update(stockRef, {
-          'currentStock': currentStock + deliveredQuantity,
-          'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
-          'vendorEmail': vendorEmail, // NEW FIELD
-        });
+        try {
+          transaction.update(stockRef, {
+            'currentStock': currentStock + deliveredQuantity,
+            'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
+            'vendorEmail': vendorEmail, // NEW FIELD
+          });
+          print('DEBUG: Firestore transaction update succeeded for ${productName + '_' + vendorEmail} - new currentStock: ${currentStock + deliveredQuantity}');
+        } catch (e) {
+          print('ERROR: Firestore transaction update failed for ${productName + '_' + vendorEmail}: $e');
+        }
       } else {
-        transaction.set(stockRef, {
-          'productName': productName,
-          'currentStock': deliveredQuantity,
-          'minimumStock': (deliveredQuantity * 0.1).round(),
-          'maximumStock': deliveredQuantity,
-          'firstDeliveryDate': Timestamp.now(),
-          'lastDeliveryDate': Timestamp.now(),
-          'deliveryHistory': [
-            {
-              'quantity': deliveredQuantity,
-              'deliveryDate': Timestamp.now(),
-              'supplierName': '',
-              'supplierEmail': '',
-              'vendorEmail': vendorEmail, // NEW FIELD
-              'notes': '',
-            }
-          ],
-          'vendorEmail': vendorEmail, // NEW FIELD
-        });
+        try {
+          transaction.set(stockRef, {
+            'productName': productName,
+            'currentStock': deliveredQuantity,
+            'minimumStock': (deliveredQuantity * 0.1).round(),
+            'maximumStock': deliveredQuantity,
+            'firstDeliveryDate': Timestamp.now(),
+            'lastDeliveryDate': Timestamp.now(),
+            'deliveryHistory': [
+              {
+                'quantity': deliveredQuantity,
+                'deliveryDate': Timestamp.now(),
+                'supplierName': '',
+                'supplierEmail': '',
+                'vendorEmail': vendorEmail, // NEW FIELD
+                'notes': '',
+              }
+            ],
+            'vendorEmail': vendorEmail, // NEW FIELD
+          });
+          print('DEBUG: Firestore transaction set succeeded for ${productName + '_' + vendorEmail} - new currentStock: $deliveredQuantity');
+        } catch (e) {
+          print('ERROR: Firestore transaction set failed for ${productName + '_' + vendorEmail}: $e');
+        }
       }
     });
     print('Stock updated: $productName - Added $deliveredQuantity units');
