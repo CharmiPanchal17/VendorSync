@@ -466,14 +466,45 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   valueColor: AlwaysStoppedAnimation<Color>(maroon),
                 ),
               )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: stockItems.length,
-                itemBuilder: (context, index) {
-                  final stockItem = stockItems[index];
-                  return _buildStockCard(context, stockItem, isDark, index);
-                },
-              ),
+            : stockItems.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2,
+                          size: 64,
+                          color: isDark ? Colors.white24 : Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No products in stock',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Deliver products to see them here.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? Colors.white38 : Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: stockItems.length,
+                    itemBuilder: (context, index) {
+                      final stockItem = stockItems[index];
+                      return _buildStockCard(context, stockItem, isDark, index);
+                    },
+                  ),
       ),
     );
   }
