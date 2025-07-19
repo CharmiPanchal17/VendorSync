@@ -38,7 +38,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       });
 
       final currentVendorEmail = widget.vendorEmail;
-      print('DEBUG: Current vendor email: ' + (currentVendorEmail));
+      print('DEBUG: Querying stock_items for vendorEmail: ' + currentVendorEmail);
 
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
@@ -56,6 +56,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         // Load from Firestore
         final loadedStockItems = stockSnapshot.docs.map((doc) {
           final data = doc.data();
+          print('DEBUG: ${data['productName']} thresholdLevel: ${data['thresholdLevel']}');
           return StockItem(
             id: doc.id,
             productName: data['productName'] ?? '',
@@ -74,7 +75,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
             vendorEmail: currentVendorEmail,
-            thresholdLevel: data['thresholdLevel'] ?? 0,
+            thresholdLevel: data['thresholdLevel'],
             thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
             lastThresholdAlert: data['lastThresholdAlert'] != null 
                 ? (data['lastThresholdAlert'] as Timestamp).toDate() 
