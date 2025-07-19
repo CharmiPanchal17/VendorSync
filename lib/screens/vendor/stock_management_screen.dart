@@ -162,6 +162,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         DateTime? firstDelivery;
         DateTime? lastDelivery;
         final List<DeliveryRecord> deliveryHistory = [];
+        int? thresholdLevel;
 
         for (final orderDoc in orders) {
           final data = orderDoc.data() as Map<String, dynamic>;
@@ -186,6 +187,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             }
           }
 
+          // Get threshold from the first order that has it
+          if (thresholdLevel == null && data['threshold'] != null) {
+            thresholdLevel = data['threshold'] as int?;
+          }
           // Create delivery record
           deliveryHistory.add(DeliveryRecord(
             id: 'del_${orderDoc.id}',
@@ -201,7 +206,21 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             vendorEmail: currentVendorEmail,
           ));
         }
-
+        // If not found in orders, try to get from product_inventory
+        if (thresholdLevel == null) {
+          final inventorySnapshot = await FirebaseFirestore.instance
+              .collection('product_inventory')
+              .where('productName', isEqualTo: productName)
+              .where('vendorEmail', isEqualTo: currentVendorEmail)
+              .limit(1)
+              .get();
+          if (inventorySnapshot.docs.isNotEmpty) {
+            final invData = inventorySnapshot.docs.first.data();
+            if (invData['lowStockThreshold'] != null) {
+              thresholdLevel = invData['lowStockThreshold'] as int?;
+            }
+          }
+        }
         // Calculate current stock (assuming some has been sold/used)
         final currentStock = (totalDelivered * 0.7).round(); // Assume 70% of delivered is still in stock
         final minimumStock = (totalDelivered * 0.1).round(); // 10% of total delivered as minimum
@@ -224,6 +243,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           autoOrderEnabled: false,
           averageUnitPrice: averageUnitPrice,
           vendorEmail: currentVendorEmail,
+          thresholdLevel: thresholdLevel ?? 0,
         ));
 
         // stockId++; // No longer needed
@@ -236,7 +256,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
       // Only save to Firestore if this is the first setup
       if (initialSetup) {
-        await _saveStockDataToFirestore();
+      await _saveStockDataToFirestore();
       }
 
     } catch (e) {
@@ -305,6 +325,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               : null,
           'autoOrderEnabled': stockItem.autoOrderEnabled,
           'averageUnitPrice': stockItem.averageUnitPrice,
+          'thresholdLevel': stockItem.thresholdLevel,
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
