@@ -57,7 +57,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         // Load from Firestore
         final loadedStockItems = stockSnapshot.docs.map((doc) {
           final data = doc.data();
-          print('DEBUG: ${data['productName']} thresholdLevel: ${data['thresholdLevel']}');
+          print('DEBUG:  [36m${data['productName']} thresholdLevel: ${data['thresholdLevel']}\u001b[0m');
           return StockItem(
             id: doc.id,
             productName: data['productName'] ?? '',
@@ -90,7 +90,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        // Automatically sync from delivered orders if no stock items are found
+        // Only run the sync function if there are truly no stock items (first setup or recovery)
+        // DO NOT run this after every update or reload, to avoid overwriting sales deductions
         await rebuildStockItemsFromDeliveredOrders();
         // Try loading again
         final retrySnapshot = await FirebaseFirestore.instance
@@ -378,6 +379,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     });
     // Persist the update to Firestore
     final docRef = FirebaseFirestore.instance.collection('stock_items').doc(updatedStockItem.id);
+    final salesHistoryUpdate = (oldStock > updatedStockItem.currentStock)
+        ? {
+            'salesHistory': FieldValue.arrayUnion([
+              {
+                'quantitySold': oldStock - updatedStockItem.currentStock,
+                'timestamp': FieldValue.serverTimestamp(),
+              }
+            ]),
+          }
+        : {};
     await docRef.set({
       'productName': updatedStockItem.productName,
       'currentStock': updatedStockItem.currentStock,
@@ -392,10 +403,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
       'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
       'updatedAt': FieldValue.serverTimestamp(),
+      ...salesHistoryUpdate,
     }, SetOptions(merge: true));
     print('DEBUG: Firestore set for '
-        ' [32m${updatedStockItem.id} [0m - new currentStock: '
-        ' [33m${updatedStockItem.currentStock} [0m');
+        '\u001b[32m${updatedStockItem.id}\u001b[0m - new currentStock: '
+        '\u001b[33m${updatedStockItem.currentStock}\u001b[0m');
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
     print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
