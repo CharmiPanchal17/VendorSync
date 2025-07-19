@@ -380,15 +380,14 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     if (inventoryQuery.docs.isEmpty) return;
     final inventory = inventoryQuery.docs.first;
     final data = inventory.data();
-    final bool autoOrderEnabled = data['autoOrderEnabled'] ?? false;
     final int lowStockThreshold = data['lowStockThreshold'] ?? 0;
     final int autoOrderQuantity = data['autoOrderQuantity'] ?? 0;
     final String? supplierName = data['supplierName'];
     final String? supplierEmail = data['supplierEmail'];
     final bool autoOrderPending = data['autoOrderPending'] ?? false;
 
-    // Only trigger if enabled, not already pending, and threshold reached
-    if (autoOrderEnabled && !autoOrderPending && updatedStockItem.currentStock <= lowStockThreshold && autoOrderQuantity > 0 && supplierEmail != null && supplierName != null) {
+    // Only trigger if not already pending, and threshold reached
+    if (!autoOrderPending && updatedStockItem.currentStock <= lowStockThreshold && autoOrderQuantity > 0 && supplierEmail != null && supplierName != null) {
       // Create a new order
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'productName': updatedStockItem.productName,
