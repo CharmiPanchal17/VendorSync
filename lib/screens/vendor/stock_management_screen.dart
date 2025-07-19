@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as ex;
 import '../../models/notification.dart';
+import 'package:flutter/foundation.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -89,21 +90,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        // If no stock data exists, create it from actual orders (first setup only)
-        final ordersSnapshot = await FirebaseFirestore.instance
-            .collection('orders')
-            .where('status', isEqualTo: 'Delivered')
-            .where('vendorEmail', isEqualTo: currentVendorEmail)
-            .get();
-        if (ordersSnapshot.docs.isNotEmpty) {
-          await _createStockFromOrders(initialSetup: true);
-        } else {
-          // Only use mock data if Firestore and orders are both empty (first setup)
+        // Only use mock data in debug mode
+        if (kDebugMode) {
           setState(() {
             stockItems = _sortStockItems(List.from(mockStockItems));
             isLoading = false;
           });
-          // Do NOT call _saveStockDataToFirestore here
+        } else {
+          setState(() {
+            stockItems = [];
+            isLoading = false;
+          });
         }
       }
     } catch (e) {

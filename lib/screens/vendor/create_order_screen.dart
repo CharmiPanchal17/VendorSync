@@ -1080,22 +1080,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update or create the stock_items document for this product/vendor
-      final stockDocId = '${_productNameController.text.trim()}_${widget.vendorEmail}';
-      await FirebaseFirestore.instance.collection('stock_items').doc(stockDocId).set({
-        'productName': _productNameController.text.trim(),
-        'currentStock': quantity,
-        'minimumStock': (quantity * 0.1).round(),
-        'maximumStock': quantity,
-        'primarySupplier': _selectedSupplierName,
-        'primarySupplierEmail': _selectedSupplierEmail,
-        'autoOrderEnabled': false,
-        'averageUnitPrice': null,
-        'vendorEmail': widget.vendorEmail,
-        'thresholdLevel': threshold,
-        'thresholdNotificationsEnabled': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      // Remove the stock_items update from here. Products will be added to stock_items only after delivery/approval.
 
       // Send notification to supplier
       await NotificationService.notifySupplierOfNewOrder(

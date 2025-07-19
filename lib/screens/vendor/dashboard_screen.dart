@@ -1466,6 +1466,23 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         'approvedAt': FieldValue.serverTimestamp(),
       });
 
+      // Update or create the stock_items document for this product/vendor
+      final stockDocId = '${productName}_${widget.vendorEmail}';
+      await FirebaseFirestore.instance.collection('stock_items').doc(stockDocId).set({
+        'productName': productName,
+        'currentStock': quantity,
+        'minimumStock': (quantity * 0.1).round(),
+        'maximumStock': quantity,
+        'primarySupplier': supplierName,
+        'primarySupplierEmail': supplierEmail,
+        'autoOrderEnabled': false,
+        'averageUnitPrice': unitPrice,
+        'vendorEmail': widget.vendorEmail,
+        'thresholdLevel': orderData['threshold'] ?? 0,
+        'thresholdNotificationsEnabled': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
       // Update stock management data
       await _updateStockAfterDelivery(productName, quantity, supplierName, supplierEmail, unitPrice, orderId);
 
