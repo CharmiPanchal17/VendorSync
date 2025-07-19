@@ -240,10 +240,9 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                     leftTitles: AxisTitles(
                                       sideTitles: SideTitles(
                                         showTitles: true,
-                                        interval: 5, // You can adjust this as needed
+                                        interval: interval.toDouble(),
                                         getTitlesWidget: (double value, TitleMeta meta) {
-                                          // Only show every 2nd label
-                                          if (value % 2 == 0) {
+                                          if (value % interval == 0) {
                                             return Text(
                                               value.toInt().toString(),
                                               style: TextStyle(
@@ -270,17 +269,11 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                       ],
                                       isCurved: true,
                                       preventCurveOverShooting: true,
-                                      gradient: LinearGradient(
-                                        colors: [maroon, Colors.purple],
-                                      ),
+                                      color: maroon,
                                       barWidth: 4,
                                       belowBarData: BarAreaData(
                                         show: true,
-                                        gradient: LinearGradient(
-                                          colors: [maroon.withOpacity(0.3), Colors.purple.withOpacity(0.1)],
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                        ),
+                                        color: maroon.withOpacity(0.15),
                                       ),
                                       dotData: FlDotData(
                                         show: true,
