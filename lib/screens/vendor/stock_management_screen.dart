@@ -1895,4 +1895,43 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       ),
     );
   }
+
+  Future<void> rebuildStockItemsFromDeliveredOrders() async {
+    final currentVendorEmail = widget.vendorEmail;
+    final ordersSnapshot = await FirebaseFirestore.instance
+        .collection('orders')
+        .where('status', isEqualTo: 'Delivered')
+        .where('vendorEmail', isEqualTo: currentVendorEmail)
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in ordersSnapshot.docs) {
+      final data = doc.data();
+      final productName = data['productName'];
+      final quantity = data['quantity'];
+      final supplierName = data['supplierName'];
+      final supplierEmail = data['supplierEmail'];
+      final threshold = data['threshold'] ?? 0;
+
+      final stockDocId = '${productName}_$currentVendorEmail';
+      final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(stockDocId);
+
+      batch.set(stockRef, {
+        'productName': productName,
+        'currentStock': quantity,
+        'minimumStock': (quantity * 0.1).round(),
+        'maximumStock': quantity,
+        'primarySupplier': supplierName,
+        'primarySupplierEmail': supplierEmail,
+        'vendorEmail': currentVendorEmail,
+        'thresholdLevel': threshold,
+        'thresholdNotificationsEnabled': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+
+    await batch.commit();
+    print('Stock items rebuilt from delivered orders.');
+  }
 } 
