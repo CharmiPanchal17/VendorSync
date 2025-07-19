@@ -85,6 +85,19 @@ class ProductAnalyticsScreen extends StatelessWidget {
                   final data = stockSnapshot.data!.docs.first.data() as Map<String, dynamic>;
                   currentStock = data['currentStock'] as int?;
                 }
+                // --- Dynamic interval calculation here ---
+                final maxY = dailySalesData.isNotEmpty ? dailySalesData.map((e) => e['sales'] as int).reduce((a, b) => a > b ? a : b) : 0;
+                int interval;
+                if (maxY <= 50) {
+                  interval = 10;
+                } else if (maxY <= 200) {
+                  interval = 20;
+                } else if (maxY <= 1000) {
+                  interval = 100;
+                } else {
+                  interval = 200;
+                }
+                // --- End dynamic interval calculation ---
                 return ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
