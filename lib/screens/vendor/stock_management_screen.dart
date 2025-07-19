@@ -378,7 +378,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     });
     // Persist the update to Firestore
     final docRef = FirebaseFirestore.instance.collection('stock_items').doc(updatedStockItem.id);
-    await docRef.update({
+    await docRef.set({
       'productName': updatedStockItem.productName,
       'currentStock': updatedStockItem.currentStock,
       'minimumStock': updatedStockItem.minimumStock,
@@ -392,7 +392,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
       'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
+    print('DEBUG: Firestore set for '
+        ' [32m${updatedStockItem.id} [0m - new currentStock: '
+        ' [33m${updatedStockItem.currentStock} [0m');
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
     print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
