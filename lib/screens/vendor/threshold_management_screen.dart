@@ -104,6 +104,19 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
         'suggestedOrderQuantity': item.calculateSuggestedOrderQuantity(),
       });
 
+      // Also update the product_inventory collection for this product/vendor
+      final inventoryQuery = await FirebaseFirestore.instance
+          .collection('product_inventory')
+          .where('productName', isEqualTo: item.productName)
+          .where('vendorEmail', isEqualTo: item.vendorEmail)
+          .limit(1)
+          .get();
+      if (inventoryQuery.docs.isNotEmpty) {
+        await inventoryQuery.docs.first.reference.update({
+          'lowStockThreshold': newThreshold,
+        });
+      }
+
       // Reload data
       await _loadStockData();
       
