@@ -90,10 +90,52 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           isLoading = false;
         });
       } else {
-        setState(() {
-          stockItems = [];
-          isLoading = false;
-        });
+        // Automatically sync from delivered orders if no stock items are found
+        await rebuildStockItemsFromDeliveredOrders();
+        // Try loading again
+        final retrySnapshot = await FirebaseFirestore.instance
+            .collection('stock_items')
+            .where('vendorEmail', isEqualTo: currentVendorEmail)
+            .get();
+        if (retrySnapshot.docs.isNotEmpty) {
+          final loadedStockItems = retrySnapshot.docs.map((doc) {
+            final data = doc.data();
+            return StockItem(
+              id: doc.id,
+              productName: data['productName'] ?? '',
+              currentStock: data['currentStock'] ?? 0,
+              minimumStock: data['minimumStock'] ?? 0,
+              maximumStock: data['maximumStock'] ?? 0,
+              deliveryHistory: _parseDeliveryHistory(data['deliveryHistory'] ?? []),
+              primarySupplier: data['primarySupplier'],
+              primarySupplierEmail: data['primarySupplierEmail'],
+              firstDeliveryDate: data['firstDeliveryDate'] != null 
+                  ? (data['firstDeliveryDate'] as Timestamp).toDate() 
+                  : null,
+              lastDeliveryDate: data['lastDeliveryDate'] != null 
+                  ? (data['lastDeliveryDate'] as Timestamp).toDate() 
+                  : null,
+              autoOrderEnabled: data['autoOrderEnabled'] ?? false,
+              averageUnitPrice: data['averageUnitPrice']?.toDouble(),
+              vendorEmail: currentVendorEmail,
+              thresholdLevel: data['thresholdLevel'] ?? 0,
+              thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
+              lastThresholdAlert: data['lastThresholdAlert'] != null 
+                  ? (data['lastThresholdAlert'] as Timestamp).toDate() 
+                  : null,
+              suggestedOrderQuantity: data['suggestedOrderQuantity'] ?? 0,
+            );
+          }).toList();
+          setState(() {
+            stockItems = _sortStockItems(loadedStockItems);
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            stockItems = [];
+            isLoading = false;
+          });
+        }
       }
     } catch (e) {
       print('Error loading stock data: $e');
