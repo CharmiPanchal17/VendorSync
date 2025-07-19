@@ -496,7 +496,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final quantityController = TextEditingController(
       text: item.calculateSuggestedOrderQuantity().toString(),
     );
-    final notesController = TextEditingController();
 
     showDialog(
       context: context,
@@ -577,21 +576,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: notesController,
-              decoration: InputDecoration(
-                labelText: 'Notes (Optional)',
-                border: const OutlineInputBorder(),
-                labelStyle: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.grey[600],
-                ),
-              ),
-              maxLines: 2,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
           ],
         ),
         actions: [
@@ -606,7 +590,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
             onPressed: () {
               final quantity = int.tryParse(quantityController.text) ?? 0;
               if (quantity > 0) {
-                _placeOrder(item, quantity, notesController.text.trim());
+                _placeOrder(item, quantity);
                 Navigator.pop(context);
               }
             },
@@ -621,7 +605,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Future<void> _placeOrder(StockItem item, int quantity, String notes) async {
+  Future<void> _placeOrder(StockItem item, int quantity) async {
     try {
       final orderData = {
         'productName': item.productName,
@@ -631,7 +615,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
         'vendorEmail': widget.vendorEmail,
         'status': 'Pending',
         'preferredDeliveryDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
-        'notes': notes,
         'isAutoOrder': false,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),

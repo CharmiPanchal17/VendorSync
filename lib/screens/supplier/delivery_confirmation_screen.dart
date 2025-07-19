@@ -30,8 +30,8 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Confirm Delivery'),
         backgroundColor: Colors.transparent,
@@ -42,31 +42,29 @@ class _DeliveryConfirmationScreenState extends State<DeliveryConfirmationScreen>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-                                colors: isDark
-                      ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                      : [maroonDelivery, maroonDelivery.withOpacity(0.8)],
+              colors: isDark
+                  ? [maroonDelivery.withOpacity(0.8), Colors.black]
+                  : [maroonDelivery, maroonDelivery.withOpacity(0.8)],
             ),
           ),
         ),
       ),
-      body: Container(
-        color: isDark ? const Color(0xFF2D2D2D) : lightCyanDelivery,
+      body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order Summary Card
-                _buildOrderSummaryCard(isDark),
-                const SizedBox(height: 24),
-                
-                // Delivery Details Form
                 _buildDeliveryForm(isDark),
-                const SizedBox(height: 32),
-                
-                // Submit Button
+                const SizedBox(height: 24),
                 _buildSubmitButton(isDark),
               ],
             ),

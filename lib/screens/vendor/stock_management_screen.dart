@@ -1361,7 +1361,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   'Update Stock',
                   Icons.edit,
                   maroon,
-                  () => _showEditStockDialog(context, stockItem, index),
+                  () => _showEditStockDialog(context, stockItem, index, parentContext: context),
                   isDark,
                 ),
               ),
@@ -1471,7 +1471,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     );
   }
 
-  void _showEditStockDialog(BuildContext context, StockItem stockItem, int index) {
+  void _showEditStockDialog(BuildContext context, StockItem stockItem, int index, {required BuildContext parentContext}) {
     final controller = TextEditingController();
     String? errorText;
     showDialog(
@@ -1530,16 +1530,18 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 );
                 await _updateStockItem(index, updatedStockItem);
                 Navigator.pop(context);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('$qty units of ${stockItem.productName} have been sold.'),
-                      backgroundColor: maroon, // Use maroon color for confirmation
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  );
-                }
+                Future.delayed(Duration.zero, () {
+                  if (parentContext.mounted) {
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      SnackBar(
+                        content: Text('$qty units of ${stockItem.productName} have been sold.'),
+                        backgroundColor: maroon, // Use maroon color for confirmation
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  }
+                });
               },
               child: Text('Confirm'),
             ),
