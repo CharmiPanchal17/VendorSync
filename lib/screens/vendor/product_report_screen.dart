@@ -581,34 +581,74 @@ class ProductReportScreen extends StatelessWidget {
         ...last7Days.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
       ];
       String csv = const ListToCsvConverter().convert(csvData);
+      // Calculate summary statistics
+      final salesValues = last7Days.map((d) => salesByDay[_formatDate(d)] ?? 0).toList();
+      final totalSales = salesValues.fold<int>(0, (sum, v) => sum + v);
+      final avgSales = salesValues.isNotEmpty ? (totalSales / salesValues.length).round() : 0;
+      final maxSales = salesValues.isNotEmpty ? salesValues.reduce((a, b) => a > b ? a : b) : 0;
+      final minSales = salesValues.isNotEmpty ? salesValues.reduce((a, b) => a < b ? a : b) : 0;
       // Show preview dialog before saving
       if (context.mounted) {
+        final filenameController = TextEditingController(
+          text: '${productName}_sales_report_${_formatDate(DateTime.now())}.csv',
+        );
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Report Preview'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: (csvData.isNotEmpty)
-                      ? (csvData[0] as List)
-                          .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
-                          .toList()
-                      : [],
-                  rows: csvData.length > 1
-                      ? csvData
-                          .sublist(1)
-                          .map<DataRow>((row) => DataRow(
-                                cells: (row as List)
-                                    .map<DataCell>((cell) => DataCell(Text(cell.toString())))
-                                    .toList(),
-                              ))
-                          .toList()
-                      : [],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Summary statistics
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: maroon.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Total Sales: $totalSales', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Average Daily Sales: $avgSales'),
+                      Text('Lowest Daily Sales: $minSales'),
+                      Text('Highest Daily Sales: $maxSales'),
+                    ],
+                  ),
                 ),
-              ),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: (csvData.isNotEmpty)
+                          ? (csvData[0] as List)
+                              .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
+                              .toList()
+                          : [],
+                      rows: csvData.length > 1
+                          ? csvData
+                              .sublist(1)
+                              .map<DataRow>((row) => DataRow(
+                                    cells: (row as List)
+                                        .map<DataCell>((cell) => DataCell(Text(cell.toString())))
+                                        .toList(),
+                                  ))
+                              .toList()
+                          : [],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: filenameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Filename',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ),
             actions: [
               TextButton(
@@ -617,7 +657,9 @@ class ProductReportScreen extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final fileName = '${productName}_sales_report_${_formatDate(DateTime.now())}.csv';
+                  final fileName = filenameController.text.trim().isEmpty
+                      ? 'report.csv'
+                      : filenameController.text.trim();
                   String? path;
                   try {
                     path = await getSavePath(suggestedName: fileName);
