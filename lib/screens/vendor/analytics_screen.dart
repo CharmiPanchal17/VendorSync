@@ -40,90 +40,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           isLoading = false;
         });
       } else {
-        // Try to create from orders or fallback to mock data
-        final ordersSnapshot = await FirebaseFirestore.instance
-            .collection('orders')
-            .where('status', isEqualTo: 'Delivered')
-            .where('vendorEmail', isEqualTo: currentVendorEmail)
-            .get();
-        if (ordersSnapshot.docs.isNotEmpty) {
-          // Group orders by product name
-          final Map<String, List<QueryDocumentSnapshot>> productGroups = {};
-          for (final doc in ordersSnapshot.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final productName = data['productName'] as String? ?? 'Unknown Product';
-            productGroups.putIfAbsent(productName, () => []).add(doc);
-          }
-          final List<Map<String, dynamic>> realStockData = [];
-          for (final entry in productGroups.entries) {
-            final productName = entry.key;
-            final orders = entry.value;
-            int totalDelivered = 0;
-            double totalPrice = 0;
-            int priceCount = 0;
-            int minimumStock = 0;
-            int maximumStock = 0;
-            int currentStock = 0;
-            for (final orderDoc in orders) {
-              final data = orderDoc.data() as Map<String, dynamic>;
-              final quantity = data['quantity'] as int? ?? 0;
-              final unitPrice = data['unitPrice'] as double?;
-              totalDelivered += quantity;
-              if (unitPrice != null) {
-                totalPrice += unitPrice;
-                priceCount++;
-              }
-            }
-            currentStock = (totalDelivered * 0.7).round();
-            minimumStock = (totalDelivered * 0.1).round();
-            maximumStock = totalDelivered;
-            final averageUnitPrice = priceCount > 0 ? totalPrice / priceCount : null;
-            realStockData.add({
-              'productName': productName,
-              'currentStock': currentStock,
-              'minimumStock': minimumStock,
-              'maximumStock': maximumStock,
-              'averageUnitPrice': averageUnitPrice,
-              'vendorEmail': currentVendorEmail,
-            });
-          }
-          if (!mounted) return;
-          setState(() {
-            stockData = realStockData;
-            isLoading = false;
-          });
-          await _saveStockDataToFirestore(realStockData);
-        } else {
-          // Fallback to mock data
-          if (!mounted) return;
-          setState(() {
-            stockData = mockStockItems.map((item) => {
-              'productName': item.productName,
-              'currentStock': item.currentStock,
-              'minimumStock': item.minimumStock,
-              'maximumStock': item.maximumStock,
-              'averageUnitPrice': item.averageUnitPrice,
-              'vendorEmail': item.vendorEmail,
-            }).toList();
-            isLoading = false;
-          });
-          await _saveStockDataToFirestore(stockData);
-        }
+        if (!mounted) return;
+        setState(() {
+          stockData = [];
+          isLoading = false;
+        });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        stockData = mockStockItems.map((item) => {
-          'productName': item.productName,
-          'currentStock': item.currentStock,
-          'minimumStock': item.minimumStock,
-          'maximumStock': item.maximumStock,
-          'averageUnitPrice': item.averageUnitPrice,
-          'vendorEmail': item.vendorEmail,
-        }).toList();
+        stockData = [];
         isLoading = false;
       });
-      await _saveStockDataToFirestore(stockData);
     }
   }
 
@@ -177,46 +105,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
+                        Icon(
+                          Icons.analytics,
+                          size: 64,
+                          color: isDark ? Colors.white24 : Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No analytics data',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.black54,
                           ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.analytics,
-                                size: 64,
-                                color: maroon.withOpacity(0.6),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No Analytics Data',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Add products or receive deliveries\nto see detailed analytics.',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: isDark ? Colors.white60 : Colors.grey[600],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Deliver products to see analytics here.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? Colors.white38 : Colors.grey[600],
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
