@@ -567,7 +567,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
               children: [
                 Expanded(
                   child: Text(
-          stockItem.productName, 
+                    stockItem.productName, 
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -584,25 +584,39 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-          children: [
+                      children: [
                         Icon(Icons.warning, color: Colors.white, size: 14),
                         const SizedBox(width: 4),
-              Text(
+                        Text(
                           'THRESHOLD',
-                style: TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 4),
+            if (stockItem.primarySupplierEmail != null && stockItem.primarySupplierEmail!.isNotEmpty)
+              Row(
+                children: [
+                  Icon(Icons.email, size: 16, color: isDark ? Colors.white70 : Colors.grey[700]),
+                  const SizedBox(width: 6),
+                  Text(
+                    stockItem.primarySupplierEmail!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white70 : Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
             Row(
-          children: [
+              children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
