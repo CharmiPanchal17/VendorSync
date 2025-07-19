@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:csv/csv.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -547,15 +550,63 @@ class ProductReportScreen extends StatelessWidget {
     );
   }
 
-  void _printReport(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Print functionality coming soon!'),
-        backgroundColor: maroon,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+  void _printReport(BuildContext context) async {
+    try {
+      // Gather report data (last 7 days sales for the product)
+      final now = DateTime.now();
+      final last7Days = List.generate(7, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
+      final salesSnapshot = await FirebaseFirestore.instance
+          .collection('sales_history')
+          .where('productName', isEqualTo: productName)
+          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(last7Days.first))
+          .get();
+      final salesDocs = salesSnapshot.docs;
+      final Map<String, int> salesByDay = {for (var d in last7Days) _formatDate(d): 0};
+      for (final doc in salesDocs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final ts = data['timestamp'];
+        if (ts is Timestamp) {
+          final date = DateTime(ts.toDate().year, ts.toDate().month, ts.toDate().day);
+          final key = _formatDate(date);
+          if (salesByDay.containsKey(key)) {
+            salesByDay[key] = salesByDay[key]! + ((data['quantity'] ?? 0) as int);
+          }
+        }
+      }
+      // Prepare CSV data
+      List<List<dynamic>> csvData = [
+        ['Date', 'Sales'],
+        ...last7Days.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
+      ];
+      String csv = const ListToCsvConverter().convert(csvData);
+      // Get downloads directory
+      final directory = await getExternalStorageDirectory();
+      final downloadsDir = directory ?? await getApplicationDocumentsDirectory();
+      final fileName = '${productName}_sales_report_${_formatDate(DateTime.now())}.csv';
+      final file = File('${downloadsDir.path}/$fileName');
+      await file.writeAsString(csv);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Report downloaded to ${file.path}'),
+            backgroundColor: maroon,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download report: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   String _formatDate(DateTime date) {
