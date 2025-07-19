@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
+import 'package:file_selector/file_selector.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -579,19 +580,68 @@ class ProductReportScreen extends StatelessWidget {
         ...last7Days.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
       ];
       String csv = const ListToCsvConverter().convert(csvData);
-      // Get downloads directory
-      final directory = await getExternalStorageDirectory();
-      final downloadsDir = directory ?? await getApplicationDocumentsDirectory();
-      final fileName = '${productName}_sales_report_${_formatDate(DateTime.now())}.csv';
-      final file = File('${downloadsDir.path}/$fileName');
-      await file.writeAsString(csv);
+      // Show preview dialog before saving
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Report downloaded to ${file.path}'),
-            backgroundColor: maroon,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Report Preview'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: (csvData.isNotEmpty)
+                      ? (csvData[0] as List)
+                          .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
+                          .toList()
+                      : [],
+                  rows: csvData.length > 1
+                      ? csvData
+                          .sublist(1)
+                          .map<DataRow>((row) => DataRow(
+                                cells: (row as List)
+                                    .map<DataCell>((cell) => DataCell(Text(cell.toString())))
+                                    .toList(),
+                              ))
+                          .toList()
+                      : [],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Let user pick location
+                  final fileName = '${productName}_sales_report_${_formatDate(DateTime.now())}.csv';
+                  final path = await getSavePath(suggestedName: fileName);
+                  if (path != null) {
+                    final file = XFile.fromData(
+                      csv.codeUnits,
+                      name: fileName,
+                      mimeType: 'text/csv',
+                    );
+                    await file.saveTo(path);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Report downloaded to $path'),
+                          backgroundColor: maroon,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Download'),
+              ),
+            ],
           ),
         );
       }
@@ -599,7 +649,7 @@ class ProductReportScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to download report: $e'),
+            content: Text('Failed to generate report: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
