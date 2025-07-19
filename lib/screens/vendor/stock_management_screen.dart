@@ -440,6 +440,19 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: 'Sync from Delivered Orders',
+            onPressed: () async {
+              await rebuildStockItemsFromDeliveredOrders();
+              await _loadStockData();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Stock items synced from delivered orders!')),
+                );
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.upload),
             onPressed: () => _showUploadDialog(context),
             tooltip: 'Upload Stock Data',
