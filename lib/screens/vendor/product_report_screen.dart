@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_selector/file_selector.dart';
+import 'dart:typed_data';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
@@ -616,12 +617,20 @@ class ProductReportScreen extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Let user pick location
                   final fileName = '${productName}_sales_report_${_formatDate(DateTime.now())}.csv';
-                  final path = await getSavePath(suggestedName: fileName);
+                  String? path;
+                  try {
+                    path = await getSavePath(suggestedName: fileName);
+                  } catch (_) {
+                    // Fallback for platforms where getSavePath is not supported
+                    final dir = await getDirectoryPath();
+                    if (dir != null) {
+                      path = '$dir/$fileName';
+                    }
+                  }
                   if (path != null) {
                     final file = XFile.fromData(
-                      csv.codeUnits,
+                      Uint8List.fromList(csv.codeUnits), // convert to Uint8List
                       name: fileName,
                       mimeType: 'text/csv',
                     );
@@ -634,6 +643,15 @@ class ProductReportScreen extends StatelessWidget {
                           backgroundColor: maroon,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('No location selected.'),
+                          backgroundColor: Colors.red,
                         ),
                       );
                     }
