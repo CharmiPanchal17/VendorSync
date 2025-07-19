@@ -1480,7 +1480,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         newStock = quantity;
       }
 
-      // Always set thresholdLevel from the delivered order
       await stockRef.set({
         'productName': productName,
         'currentStock': newStock,
