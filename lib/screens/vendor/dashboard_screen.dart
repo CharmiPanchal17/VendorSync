@@ -1566,8 +1566,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           minimumStock: currentStockItem.minimumStock,
           maximumStock: newTotalStock, // Update total stock with new calculation
           deliveryHistory: updatedDeliveryHistory,
-          primarySupplier: currentStockItem.primarySupplier,
-          primarySupplierEmail: currentStockItem.primarySupplierEmail,
+          primarySupplier: supplierName,
+          primarySupplierEmail: supplierEmail,
           firstDeliveryDate: currentStockItem.firstDeliveryDate ?? DateTime.now(),
           lastDeliveryDate: DateTime.now(),
           autoOrderEnabled: currentStockItem.autoOrderEnabled,
