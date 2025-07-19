@@ -553,17 +553,60 @@ class ProductReportScreen extends StatelessWidget {
   }
 
   void _printReport(BuildContext context) async {
+    // Step 1: Ask the vendor to select the report period
+    final period = await showDialog<_ReportPeriod>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Select Report Period'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, _ReportPeriod.weekly),
+            child: const Text('Weekly (Last 7 Days)'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, _ReportPeriod.monthly),
+            child: const Text('Monthly (Last 30 Days)'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, _ReportPeriod.yearly),
+            child: const Text('Yearly (Last 365 Days)'),
+          ),
+        ],
+      ),
+    );
+    if (period == null) return;
+
+    // Step 2: Determine the date range based on the selected period
+    int days;
+    switch (period) {
+      case _ReportPeriod.weekly:
+        days = 7;
+        break;
+      case _ReportPeriod.monthly:
+        days = 30;
+        break;
+      case _ReportPeriod.yearly:
+        days = 365;
+        break;
+    }
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1));
+    final periodLabel = period == _ReportPeriod.weekly
+        ? 'Last 7 Days'
+        : period == _ReportPeriod.monthly
+            ? 'Last 30 Days'
+            : 'Last 365 Days';
+    final dateList = List.generate(days, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1 - i)));
+
     try {
-      // Gather report data (last 7 days sales for the product)
-      final now = DateTime.now();
-      final last7Days = List.generate(7, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
+      // Step 3: Gather report data for the selected period
       final salesSnapshot = await FirebaseFirestore.instance
           .collection('sales_history')
           .where('productName', isEqualTo: productName)
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(last7Days.first))
+          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
       final salesDocs = salesSnapshot.docs;
-      final Map<String, int> salesByDay = {for (var d in last7Days) _formatDate(d): 0};
+      final Map<String, int> salesByDay = {for (var d in dateList) _formatDate(d): 0};
       for (final doc in salesDocs) {
         final data = doc.data() as Map<String, dynamic>;
         final ts = data['timestamp'];
@@ -578,11 +621,11 @@ class ProductReportScreen extends StatelessWidget {
       // Prepare CSV data
       List<List<dynamic>> csvData = [
         ['Date', 'Sales'],
-        ...last7Days.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
+        ...dateList.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
       ];
       String csv = const ListToCsvConverter().convert(csvData);
       // Calculate summary statistics
-      final salesValues = last7Days.map((d) => salesByDay[_formatDate(d)] ?? 0).toList();
+      final salesValues = dateList.map((d) => salesByDay[_formatDate(d)] ?? 0).toList();
       final totalSales = salesValues.fold<int>(0, (sum, v) => sum + v);
       final avgSales = salesValues.isNotEmpty ? (totalSales / salesValues.length).round() : 0;
       final maxSales = salesValues.isNotEmpty ? salesValues.reduce((a, b) => a > b ? a : b) : 0;
@@ -595,60 +638,66 @@ class ProductReportScreen extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Report Preview'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Summary statistics
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: maroon.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Total Sales: $totalSales', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Average Daily Sales: $avgSales'),
-                      Text('Lowest Daily Sales: $minSales'),
-                      Text('Highest Daily Sales: $maxSales'),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: double.maxFinite,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: (csvData.isNotEmpty)
-                          ? (csvData[0] as List)
-                              .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
-                              .toList()
-                          : [],
-                      rows: csvData.length > 1
-                          ? csvData
-                              .sublist(1)
-                              .map<DataRow>((row) => DataRow(
-                                    cells: (row as List)
-                                        .map<DataCell>((cell) => DataCell(Text(cell.toString())))
-                                        .toList(),
-                                  ))
-                              .toList()
-                          : [],
+            title: Text('Report Preview ($periodLabel)'),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Summary statistics
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: maroon.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Total Sales: $totalSales', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Average Daily Sales: $avgSales'),
+                          Text('Lowest Daily Sales: $minSales'),
+                          Text('Highest Daily Sales: $maxSales'),
+                        ],
+                      ),
                     ),
-                  ),
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: (csvData.isNotEmpty)
+                              ? (csvData[0] as List)
+                                  .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
+                                  .toList()
+                              : [],
+                          rows: csvData.length > 1
+                              ? csvData
+                                  .sublist(1)
+                                  .map<DataRow>((row) => DataRow(
+                                        cells: (row as List)
+                                            .map<DataCell>((cell) => DataCell(Text(cell.toString())))
+                                            .toList(),
+                                      ))
+                                  .toList()
+                              : [],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: filenameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Filename',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: filenameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Filename',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -660,19 +709,10 @@ class ProductReportScreen extends StatelessWidget {
                   final fileName = filenameController.text.trim().isEmpty
                       ? 'report.csv'
                       : filenameController.text.trim();
-                  String? path;
-                  try {
-                    path = await getSavePath(suggestedName: fileName);
-                  } catch (_) {
-                    // Fallback for platforms where getSavePath is not supported
-                    final dir = await getDirectoryPath();
-                    if (dir != null) {
-                      path = '$dir/$fileName';
-                    }
-                  }
+                  final path = await getSavePath(suggestedName: fileName);
                   if (path != null) {
                     final file = XFile.fromData(
-                      Uint8List.fromList(csv.codeUnits), // convert to Uint8List
+                      Uint8List.fromList(csv.codeUnits),
                       name: fileName,
                       mimeType: 'text/csv',
                     );
@@ -685,15 +725,6 @@ class ProductReportScreen extends StatelessWidget {
                           backgroundColor: maroon,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      );
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('No location selected.'),
-                          backgroundColor: Colors.red,
                         ),
                       );
                     }
@@ -736,3 +767,6 @@ class ProductReportScreen extends StatelessWidget {
     }
   }
 } 
+
+// Helper enum for report period
+enum _ReportPeriod { weekly, monthly, yearly } 
