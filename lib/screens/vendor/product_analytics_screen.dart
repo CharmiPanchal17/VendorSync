@@ -283,13 +283,14 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                       isCurved: true,
                                       preventCurveOverShooting: true,
                                       color: maroon,
-                                      barWidth: 4,
+                                      barWidth: 2, // Reduced thickness for a thinner line
                                       belowBarData: BarAreaData(
                                         show: true,
                                         color: maroon.withOpacity(0.15),
                                       ),
                                       dotData: FlDotData(
                                         show: true,
+                                        dotSize: 2, // Reduced dot size for plotting
                                         getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
                                           radius: 5,
                                           color: Colors.white,
