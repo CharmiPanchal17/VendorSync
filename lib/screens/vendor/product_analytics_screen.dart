@@ -290,11 +290,10 @@ class ProductAnalyticsScreen extends StatelessWidget {
                                       ),
                                       dotData: FlDotData(
                                         show: true,
-                                        dotSize: 2, // Reduced dot size for plotting
                                         getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                                          radius: 5,
-                                          color: Colors.white,
-                                          strokeWidth: 3,
+                                          radius: 2, // Increased dot size by one
+                                          color: maroon,
+                                          strokeWidth: 0,
                                           strokeColor: maroon,
                                         ),
                                       ),
