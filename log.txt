@@ -134,3 +134,4 @@ Styled header and footer
 Implemented Excel upload support
 Excel template download
 Excel upload UI
+Validation for Excel fields
