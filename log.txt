@@ -135,3 +135,4 @@ Implemented Excel upload support
 Excel template download
 Excel upload UI
 Validation for Excel fields
+Loading spinner for uploads
