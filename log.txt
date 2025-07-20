@@ -137,3 +137,4 @@ Excel upload UI
 Validation for Excel fields
 Loading spinner for uploads
 Backend Excel parser
+Improved Excel UX
