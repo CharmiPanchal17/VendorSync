@@ -131,3 +131,4 @@ Bug fix in auth flow
 Added vendor section
 Initial homepage layout
 Styled header and footer
+Implemented Excel upload support
