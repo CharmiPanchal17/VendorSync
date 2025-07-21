@@ -177,3 +177,4 @@ Loading spinner for uploads
 Backend  parser
 Backend  parser
 Improved  UX
+Fixed duplicate rows issue
