@@ -176,3 +176,4 @@ Excel template download
 Loading spinner for uploads
 Backend  parser
 Backend  parser
+Improved  UX
