@@ -173,3 +173,4 @@ Improved responsive design
 UI enhancements
 Added forgot password page
 Excel template download
+Loading spinner for uploads
