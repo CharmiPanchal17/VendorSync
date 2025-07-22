@@ -92,7 +92,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       } else {
         // Only run the sync function if there are truly no stock items (first setup or recovery)
         // DO NOT run this after every update or reload, to avoid overwriting sales deductions
-        await rebuildStockItemsFromDeliveredOrders();
+        // await rebuildStockItemsFromDeliveredOrders();
         // Try loading again
         final retrySnapshot = await FirebaseFirestore.instance
             .collection('stock_items')
@@ -377,37 +377,69 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Re-sort the list after updating to maintain threshold items first
       stockItems = _sortStockItems(List.from(stockItems));
     });
-    // Persist the update to Firestore
+
     final docRef = FirebaseFirestore.instance.collection('stock_items').doc(updatedStockItem.id);
     final salesHistoryUpdate = (oldStock > updatedStockItem.currentStock)
         ? {
             'salesHistory': FieldValue.arrayUnion([
               {
                 'quantitySold': oldStock - updatedStockItem.currentStock,
-                'timestamp': DateTime.now().toUtc(), // Use DateTime instead of FieldValue.serverTimestamp()
+                'timestamp': DateTime.now().toUtc(),
               }
             ]),
           }
         : {};
-    await docRef.set({
-      'productName': updatedStockItem.productName,
-      'currentStock': updatedStockItem.currentStock,
-      'minimumStock': updatedStockItem.minimumStock,
-      'maximumStock': updatedStockItem.maximumStock,
-      'primarySupplier': updatedStockItem.primarySupplier,
-      'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
-      'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
-      'averageUnitPrice': updatedStockItem.averageUnitPrice,
-      'thresholdLevel': updatedStockItem.thresholdLevel,
-      'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
-      'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
-      'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
-      'updatedAt': FieldValue.serverTimestamp(),
-      ...salesHistoryUpdate,
-    }, SetOptions(merge: true));
-    print('DEBUG: Firestore set for '
-        '\u001b[32m${updatedStockItem.id}\u001b[0m - new currentStock: '
-        '\u001b[33m${updatedStockItem.currentStock}\u001b[0m');
+
+    int newCurrentStock = updatedStockItem.currentStock;
+    int newMaximumStock = updatedStockItem.maximumStock;
+
+    // Use a transaction to increment/decrement currentStock like delivery confirmation
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final stockSnapshot = await transaction.get(docRef);
+      if (stockSnapshot.exists) {
+        final currentStock = stockSnapshot['currentStock'] ?? 0;
+        final maximumStock = stockSnapshot['maximumStock'] ?? 0;
+        // Calculate the change in stock
+        final stockDelta = updatedStockItem.currentStock - oldStock;
+        newCurrentStock = currentStock + stockDelta;
+        newMaximumStock = maximumStock + stockDelta;
+        transaction.update(docRef, {
+          'currentStock': newCurrentStock,
+          'maximumStock': newMaximumStock,
+          'minimumStock': updatedStockItem.minimumStock,
+          'primarySupplier': updatedStockItem.primarySupplier,
+          'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
+          'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
+          'averageUnitPrice': updatedStockItem.averageUnitPrice,
+          'thresholdLevel': updatedStockItem.thresholdLevel,
+          'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
+          'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
+          'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
+          'updatedAt': FieldValue.serverTimestamp(),
+          ...salesHistoryUpdate,
+        });
+      } else {
+        // If it doesn't exist, create it
+        transaction.set(docRef, {
+          'productName': updatedStockItem.productName,
+          'currentStock': updatedStockItem.currentStock,
+          'minimumStock': updatedStockItem.minimumStock,
+          'maximumStock': updatedStockItem.maximumStock,
+          'primarySupplier': updatedStockItem.primarySupplier,
+          'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
+          'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
+          'averageUnitPrice': updatedStockItem.averageUnitPrice,
+          'thresholdLevel': updatedStockItem.thresholdLevel,
+          'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
+          'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
+          'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
+          'updatedAt': FieldValue.serverTimestamp(),
+          ...salesHistoryUpdate,
+        });
+      }
+    });
+    print('DEBUG: Firestore transaction update for ${updatedStockItem.id} - new currentStock: $newCurrentStock');
+
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
     print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
@@ -444,7 +476,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
     final bool autoOrderPending = data['autoOrderPending'] ?? false;
 
     // Only trigger if not already pending, and threshold reached
-    if (!autoOrderPending && updatedStockItem.currentStock <= lowStockThreshold && autoOrderQuantity > 0 && supplierEmail != null && supplierName != null) {
+    if (!autoOrderPending && newCurrentStock <= lowStockThreshold && autoOrderQuantity > 0 && supplierEmail != null && supplierName != null) {
       // Create a new order
       final orderRef = await FirebaseFirestore.instance.collection('orders').add({
         'productName': updatedStockItem.productName,

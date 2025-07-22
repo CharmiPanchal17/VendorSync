@@ -72,13 +72,24 @@ class ProductAnalyticsScreen extends StatelessWidget {
             final avgSales = dailySalesData.isNotEmpty ? (totalSales / dailySalesData.length).round() : 0;
             // Debug print to check for negative sales data
             print('Daily sales data: ' + dailySalesData.map((e) => e['sales']).toList().toString());
-            // Fetch current stock for this product
-            return FutureBuilder<QuerySnapshot>(
-              future: FirebaseFirestore.instance
+            // Replace the FutureBuilder for stock_items with a StreamBuilder for real-time updates
+            // Find the section where the stock level is fetched for the product
+            // Replace:
+            //   FutureBuilder<QuerySnapshot>(
+            //     future: FirebaseFirestore.instance
+            //         .collection('stock_items')
+            //         .where('productName', isEqualTo: productName)
+            //         .limit(1)
+            //         .get(),
+            //     builder: (context, stockSnapshot) { ... }
+            //   )
+            // With:
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('stock_items')
                   .where('productName', isEqualTo: productName)
                   .limit(1)
-                  .get(),
+                  .snapshots(),
               builder: (context, stockSnapshot) {
                 int? currentStock;
                 if (stockSnapshot.hasData && stockSnapshot.data!.docs.isNotEmpty) {
