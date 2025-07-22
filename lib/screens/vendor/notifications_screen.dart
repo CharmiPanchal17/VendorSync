@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/order.dart';
 
 class VendorNotificationsScreen extends StatefulWidget {
   final String vendorEmail;
@@ -371,35 +369,15 @@ class _VendorNotificationsScreenState extends State<VendorNotificationsScreen> {
            type == NotificationType.stockCritical;
   }
 
-  void _handleNotificationTap(AppNotification notification) async {
+  void _handleNotificationTap(AppNotification notification) {
+    // If the notification is for an order confirmed, do nothing
+    if (notification.type == NotificationType.orderStatusChanged && notification.message.toLowerCase().contains('confirmed')) {
+      // Optionally, you can show a SnackBar or mark as read
+      return;
+    }
     if (notification.orderId != null) {
-      // Fetch the order from Firestore using the orderId
-      final orderDoc = await FirebaseFirestore.instance.collection('orders').doc(notification.orderId).get();
-      if (orderDoc.exists) {
-        final data = orderDoc.data()!;
-        final order = Order(
-          id: orderDoc.id,
-          productName: data['productName'] ?? 'Unknown Product',
-          supplierName: data['supplierName'] ?? 'Unknown Supplier',
-          supplierEmail: data['supplierEmail'] ?? 'unknown@example.com',
-          quantity: data['quantity'] ?? 0,
-          status: data['status'] ?? 'Pending',
-          preferredDeliveryDate: data['preferredDeliveryDate'] != null
-              ? (data['preferredDeliveryDate'] as Timestamp).toDate()
-              : DateTime.now(),
-        );
-        Navigator.of(context).pushNamed('/vendor-order-details', arguments: order);
-      } else {
-        // Show error if order not found
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Order not found.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
+      // Navigate to order details
+      Navigator.of(context).pushNamed('/vendor-order-details');
     } else if (_isThresholdNotification(notification.type)) {
       // For threshold notifications, show options
       _showThresholdNotificationOptions(notification);
