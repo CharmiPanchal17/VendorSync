@@ -28,10 +28,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     try {
       if (!mounted) return;
       setState(() { isLoading = true; });
-      final currentVendorEmail = widget.vendorEmail;
+      // Removed vendorEmail filter to show all products
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
-          .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
       if (stockSnapshot.docs.isNotEmpty) {
         if (!mounted) return;

@@ -2,17 +2,6 @@ import '../models/order.dart';
 
 final List<Order> mockOrders = [
   Order(
-    id: '1',
-    productName: 'Widgets',
-    quantity: 100,
-    supplierName: 'Supplier A',
-    supplierEmail: 'supplierA@example.com',
-    status: 'Pending',
-    preferredDeliveryDate: DateTime.now().add(Duration(days: 3)),
-    unitPrice: 15.50,
-    notes: 'Standard delivery',
-  ),
-  Order(
     id: '2',
     productName: 'Gadgets',
     quantity: 50,
@@ -94,20 +83,4 @@ final List<DeliveryRecord> mockDeliveryRecords = [
 ];
 
 // Mock stock items with delivery history
-final List<StockItem> mockStockItems = [
-  StockItem(
-    id: 'stock_1',
-    productName: 'Widgets',
-    currentStock: 25,
-    minimumStock: 20,
-    maximumStock: 250,
-    deliveryHistory: mockDeliveryRecords.where((record) => record.productName == 'Widgets').toList(),
-    primarySupplier: 'Supplier A',
-    primarySupplierEmail: 'supplierA@example.com',
-    firstDeliveryDate: DateTime.now().subtract(Duration(days: 12)),
-    lastDeliveryDate: DateTime.now().subtract(Duration(days: 5)),
-    autoOrderEnabled: true,
-    averageUnitPrice: null, // Removed price
-    vendorEmail: 'demo@vendor.com',
-  ),
-]; 
+final List<StockItem> mockStockItems = []; 
