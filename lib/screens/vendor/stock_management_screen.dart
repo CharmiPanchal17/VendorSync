@@ -1447,7 +1447,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   void _navigateToThresholdManagement(StockItem stockItem) {
     Navigator.of(context).pushNamed(
       '/vendor-threshold-management',
-      arguments: widget.vendorEmail,
+      arguments: {
+        'vendorEmail': widget.vendorEmail,
+        'productName': stockItem.productName,
+        'thresholdLevel': stockItem.thresholdLevel,
+      },
     );
   }
 

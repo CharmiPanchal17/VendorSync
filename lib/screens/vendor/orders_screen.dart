@@ -31,7 +31,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
       
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
-          .where('vendorEmail', isEqualTo: widget.vendorEmail)
           .get();
 
       if (stockSnapshot.docs.isNotEmpty) {
@@ -56,7 +55,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 : null,
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
-            vendorEmail: widget.vendorEmail,
+            vendorEmail: data['vendorEmail'] ?? '',
             thresholdLevel: data['thresholdLevel'] ?? 0,
             thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
             lastThresholdAlert: data['lastThresholdAlert'] != null 

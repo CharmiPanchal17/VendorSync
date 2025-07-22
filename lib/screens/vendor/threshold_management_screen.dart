@@ -8,8 +8,10 @@ const lightCyanThreshold = Color(0xFFAFFFFF);
 
 class ThresholdManagementScreen extends StatefulWidget {
   final String vendorEmail;
+  final String? productName;
+  final int? thresholdLevel;
   
-  const ThresholdManagementScreen({super.key, required this.vendorEmail});
+  const ThresholdManagementScreen({super.key, required this.vendorEmail, this.productName, this.thresholdLevel});
 
   @override
   State<ThresholdManagementScreen> createState() => _ThresholdManagementScreenState();
@@ -22,6 +24,15 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
   @override
   void initState() {
     super.initState();
+    // Check for navigation arguments and pre-fill threshold if provided
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['thresholdLevel'] != null) {
+        setState(() {
+          // You can use this value to pre-fill a field or highlight the product
+        });
+      }
+    });
     _loadStockData();
   }
 
