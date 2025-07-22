@@ -384,7 +384,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             'salesHistory': FieldValue.arrayUnion([
               {
                 'quantitySold': oldStock - updatedStockItem.currentStock,
-                'timestamp': FieldValue.serverTimestamp(),
+                'timestamp': DateTime.now().toUtc(), // Use DateTime instead of FieldValue.serverTimestamp()
               }
             ]),
           }
@@ -1528,20 +1528,34 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   averageUnitPrice: stockItem.averageUnitPrice,
                   vendorEmail: stockItem.vendorEmail,
                 );
-                await _updateStockItem(index, updatedStockItem);
-                Navigator.pop(context);
-                Future.delayed(Duration.zero, () {
+                try {
+                  await _updateStockItem(index, updatedStockItem);
                   if (parentContext.mounted) {
+                    Navigator.pop(context); // Close the dialog
                     ScaffoldMessenger.of(parentContext).showSnackBar(
                       SnackBar(
                         content: Text('$qty units of ${stockItem.productName} have been sold.'),
-                        backgroundColor: maroon, // Use maroon color for confirmation
+                        backgroundColor: maroon,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     );
                   }
-                });
+                  // Reload data to reflect changes
+                  await _loadStockData();
+                } catch (e) {
+                  if (parentContext.mounted) {
+                    Navigator.pop(context); // Close the dialog
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update stock: $e'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  }
+                }
               },
               child: Text('Confirm'),
             ),
