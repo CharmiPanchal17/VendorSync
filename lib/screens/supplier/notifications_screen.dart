@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification.dart';
 import 'package:intl/intl.dart';

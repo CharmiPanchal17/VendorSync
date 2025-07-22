@@ -8,7 +8,7 @@ const lightCyan = Color(0xFFAFFFFF);
 
 class AnalyticsScreen extends StatefulWidget {
   final String vendorEmail;
-  const AnalyticsScreen({Key? key, required this.vendorEmail}) : super(key: key);
+  const AnalyticsScreen({super.key, required this.vendorEmail});
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -35,7 +35,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       if (stockSnapshot.docs.isNotEmpty) {
         if (!mounted) return;
         setState(() {
-          stockData = stockSnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+          stockData = stockSnapshot.docs.map((doc) => doc.data()).toList();
           isLoading = false;
         });
       } else {
@@ -162,7 +162,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ...stockData.map((item) {
                         final isLow = (item['currentStock'] ?? 0) <= (item['minimumStock'] ?? 0);
                         return _buildEnhancedProductCard(item, isLow, isDark, context);
-                      }).toList(),
+                      }),
                     ],
                   ),
       ),

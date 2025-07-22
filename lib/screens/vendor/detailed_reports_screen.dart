@@ -316,7 +316,7 @@ class _DetailedReportsScreenState extends State<DetailedReportsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            ...salesHistory.map((item) => _buildSalesRow(item, isDark)).toList(),
+            ...salesHistory.map((item) => _buildSalesRow(item, isDark)),
           ],
         ),
       ),
@@ -423,7 +423,7 @@ class _DetailedReportsScreenState extends State<DetailedReportsScreen> {
                 ),
               )
             else
-              ...orderHistory.map((order) => _buildOrderRow(order, isDark)).toList(),
+              ...orderHistory.map((order) => _buildOrderRow(order, isDark)),
           ],
         ),
       ),
@@ -529,7 +529,7 @@ class _DetailedReportsScreenState extends State<DetailedReportsScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            ...supplierPerformance.map((supplier) => _buildSupplierRow(supplier, isDark)).toList(),
+            ...supplierPerformance.map((supplier) => _buildSupplierRow(supplier, isDark)),
           ],
         ),
       ),

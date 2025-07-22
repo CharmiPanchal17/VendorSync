@@ -192,17 +192,16 @@ class VendorSyncApp extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       cardColor: const Color(0xFF1E1E1E),
-      dialogBackgroundColor: const Color(0xFF1E1E1E),
       drawerTheme: const DrawerThemeData(
         backgroundColor: Color(0xFF1E1E1E),
-      ),
+      ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1E1E1E)),
     );
   }
 }
 
 class _AutoLoginScreen extends StatelessWidget {
   final String? userEmail;
-  const _AutoLoginScreen({Key? key, this.userEmail}) : super(key: key);
+  const _AutoLoginScreen({super.key, this.userEmail});
 
   Future<String?> _getUserRole(String? email) async {
     if (email == null) return null;

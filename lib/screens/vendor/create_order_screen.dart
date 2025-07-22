@@ -413,7 +413,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                         ),
                                       
                                       // Supplier Selection Dropdown
-                                      Container(
+                                      SizedBox(
                                         width: double.infinity,
                                         child: DropdownButtonFormField<String>(
                                           decoration: InputDecoration(
@@ -598,7 +598,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                                   ),
                                                 ),
                                               );
-                                            }).toList(),
+                                            }),
                                           ],
                                           onChanged: (value) {
                                             print('Dropdown changed to: $value'); // Debug print

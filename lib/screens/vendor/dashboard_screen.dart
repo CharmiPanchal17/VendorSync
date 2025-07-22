@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../mock_data/mock_orders.dart';
 import '../../models/order.dart' as order_model;
-import '../../models/order.dart' show DeliveryRecord, StockItem;
 import '../../services/notification_service.dart';
 import 'suppliers_list_screen.dart';
 import 'settings_screen.dart';
