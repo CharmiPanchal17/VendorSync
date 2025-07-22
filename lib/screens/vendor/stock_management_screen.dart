@@ -44,7 +44,6 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
-          .where('vendorEmail', isEqualTo: currentVendorEmail)
           .get();
 
       print('DEBUG: Firestore stock_items found: \'${stockSnapshot.docs.length}\'');
@@ -89,54 +88,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           stockItems = _sortStockItems(loadedStockItems);
           isLoading = false;
         });
-      } else {
-        // Only run the sync function if there are truly no stock items (first setup or recovery)
-        // DO NOT run this after every update or reload, to avoid overwriting sales deductions
-        // await rebuildStockItemsFromDeliveredOrders();
-        // Try loading again
-        final retrySnapshot = await FirebaseFirestore.instance
-            .collection('stock_items')
-            .where('vendorEmail', isEqualTo: currentVendorEmail)
-            .get();
-        if (retrySnapshot.docs.isNotEmpty) {
-          final loadedStockItems = retrySnapshot.docs.map((doc) {
-            final data = doc.data();
-            return StockItem(
-              id: doc.id,
-              productName: data['productName'] ?? '',
-              currentStock: data['currentStock'] ?? 0,
-              minimumStock: data['minimumStock'] ?? 0,
-              maximumStock: data['maximumStock'] ?? 0,
-              deliveryHistory: _parseDeliveryHistory(data['deliveryHistory'] ?? []),
-              primarySupplier: data['primarySupplier'],
-              primarySupplierEmail: data['primarySupplierEmail'],
-              firstDeliveryDate: data['firstDeliveryDate'] != null 
-                  ? (data['firstDeliveryDate'] as Timestamp).toDate() 
-                  : null,
-              lastDeliveryDate: data['lastDeliveryDate'] != null 
-                  ? (data['lastDeliveryDate'] as Timestamp).toDate() 
-                  : null,
-              autoOrderEnabled: data['autoOrderEnabled'] ?? false,
-              averageUnitPrice: data['averageUnitPrice']?.toDouble(),
-              vendorEmail: currentVendorEmail,
-              thresholdLevel: data['thresholdLevel'] ?? 0,
-              thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
-              lastThresholdAlert: data['lastThresholdAlert'] != null 
-                  ? (data['lastThresholdAlert'] as Timestamp).toDate() 
-                  : null,
-              suggestedOrderQuantity: data['suggestedOrderQuantity'] ?? 0,
-            );
-          }).toList();
-          setState(() {
-            stockItems = _sortStockItems(loadedStockItems);
-            isLoading = false;
-          });
+        // Debug printout of all loaded products
+        print('DEBUG: Loaded products after update:');
+        for (final item in stockItems) {
+          print('  Product: \'${item.productName}\', Stock: \'${item.currentStock}\', Vendor: \'${item.vendorEmail}\'');
+        }
         } else {
           setState(() {
             stockItems = [];
             isLoading = false;
           });
-        }
       }
     } catch (e) {
       print('Error loading stock data: $e');
@@ -421,20 +382,20 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       } else {
         // If it doesn't exist, create it
         transaction.set(docRef, {
-          'productName': updatedStockItem.productName,
-          'currentStock': updatedStockItem.currentStock,
-          'minimumStock': updatedStockItem.minimumStock,
-          'maximumStock': updatedStockItem.maximumStock,
-          'primarySupplier': updatedStockItem.primarySupplier,
-          'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
-          'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
-          'averageUnitPrice': updatedStockItem.averageUnitPrice,
-          'thresholdLevel': updatedStockItem.thresholdLevel,
-          'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
-          'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
-          'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
-          'updatedAt': FieldValue.serverTimestamp(),
-          ...salesHistoryUpdate,
+      'productName': updatedStockItem.productName,
+      'currentStock': updatedStockItem.currentStock,
+      'minimumStock': updatedStockItem.minimumStock,
+      'maximumStock': updatedStockItem.maximumStock,
+      'primarySupplier': updatedStockItem.primarySupplier,
+      'primarySupplierEmail': updatedStockItem.primarySupplierEmail,
+      'autoOrderEnabled': updatedStockItem.autoOrderEnabled,
+      'averageUnitPrice': updatedStockItem.averageUnitPrice,
+      'thresholdLevel': updatedStockItem.thresholdLevel,
+      'thresholdNotificationsEnabled': updatedStockItem.thresholdNotificationsEnabled,
+      'lastThresholdAlert': updatedStockItem.lastThresholdAlert,
+      'suggestedOrderQuantity': updatedStockItem.suggestedOrderQuantity,
+      'updatedAt': FieldValue.serverTimestamp(),
+      ...salesHistoryUpdate,
         });
       }
     });
@@ -1561,7 +1522,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                   vendorEmail: stockItem.vendorEmail,
                 );
                 try {
-                  await _updateStockItem(index, updatedStockItem);
+                await _updateStockItem(index, updatedStockItem);
                   if (parentContext.mounted) {
                     Navigator.pop(context); // Close the dialog
                     ScaffoldMessenger.of(parentContext).showSnackBar(

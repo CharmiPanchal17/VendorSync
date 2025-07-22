@@ -31,7 +31,6 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
       
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
-          .where('vendorEmail', isEqualTo: widget.vendorEmail)
           .get();
 
       if (stockSnapshot.docs.isNotEmpty) {
