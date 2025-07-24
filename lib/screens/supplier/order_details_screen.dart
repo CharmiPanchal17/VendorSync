@@ -340,7 +340,7 @@ class _SupplierOrderDetailsScreenState extends State<SupplierOrderDetailsScreen>
                                 : () => _showUpdateConfirmation(order.id),
                             child: _isLoading
                                 ? const SizedBox(
-                                    width: 20,
+                                    width: 30,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
