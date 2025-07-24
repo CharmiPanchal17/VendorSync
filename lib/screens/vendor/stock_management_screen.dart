@@ -3,7 +3,7 @@ import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/notification_service.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter_document_picker/flutter_document_picker.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as ex;
 import '../../models/notification.dart';
@@ -1792,13 +1792,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   void _uploadFromCSV(BuildContext context) async {
     Navigator.pop(context);
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['csv', 'xlsx'],
+      final filePath = await FlutterDocumentPicker.openDocument(
+        params: FlutterDocumentPickerParams(
+          allowedFileExtensions: ['csv', 'xlsx'],
+        ),
       );
-      if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
-        final fileName = result.files.single.name;
+      if (filePath != null) {
+        final fileName = filePath.split('/').last;
         List<List<dynamic>>? rows;
         if (fileName.toLowerCase().endsWith('.csv')) {
           final csvString = await File(filePath).readAsString();
