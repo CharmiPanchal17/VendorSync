@@ -1058,7 +1058,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           return const Text(
             '...',
             style: TextStyle(
-              fontSize: 24.1,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.blue,
             ),
@@ -1068,7 +1068,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         return Text(
           count.toString(),
           style: const TextStyle(
-            fontSize: 24.1,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.blue,
           ),
