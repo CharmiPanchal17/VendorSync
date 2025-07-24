@@ -45,7 +45,7 @@ class _SupplierDashboardScreenState extends State<SupplierDashboardScreen> {
                 child: Row(
                       children: [
                     IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.black, size: 28),
+                      icon: const Icon(Icons.menu, color: Colors.black, size: 30),
                       onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                     ),
                     const SizedBox(width: 16),
