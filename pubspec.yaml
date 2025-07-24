@@ -43,7 +43,7 @@ dependencies:
   excel: ^2.1.0
   path_provider: ^2.1.2
   cupertino_icons: ^1.0.8
-  flutter_document_picker: ^5.3.0
+  flutter_document_picker: 5.2.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

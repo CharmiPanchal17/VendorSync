@@ -860,28 +860,23 @@ class ProductReportScreen extends StatelessWidget {
                   final fileName = filenameController.text.trim().isEmpty
                       ? 'report.csv'
                       : filenameController.text.trim();
-                  String? outputPath = await FilePicker.platform.saveFile(
-                    dialogTitle: 'Save Report As',
-                    fileName: fileName,
-                    type: FileType.custom,
-                    allowedExtensions: ['csv'],
-                  );
-                  if (outputPath != null) {
-                    final file = File(outputPath);
-                    await file.writeAsBytes(Uint8List.fromList(csv.codeUnits));
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Report downloaded to $outputPath'),
-                          backgroundColor: maroon,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                  // Save to Downloads folder on Android
+                  final downloadsDir = '/storage/emulated/0/Download';
+                  final outputPath = '$downloadsDir/$fileName';
+                  final file = File(outputPath);
+                  await file.writeAsBytes(Uint8List.fromList(csv.codeUnits));
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Report downloaded to $outputPath'),
+                        backgroundColor: maroon,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      );
-                    }
+                      ),
+                    );
                   }
                 },
                 child: const Text('Download'),
