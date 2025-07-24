@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
+import 'dart:io';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class ProductReportScreen extends StatelessWidget {
   final String productName;
-  
+
   const ProductReportScreen({super.key, required this.productName});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
-    final last7Days = List.generate(7, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
+    final last7Days = List.generate(
+      7,
+      (i) => DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 6 - i)),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -49,7 +57,10 @@ class ProductReportScreen extends StatelessWidget {
           stream: FirebaseFirestore.instance
               .collection('sales_history')
               .where('productName', isEqualTo: productName)
-              .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(last7Days.first))
+              .where(
+                'timestamp',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(last7Days.first),
+              )
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -59,7 +70,7 @@ class ProductReportScreen extends StatelessWidget {
                 ),
               );
             }
-            
+
             if (snapshot.hasError) {
               return Center(
                 child: Column(
@@ -81,31 +92,55 @@ class ProductReportScreen extends StatelessWidget {
             }
 
             final salesDocs = snapshot.data?.docs ?? [];
-            
+
             // Aggregate sales by day
-            final Map<String, int> salesByDay = {for (var d in last7Days) _formatDate(d): 0};
+            final Map<String, int> salesByDay = {
+              for (var d in last7Days) _formatDate(d): 0,
+            };
             for (final doc in salesDocs) {
               final data = doc.data() as Map<String, dynamic>;
               final ts = data['timestamp'];
               if (ts is Timestamp) {
-                final date = DateTime(ts.toDate().year, ts.toDate().month, ts.toDate().day);
+                final date = DateTime(
+                  ts.toDate().year,
+                  ts.toDate().month,
+                  ts.toDate().day,
+                );
                 final key = _formatDate(date);
                 if (salesByDay.containsKey(key)) {
-                  salesByDay[key] = salesByDay[key]! + ((data['quantity'] ?? 0) as int);
+                  salesByDay[key] =
+                      salesByDay[key]! + ((data['quantity'] ?? 0) as int);
                 }
               }
             }
 
-            final dailySalesData = last7Days.map((d) => {
-              'date': d,
-              'formattedDate': _formatDate(d),
-              'sales': salesByDay[_formatDate(d)] ?? 0,
-            }).toList();
+            final dailySalesData = last7Days
+                .map(
+                  (d) => {
+                    'date': d,
+                    'formattedDate': _formatDate(d),
+                    'sales': salesByDay[_formatDate(d)] ?? 0,
+                  },
+                )
+                .toList();
 
-            final totalSales = dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int));
-            final avgSales = dailySalesData.isNotEmpty ? (totalSales / dailySalesData.length).round() : 0;
-            final maxSales = dailySalesData.isNotEmpty ? dailySalesData.map((e) => e['sales'] as int).reduce((a, b) => a > b ? a : b) : 0;
-            final minSales = dailySalesData.isNotEmpty ? dailySalesData.map((e) => e['sales'] as int).reduce((a, b) => a < b ? a : b) : 0;
+            final totalSales = dailySalesData.fold<int>(
+              0,
+              (sum, item) => sum + (item['sales'] as int),
+            );
+            final avgSales = dailySalesData.isNotEmpty
+                ? (totalSales / dailySalesData.length).round()
+                : 0;
+            final maxSales = dailySalesData.isNotEmpty
+                ? dailySalesData
+                      .map((e) => e['sales'] as int)
+                      .reduce((a, b) => a > b ? a : b)
+                : 0;
+            final minSales = dailySalesData.isNotEmpty
+                ? dailySalesData
+                      .map((e) => e['sales'] as int)
+                      .reduce((a, b) => a < b ? a : b)
+                : 0;
 
             return FutureBuilder<QuerySnapshot>(
               future: FirebaseFirestore.instance
@@ -115,8 +150,11 @@ class ProductReportScreen extends StatelessWidget {
                   .get(),
               builder: (context, stockSnapshot) {
                 int? currentStock;
-                if (stockSnapshot.hasData && stockSnapshot.data!.docs.isNotEmpty) {
-                  final data = stockSnapshot.data!.docs.first.data() as Map<String, dynamic>;
+                if (stockSnapshot.hasData &&
+                    stockSnapshot.data!.docs.isNotEmpty) {
+                  final data =
+                      stockSnapshot.data!.docs.first.data()
+                          as Map<String, dynamic>;
                   currentStock = data['currentStock'] as int?;
                 }
 
@@ -126,15 +164,21 @@ class ProductReportScreen extends StatelessWidget {
                     // Report Header
                     _buildReportHeader(isDark, currentStock),
                     const SizedBox(height: 24),
-                    
+
                     // Summary Statistics
-                    _buildSummaryStats(isDark, totalSales, avgSales, maxSales, minSales),
+                    _buildSummaryStats(
+                      isDark,
+                      totalSales,
+                      avgSales,
+                      maxSales,
+                      minSales,
+                    ),
                     const SizedBox(height: 24),
-                    
+
                     // Daily Sales Table
                     _buildDailySalesTable(isDark, dailySalesData, currentStock),
                     const SizedBox(height: 24),
-                    
+
                     // Report Footer
                     _buildReportFooter(isDark),
                   ],
@@ -155,13 +199,17 @@ class ProductReportScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-            isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
+            isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.9),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -177,7 +225,10 @@ class ProductReportScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [maroon.withOpacity(0.2), maroon.withOpacity(0.1)],
+                      colors: [
+                        maroon.withOpacity(0.2),
+                        maroon.withOpacity(0.1),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: maroon.withOpacity(0.3)),
@@ -248,7 +299,13 @@ class ProductReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryStats(bool isDark, int totalSales, int avgSales, int maxSales, int minSales) {
+  Widget _buildSummaryStats(
+    bool isDark,
+    int totalSales,
+    int avgSales,
+    int maxSales,
+    int minSales,
+  ) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -256,13 +313,17 @@ class ProductReportScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-            isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
+            isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.9),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -285,11 +346,21 @@ class ProductReportScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard('Total Sales', totalSales.toString(), Icons.trending_up, isDark),
+                  child: _buildStatCard(
+                    'Total Sales',
+                    totalSales.toString(),
+                    Icons.trending_up,
+                    isDark,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatCard('Average Daily', avgSales.toString(), Icons.analytics, isDark),
+                  child: _buildStatCard(
+                    'Average Daily',
+                    avgSales.toString(),
+                    Icons.analytics,
+                    isDark,
+                  ),
                 ),
               ],
             ),
@@ -297,11 +368,21 @@ class ProductReportScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard('Highest Day', maxSales.toString(), Icons.arrow_upward, isDark),
+                  child: _buildStatCard(
+                    'Highest Day',
+                    maxSales.toString(),
+                    Icons.arrow_upward,
+                    isDark,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatCard('Lowest Day', minSales.toString(), Icons.arrow_downward, isDark),
+                  child: _buildStatCard(
+                    'Lowest Day',
+                    minSales.toString(),
+                    Icons.arrow_downward,
+                    isDark,
+                  ),
                 ),
               ],
             ),
@@ -311,7 +392,12 @@ class ProductReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, bool isDark) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -344,7 +430,11 @@ class ProductReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDailySalesTable(bool isDark, List<Map<String, dynamic>> dailySalesData, int? currentStock) {
+  Widget _buildDailySalesTable(
+    bool isDark,
+    List<Map<String, dynamic>> dailySalesData,
+    int? currentStock,
+  ) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -352,13 +442,17 @@ class ProductReportScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-            isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
+            isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.9),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -378,7 +472,7 @@ class ProductReportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Table Header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -426,20 +520,26 @@ class ProductReportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Table Rows
-            ...dailySalesData.map((item) => _buildTableRow(item, isDark, currentStock)),
+            ...dailySalesData.map(
+              (item) => _buildTableRow(item, isDark, currentStock),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTableRow(Map<String, dynamic> item, bool isDark, int? currentStock) {
+  Widget _buildTableRow(
+    Map<String, dynamic> item,
+    bool isDark,
+    int? currentStock,
+  ) {
     final date = item['date'] as DateTime;
     final sales = item['sales'] as int;
     final dayName = _getDayName(date.weekday);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -510,13 +610,17 @@ class ProductReportScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             isDark ? Colors.white.withOpacity(0.1) : Colors.white,
-            isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.9),
+            isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.9),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -588,50 +692,82 @@ class ProductReportScreen extends StatelessWidget {
         break;
     }
     final now = DateTime.now();
-    final startDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1));
+    final startDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: days - 1));
     final periodLabel = period == _ReportPeriod.weekly
         ? 'Last 7 Days'
         : period == _ReportPeriod.monthly
-            ? 'Last 30 Days'
-            : 'Last 365 Days';
-    final dateList = List.generate(days, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1 - i)));
+        ? 'Last 30 Days'
+        : 'Last 365 Days';
+    final dateList = List.generate(
+      days,
+      (i) => DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: days - 1 - i)),
+    );
 
     try {
       // Step 3: Gather report data for the selected period
       final salesSnapshot = await FirebaseFirestore.instance
           .collection('sales_history')
           .where('productName', isEqualTo: productName)
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where(
+            'timestamp',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          )
           .get();
       final salesDocs = salesSnapshot.docs;
-      final Map<String, int> salesByDay = {for (var d in dateList) _formatDate(d): 0};
+      final Map<String, int> salesByDay = {
+        for (var d in dateList) _formatDate(d): 0,
+      };
       for (final doc in salesDocs) {
         final data = doc.data();
         final ts = data['timestamp'];
         if (ts is Timestamp) {
-          final date = DateTime(ts.toDate().year, ts.toDate().month, ts.toDate().day);
+          final date = DateTime(
+            ts.toDate().year,
+            ts.toDate().month,
+            ts.toDate().day,
+          );
           final key = _formatDate(date);
           if (salesByDay.containsKey(key)) {
-            salesByDay[key] = salesByDay[key]! + ((data['quantity'] ?? 0) as int);
+            salesByDay[key] =
+                salesByDay[key]! + ((data['quantity'] ?? 0) as int);
           }
         }
       }
       // Prepare CSV data
       List<List<dynamic>> csvData = [
         ['Date', 'Sales'],
-        ...dateList.map((d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0]),
+        ...dateList.map(
+          (d) => [_formatDate(d), salesByDay[_formatDate(d)] ?? 0],
+        ),
       ];
       String csv = const ListToCsvConverter().convert(csvData);
       // Calculate summary statistics
-      final salesValues = dateList.map((d) => salesByDay[_formatDate(d)] ?? 0).toList();
+      final salesValues = dateList
+          .map((d) => salesByDay[_formatDate(d)] ?? 0)
+          .toList();
       final totalSales = salesValues.fold<int>(0, (sum, v) => sum + v);
-      final avgSales = salesValues.isNotEmpty ? (totalSales / salesValues.length).round() : 0;
-      final maxSales = salesValues.isNotEmpty ? salesValues.reduce((a, b) => a > b ? a : b) : 0;
-      final minSales = salesValues.isNotEmpty ? salesValues.reduce((a, b) => a < b ? a : b) : 0;
+      final avgSales = salesValues.isNotEmpty
+          ? (totalSales / salesValues.length).round()
+          : 0;
+      final maxSales = salesValues.isNotEmpty
+          ? salesValues.reduce((a, b) => a > b ? a : b)
+          : 0;
+      final minSales = salesValues.isNotEmpty
+          ? salesValues.reduce((a, b) => a < b ? a : b)
+          : 0;
       // Show preview dialog before saving
       if (context.mounted) {
         final filenameController = TextEditingController(
-          text: '${productName}_sales_report_${_formatDate(DateTime.now())}.csv',
+          text:
+              '${productName}_sales_report_${_formatDate(DateTime.now())}.csv',
         );
         showDialog(
           context: context,
@@ -655,7 +791,10 @@ class ProductReportScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Total Sales: $totalSales', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            'Total Sales: $totalSales',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           Text('Average Daily Sales: $avgSales'),
                           Text('Lowest Daily Sales: $minSales'),
                           Text('Highest Daily Sales: $maxSales'),
@@ -669,18 +808,33 @@ class ProductReportScreen extends StatelessWidget {
                         child: DataTable(
                           columns: (csvData.isNotEmpty)
                               ? (csvData[0])
-                                  .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
-                                  .toList()
+                                    .map<DataColumn>(
+                                      (col) => DataColumn(
+                                        label: Text(
+                                          col.toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList()
                               : [],
                           rows: csvData.length > 1
                               ? csvData
-                                  .sublist(1)
-                                  .map<DataRow>((row) => DataRow(
+                                    .sublist(1)
+                                    .map<DataRow>(
+                                      (row) => DataRow(
                                         cells: (row)
-                                            .map<DataCell>((cell) => DataCell(Text(cell.toString())))
+                                            .map<DataCell>(
+                                              (cell) => DataCell(
+                                                Text(cell.toString()),
+                                              ),
+                                            )
                                             .toList(),
-                                      ))
-                                  .toList()
+                                      ),
+                                    )
+                                    .toList()
                               : [],
                         ),
                       ),
@@ -707,22 +861,25 @@ class ProductReportScreen extends StatelessWidget {
                   final fileName = filenameController.text.trim().isEmpty
                       ? 'report.csv'
                       : filenameController.text.trim();
-                  final path = await getSavePath(suggestedName: fileName);
-                  if (path != null) {
-                    final file = XFile.fromData(
-                      Uint8List.fromList(csv.codeUnits),
-                      name: fileName,
-                      mimeType: 'text/csv',
-                    );
-                    await file.saveTo(path);
+                  String? outputPath = await FilePicker.platform.saveFile(
+                    dialogTitle: 'Save Report As',
+                    fileName: fileName,
+                    type: FileType.custom,
+                    allowedExtensions: ['csv'],
+                  );
+                  if (outputPath != null) {
+                    final file = File(outputPath);
+                    await file.writeAsBytes(Uint8List.fromList(csv.codeUnits));
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Report downloaded to $path'),
+                          content: Text('Report downloaded to $outputPath'),
                           backgroundColor: maroon,
                           behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       );
                     }
@@ -741,7 +898,9 @@ class ProductReportScreen extends StatelessWidget {
             content: Text('Failed to generate report: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -754,17 +913,25 @@ class ProductReportScreen extends StatelessWidget {
 
   String _getDayName(int weekday) {
     switch (weekday) {
-      case 1: return 'Monday';
-      case 2: return 'Tuesday';
-      case 3: return 'Wednesday';
-      case 4: return 'Thursday';
-      case 5: return 'Friday';
-      case 6: return 'Saturday';
-      case 7: return 'Sunday';
-      default: return 'Unknown';
+      case 1:
+        return 'Monday';
+      case 2:
+        return 'Tuesday';
+      case 3:
+        return 'Wednesday';
+      case 4:
+        return 'Thursday';
+      case 5:
+        return 'Friday';
+      case 6:
+        return 'Saturday';
+      case 7:
+        return 'Sunday';
+      default:
+        return 'Unknown';
     }
   }
-} 
+}
 
 // Helper enum for report period
-enum _ReportPeriod { weekly, monthly, yearly } 
+enum _ReportPeriod { weekly, monthly, yearly }
