@@ -318,8 +318,9 @@ class StockItem {
       closestSeason['name'] as String,
     );
 
-    if (!isRelevantToSeason)
+    if (!isRelevantToSeason) {
       return 0; // No adjustment if product not relevant to this season
+    }
 
     // Calculate seasonal adjustment based on proximity to season
     return calculateSeasonAdjustment(closestSeason);
