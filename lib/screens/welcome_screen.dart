@@ -5,103 +5,147 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Define the colors based on the screenshot
-    const Color backgroundColor = Color(0xFFB2FFFF); // Light cyan/sky blue
-    const Color maroonColor = Color(0xFF8B0000); // Deep maroon
+    const Color backgroundColor = Color(0xFFB2EBF2); // Light cyan
+    const Color maroonColor = Color(0xFF800000); // Maroon
 
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                Text(
-                  'Welcome to',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: maroonColor,
-                  ),
-                  textAlign: TextAlign.center,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(flex: 2),
+              // Welcome Text
+              Text(
+                'Welcome to',
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.bold,
+                  color: maroonColor,
+                  fontFamily: 'Arial',
                 ),
-                Text(
-                  'VendorSync',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: maroonColor,
-                  ),
-                  textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                'VendorSync',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: maroonColor,
+                  fontFamily: 'Arial',
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Your all-in-one Vendor-to-Supplier\nManagement System',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              // Subtitle Text
+              const Text(
+                'Your all-in-one Vendor-to-Supplier\nManagement System',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.black87,
                 ),
-                const SizedBox(height: 24),
-                // Oval image from assets
-                ClipOval(
-                  child: Image.asset(
-                    'assets/supermarket.jpg', // Updated filename
-                    width: 220,
-                    height: 140,
-                    fit: BoxFit.cover,
-                  ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              // Circular Image
+              ClipOval(
+                child: Image.asset(
+                  'assets/supermarket.jpg',
+                  width: 200,
+                  height: 120,
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 36),
-                // Vendor Register Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: maroonColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        elevation: 2,
-                      ),
-                      onPressed: () => Navigator.of(context).pushNamed('/register'),
-                      child: const Text('🔗 Vendor Register'),
+              ),
+              const Spacer(flex: 3),
+              // Register As Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {}, // No action needed
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: maroonColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Register As',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Supplier Register Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: maroonColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+              ),
+              const SizedBox(height: 16),
+              // Vendor and Supplier Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/register');
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: maroonColor,
+                        side: BorderSide(color: maroonColor, width: 2),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            bottomLeft: Radius.circular(12),
+                          ),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        elevation: 2,
                       ),
-                      onPressed: () => Navigator.of(context).pushNamed('/register-supplier'),
-                      child: const Text('📦 Supplier Register'),
+                      child: const Text(
+                        'Vendor',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+                  Container(
+                    width: 2,
+                    height: 52, // Match button height
+                    color: maroonColor,
+                  ),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/register-supplier');
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: maroonColor,
+                        side: BorderSide(color: maroonColor, width: 2),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(12),
+                            bottomRight: Radius.circular(12),
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'Supplier',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(flex: 1),
+            ],
           ),
         ),
       ),

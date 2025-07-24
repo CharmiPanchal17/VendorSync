@@ -7,6 +7,8 @@ import 'create_order_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../services/session_service.dart';
+import 'package:vendorsync/screens/vendor/analytics_screen.dart';
+import 'package:vendorsync/screens/vendor/stock_management_screen.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key, this.vendorEmail = 'vendor@example.com'});
@@ -49,54 +51,55 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    const Color maroonColor = Color(0xFF800000);
+    const Color lightCyan = Color(0xFFE0F7FA);
     return Scaffold(
       drawer: Drawer(
         child: Container(
-          color: Colors.blue.shade700,
+          color: lightCyan,
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
+              // Drawer Header
               Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade700,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
+                padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+                decoration: const BoxDecoration(
+                  color: maroonColor,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
                     CircleAvatar(
-                      radius: 35,
+                      radius: 32,
                       backgroundColor: Colors.white.withOpacity(0.2),
-                      child: Icon(Icons.store, size: 40, color: Colors.white),
+                      child: const Icon(Icons.store, size: 32, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       vendorName ?? 'Vendor',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    const Text(
                       'Manage your account',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 16,
+                        color: Colors.white70,
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.vendorEmail,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                      style: const TextStyle(
+                        color: Colors.white60,
                         fontSize: 14,
                       ),
                     ),
@@ -104,6 +107,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Menu Items
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
@@ -113,6 +117,43 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                       title: 'Dashboard',
                       onTap: () => Navigator.pop(context),
                       isSelected: true,
+                      maroonColor: maroonColor,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.add_shopping_cart,
+                      title: 'Create Initial Order',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
+                        ));
+                      },
+                      maroonColor: maroonColor,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'Stock Management',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const StockManagementScreen(),
+                        ));
+                      },
+                      maroonColor: maroonColor,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMenuItem(
+                      icon: Icons.analytics_outlined,
+                      title: 'Analytics',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const AnalyticsScreen(),
+                        ));
+                      },
+                      maroonColor: maroonColor,
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -124,17 +165,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           builder: (context) => SuppliersListScreen(vendorEmail: widget.vendorEmail),
                         ));
                       },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMenuItem(
-                      icon: Icons.add_shopping_cart,
-                      title: 'Create Order',
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => VendorCreateOrderScreen(vendorEmail: widget.vendorEmail),
-                        ));
-                      },
+                      maroonColor: maroonColor,
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -144,6 +175,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/vendor-notifications');
                       },
+                      maroonColor: maroonColor,
                     ),
                     const SizedBox(height: 8),
                     _buildMenuItem(
@@ -153,20 +185,10 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                         Navigator.pop(context);
                         Navigator.of(context).pushNamed('/vendor-profile');
                       },
+                      maroonColor: maroonColor,
                     ),
                     const SizedBox(height: 24),
-                    Container(
-                      height: 1,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.1),
-                            Colors.white.withOpacity(0.3),
-                            Colors.white.withOpacity(0.1),
-                          ],
-                        ),
-                      ),
-                    ),
+                    const Divider(color: Colors.grey, indent: 16, endIndent: 16),
                     const SizedBox(height: 16),
                     _buildMenuItem(
                       icon: Icons.logout,
@@ -177,19 +199,13 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Logout'),
-                            content: const Text('Are you sure you want to logout? This will remove your vendor details from the system.'),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            content: const Text('Are you sure you want to logout?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(false),
                                 child: const Text('Cancel'),
                               ),
                               ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
                                 onPressed: () => Navigator.of(context).pop(true),
                                 child: const Text('Logout'),
                               ),
@@ -197,16 +213,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                           ),
                         );
                         if (confirm == true) {
-                          // Clear the session data
                           await SessionService.clearSession();
-                          
-                          // Navigate to welcome screen
                           if (context.mounted) {
                             Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
                           }
                         }
                       },
                       isLogout: true,
+                      maroonColor: maroonColor,
                     ),
                   ],
                 ),
@@ -938,35 +952,29 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    required Color maroonColor,
     bool isSelected = false,
     bool isLogout = false,
   }) {
+    final Color color = isLogout ? Colors.red.shade700 : maroonColor;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: isSelected 
-            ? Colors.white.withOpacity(0.2)
-            : Colors.transparent,
+        color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: isSelected
-            ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
-            : null,
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Icon(
           icon,
-          color: isLogout 
-              ? Colors.red.shade300
-              : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
+          color: color,
           size: 24,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isLogout 
-                ? Colors.red.shade300
-                : (isSelected ? Colors.white : Colors.white.withOpacity(0.8)),
+            color: color,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 16,
           ),
