@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_selector/file_selector.dart';
 import 'dart:typed_data';
@@ -430,7 +428,7 @@ class ProductReportScreen extends StatelessWidget {
             const SizedBox(height: 8),
             
             // Table Rows
-            ...dailySalesData.map((item) => _buildTableRow(item, isDark, currentStock)).toList(),
+            ...dailySalesData.map((item) => _buildTableRow(item, isDark, currentStock)),
           ],
         ),
       ),
@@ -608,7 +606,7 @@ class ProductReportScreen extends StatelessWidget {
       final salesDocs = salesSnapshot.docs;
       final Map<String, int> salesByDay = {for (var d in dateList) _formatDate(d): 0};
       for (final doc in salesDocs) {
-        final data = doc.data() as Map<String, dynamic>;
+        final data = doc.data();
         final ts = data['timestamp'];
         if (ts is Timestamp) {
           final date = DateTime(ts.toDate().year, ts.toDate().month, ts.toDate().day);
@@ -670,7 +668,7 @@ class ProductReportScreen extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           columns: (csvData.isNotEmpty)
-                              ? (csvData[0] as List)
+                              ? (csvData[0])
                                   .map<DataColumn>((col) => DataColumn(label: Text(col.toString(), style: const TextStyle(fontWeight: FontWeight.bold))))
                                   .toList()
                               : [],
@@ -678,7 +676,7 @@ class ProductReportScreen extends StatelessWidget {
                               ? csvData
                                   .sublist(1)
                                   .map<DataRow>((row) => DataRow(
-                                        cells: (row as List)
+                                        cells: (row)
                                             .map<DataCell>((cell) => DataCell(Text(cell.toString())))
                                             .toList(),
                                       ))

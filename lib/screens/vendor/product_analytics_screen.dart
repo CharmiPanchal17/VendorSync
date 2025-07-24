@@ -71,7 +71,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
             final totalSales = dailySalesData.fold<int>(0, (sum, item) => sum + (item['sales'] as int));
             final avgSales = dailySalesData.isNotEmpty ? (totalSales / dailySalesData.length).round() : 0;
             // Debug print to check for negative sales data
-            print('Daily sales data: ' + dailySalesData.map((e) => e['sales']).toList().toString());
+            print('Daily sales data: ${dailySalesData.map((e) => e['sales']).toList()}');
             // Replace the FutureBuilder for stock_items with a StreamBuilder for real-time updates
             // Find the section where the stock level is fetched for the product
             // Replace:
@@ -348,7 +348,7 @@ class ProductAnalyticsScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            ...dailySalesData.map((item) => _buildDailySalesRow({...item, 'stock': currentStock}, isDark)).toList(),
+                            ...dailySalesData.map((item) => _buildDailySalesRow({...item, 'stock': currentStock}, isDark)),
                           ],
                         ),
                       ),

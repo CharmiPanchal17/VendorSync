@@ -2,21 +2,18 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import '../../mock_data/mock_orders.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart'; 
 import 'package:file_selector/file_selector.dart';
-import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as ex;
 import '../../models/notification.dart';
-import 'package:flutter/foundation.dart';
 
 const maroon = Color(0xFF800000);
 const lightCyan = Color(0xFFAFFFFF);
 
 class StockManagementScreen extends StatefulWidget {
   final String vendorEmail;
-  StockManagementScreen({Key? key, required this.vendorEmail}) : super(key: key);
+  const StockManagementScreen({super.key, required this.vendorEmail});
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -39,7 +36,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       });
 
       final currentVendorEmail = widget.vendorEmail;
-      print('DEBUG: Querying stock_items for vendorEmail: ' + currentVendorEmail);
+      print('DEBUG: Querying stock_items for vendorEmail: $currentVendorEmail');
 
       // Try to load from Firestore first
       final stockSnapshot = await FirebaseFirestore.instance
@@ -49,7 +46,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       print('DEBUG: Firestore stock_items found: \'${stockSnapshot.docs.length}\'');
       for (final doc in stockSnapshot.docs) {
         final data = doc.data();
-        print('DEBUG: StockItem docId: ' + doc.id + ', vendorEmail: ' + (data['vendorEmail']?.toString() ?? 'NULL'));
+        print('DEBUG: StockItem docId: ${doc.id}, vendorEmail: ${data['vendorEmail']?.toString() ?? 'NULL'}');
       }
 
       if (stockSnapshot.docs.isNotEmpty) {
@@ -113,9 +110,6 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   Future<void> _createStockFromOrders({bool initialSetup = false}) async {
     try {
       final currentVendorEmail = widget.vendorEmail;
-      if (currentVendorEmail == null) {
-        throw Exception('No vendor is currently logged in.');
-      }
       // Get all delivered orders from Firestore
       final ordersSnapshot = await FirebaseFirestore.instance
           .collection('orders')
@@ -403,7 +397,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
 
     final newStock = updatedStockItem.currentStock;
     final quantitySold = oldStock - newStock;
-    print('DEBUG: oldStock: ' + oldStock.toString() + ', newStock: ' + newStock.toString() + ', quantitySold: ' + quantitySold.toString());
+    print('DEBUG: oldStock: $oldStock, newStock: $newStock, quantitySold: $quantitySold');
     if (newStock < oldStock) {
       print('DEBUG: Attempting to write sales record for ${updatedStockItem.productName}, qty: $quantitySold');
       try {
@@ -459,7 +453,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Notify vendor (not supplier) that an auto-order is pending their confirmation
       await NotificationService.createNotification(
         title: 'Auto-Order Pending Confirmation',
-        message: 'An auto-order for ${updatedStockItem.productName} (${autoOrderQuantity} units) has been created and is pending your confirmation.',
+        message: 'An auto-order for ${updatedStockItem.productName} ($autoOrderQuantity units) has been created and is pending your confirmation.',
         type: NotificationType.orderPlaced,
         recipientEmail: updatedStockItem.vendorEmail,
         senderEmail: supplierEmail,
@@ -469,7 +463,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Auto-order placed for ${updatedStockItem.productName} (${autoOrderQuantity} units). Vendor notified for confirmation.'),
+            content: Text('Auto-order placed for ${updatedStockItem.productName} ($autoOrderQuantity units). Vendor notified for confirmation.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -1233,7 +1227,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             ...stockItem.deliveryHistory
                 .take(3)
                 .map((record) => _buildDeliveryRecord(record, isDark))
-                .toList(),
+                ,
           ],
         ],
       ),

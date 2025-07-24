@@ -316,7 +316,7 @@ class _QuickOrderScreenState extends State<QuickOrderScreen> {
                             ...availableSuppliers.map((supplier) => _buildSupplierOption(
                               supplier,
                               isDark,
-                            )).toList(),
+                            )),
                         ],
                       ),
                     ),

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import '../models/order.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeliveryTrackingService {
@@ -22,7 +20,7 @@ class DeliveryTrackingService {
     // 3. Update order status to 'Delivered'
     // 4. Trigger notifications if needed (not implemented here)
 
-    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc('${productName}_$vendorEmail');
     final orderRef = FirebaseFirestore.instance.collection('orders').doc(orderId);
 
     // Use a transaction to ensure consistency
@@ -83,8 +81,8 @@ class DeliveryTrackingService {
     required int deliveredQuantity,
     required String vendorEmail, // NEW PARAM
   }) async {
-    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc(productName + '_' + vendorEmail);
-    print('DEBUG: Attempting to update stock_items/${productName + '_' + vendorEmail} with deliveredQuantity: $deliveredQuantity');
+    final stockRef = FirebaseFirestore.instance.collection('stock_items').doc('${productName}_$vendorEmail');
+    print('DEBUG: Attempting to update stock_items/${'${productName}_$vendorEmail'} with deliveredQuantity: $deliveredQuantity');
     // Use a transaction to ensure consistency
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final stockSnapshot = await transaction.get(stockRef);
@@ -96,9 +94,9 @@ class DeliveryTrackingService {
             'maximumStock': (stockSnapshot['maximumStock'] ?? 0) + deliveredQuantity,
             'vendorEmail': vendorEmail, // NEW FIELD
           });
-          print('DEBUG: Firestore transaction update succeeded for ${productName + '_' + vendorEmail} - new currentStock: ${currentStock + deliveredQuantity}');
+          print('DEBUG: Firestore transaction update succeeded for ${'${productName}_$vendorEmail'} - new currentStock: ${currentStock + deliveredQuantity}');
         } catch (e) {
-          print('ERROR: Firestore transaction update failed for ${productName + '_' + vendorEmail}: $e');
+          print('ERROR: Firestore transaction update failed for ${'${productName}_$vendorEmail'}: $e');
         }
       } else {
         try {
@@ -121,9 +119,9 @@ class DeliveryTrackingService {
             ],
             'vendorEmail': vendorEmail, // NEW FIELD
           });
-          print('DEBUG: Firestore transaction set succeeded for ${productName + '_' + vendorEmail} - new currentStock: $deliveredQuantity');
+          print('DEBUG: Firestore transaction set succeeded for ${'${productName}_$vendorEmail'} - new currentStock: $deliveredQuantity');
         } catch (e) {
-          print('ERROR: Firestore transaction set failed for ${productName + '_' + vendorEmail}: $e');
+          print('ERROR: Firestore transaction set failed for ${'${productName}_$vendorEmail'}: $e');
         }
       }
     });

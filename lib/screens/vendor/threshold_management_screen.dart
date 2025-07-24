@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/order.dart';
-import '../../services/notification_service.dart';
 
 const maroonThreshold = Color(0xFF800000);
 const lightCyanThreshold = Color(0xFFAFFFFF);
