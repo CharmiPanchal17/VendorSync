@@ -1058,7 +1058,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           return const Text(
             '...',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 24.1,
               fontWeight: FontWeight.bold,
               color: Colors.blue,
             ),
@@ -1068,7 +1068,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
         return Text(
           count.toString(),
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 24.1,
             fontWeight: FontWeight.bold,
             color: Colors.blue,
           ),
@@ -1169,7 +1169,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
       },
     );
   }
-
+//approve order
   Future<void> _approveOrder(String orderId) async {
     try {
       await FirebaseFirestore.instance
