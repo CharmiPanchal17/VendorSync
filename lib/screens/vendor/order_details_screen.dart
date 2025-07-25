@@ -37,7 +37,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                       elevation: 8,
                       color: Colors.white.withOpacity(0.95),
                       child: Padding(
-                        padding: const EdgeInsets.all(24.0),
+                        padding: const EdgeInsets.all(24.1),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
