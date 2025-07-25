@@ -64,6 +64,7 @@ class SupplierDashboardScreen extends StatelessWidget {
                     label: const Text('Notifications'),
                     style: OutlinedButton.styleFrom(minimumSize: const Size(160, 48)),
                     onPressed: () {
+                      // Navigates to the supplier notifications screen
                       Navigator.of(context).pushNamed('/supplier-notifications');
                     },
                   ),
