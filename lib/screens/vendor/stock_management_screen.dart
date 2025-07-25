@@ -1810,25 +1810,31 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           rows = sheet.rows;
         }
         if (rows != null) {
-          // Expecting header: Product Name,Current Stock,Minimum Stock,Maximum Stock,Supplier Name,Supplier Email
+          // Expecting header: Product Name,Current Stock,Minimum Stock,Maximum Stock,Supplier Name,Supplier Email,Amount Sold
           int added = 0;
           for (int i = 1; i < rows.length; i++) {
             final row = rows[i];
-            if (row.length < 6) continue;
+            if (row.length < 7) continue; // Now expecting 7 columns
             final productName = row[0]?.toString() ?? '';
             final currentStock = int.tryParse(row[1]?.toString() ?? '') ?? 0;
             final minimumStock = int.tryParse(row[2]?.toString() ?? '') ?? 0;
             final maximumStock = int.tryParse(row[3]?.toString() ?? '') ?? 0;
             final supplierName = row[4]?.toString() ?? '';
             final supplierEmail = row[5]?.toString() ?? '';
+            final amountSold = int.tryParse(row[6]?.toString() ?? '') ?? 0;
             if (productName.isEmpty) continue;
+            final newCurrentStock = (currentStock - amountSold).clamp(
+              0,
+              maximumStock,
+            );
+
             final stockDocId = '${productName}_${widget.vendorEmail}';
             await FirebaseFirestore.instance
                 .collection('stock_items')
                 .doc(stockDocId)
                 .set({
                   'productName': productName,
-                  'currentStock': currentStock,
+                  'currentStock': newCurrentStock,
                   'minimumStock': minimumStock,
                   'maximumStock': maximumStock,
                   'primarySupplier': supplierName,
