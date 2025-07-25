@@ -69,6 +69,7 @@ class VendorDashboardScreen extends StatelessWidget {
                     label: const Text('Notifications'),
                     style: OutlinedButton.styleFrom(minimumSize: const Size(160, 48)),
                     onPressed: () {
+                      // Navigates to the vendor notifications screen
                       Navigator.of(context).pushNamed('/vendor-notifications');
                     },
                   ),
