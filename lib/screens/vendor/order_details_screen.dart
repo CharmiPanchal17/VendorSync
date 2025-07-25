@@ -44,7 +44,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                             const Text(
                               'Order Information',
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 21,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF1A1A1A),
                               ),
