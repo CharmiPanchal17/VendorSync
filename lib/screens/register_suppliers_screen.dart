@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterSuppliersScreen extends StatefulWidget {
-  const RegisterSuppliersScreen({super.key});
+  final String vendorEmail;
+  const RegisterSuppliersScreen({super.key, required this.vendorEmail});
 
   @override
   State<RegisterSuppliersScreen> createState() => _RegisterSuppliersScreenState();
@@ -15,7 +19,7 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
   String confirmPassword = '';
   final List<Map<String, String>> suppliers = [];
 
-  void _addSupplier() {
+  void _addSupplier() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         suppliers.add({'name': name, 'email': email, 'password': password});
@@ -25,6 +29,15 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
         confirmPassword = '';
       });
       _formKey.currentState!.reset();
+      // Save to Firestore
+      final hashedPassword = sha256.convert(utf8.encode(suppliers.last['password']!)).toString();
+      await FirebaseFirestore.instance.collection('suppliers').add({
+        'name': suppliers.last['name'],
+        'email': suppliers.last['email'],
+        'password': hashedPassword, // Store hashed password
+        'vendorEmail': widget.vendorEmail,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
   }
 
@@ -32,7 +45,7 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
+      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.2),
       body: SafeArea(
         child: Card(
           margin: EdgeInsets.zero,
@@ -122,39 +135,6 @@ class _RegisterSuppliersScreenState extends State<RegisterSuppliersScreen> {
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text('Registered Suppliers:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: suppliers.length,
-                      itemBuilder: (context, index) {
-                        final s = suppliers[index];
-                        return Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: colorScheme.primary.withOpacity(0.1),
-                              child: const Icon(Icons.person, color: Colors.black54),
-                            ),
-                            title: Text(s['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text(s['email'] ?? ''),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.dashboard),
-                      label: const Text('Finish & Go to Dashboard'),
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                      onPressed: () {
-                        Navigator.of(context).pushReplacementNamed('/vendor-dashboard');
-                      },
                     ),
                   ],
                 ),

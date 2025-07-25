@@ -2,17 +2,9 @@ import 'package:flutter/material.dart';
 import 'screens.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import '../../services/notification_service.dart';
-import '../../models/notification.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const VendorSyncApp());
-}
-
-class VendorSyncApp extends StatelessWidget {
-  const VendorSyncApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +23,7 @@ class VendorSyncApp extends StatelessWidget {
         '/reset-password': (context) => const ResetPasswordScreen(),
         '/role-selection': (context) => const RoleSelectionScreen(),
         '/vendor-dashboard': (context) => const VendorDashboardScreen(),
-        '/vendor-create-order': (context) => const VendorCreateOrderScreen(),
+        '/vendor-create-order': (context) => const CreateOrderScreen(),
         '/vendor-order-details': (context) => const VendorOrderDetailsScreen(),
         '/vendor-notifications': (context) => const VendorNotificationsScreen(),
         '/vendor-profile': (context) => const VendorProfileScreen(),
@@ -40,8 +32,9 @@ class VendorSyncApp extends StatelessWidget {
         '/supplier-delivery-schedule': (context) => const SupplierDeliveryScheduleScreen(),
         '/supplier-notifications': (context) => const SupplierNotificationsScreen(),
         '/supplier-profile': (context) => const SupplierProfileScreen(),
+        '/create-order': (context) => CreateOrderScreen(),
+
       },
-      debugShowCheckedModeBanner: false,
     );
   }
 }
