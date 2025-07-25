@@ -32,7 +32,7 @@ class VendorOrderDetailsScreen extends StatelessWidget {
                     // Card with order info
                     Card(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(1),
                       ),
                       elevation: 8,
                       color: Colors.white.withOpacity(0.95),
