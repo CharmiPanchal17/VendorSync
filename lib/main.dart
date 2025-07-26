@@ -151,9 +151,24 @@ class VendorSyncApp extends StatelessWidget {
               return SuppliersListScreen(vendorEmail: email ?? '');
             },
             '/vendor-threshold-management': (context) {
-              final email =
-                  ModalRoute.of(context)?.settings.arguments as String?;
-              return ThresholdManagementScreen(vendorEmail: email ?? '');
+              final args = ModalRoute.of(context)?.settings.arguments;
+              String vendorEmail = '';
+              String? productName;
+              int? thresholdLevel;
+
+              if (args is String) {
+                vendorEmail = args;
+              } else if (args is Map<String, dynamic>) {
+                vendorEmail = args['vendorEmail'] ?? '';
+                productName = args['productName'];
+                thresholdLevel = args['thresholdLevel'];
+              }
+
+              return ThresholdManagementScreen(
+                vendorEmail: vendorEmail,
+                productName: productName,
+                thresholdLevel: thresholdLevel,
+              );
             },
             '/vendor-orders': (context) {
               final email =
