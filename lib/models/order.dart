@@ -98,39 +98,53 @@ class StockItem {
     final demandAdjustment = calculateDemandAdjustment();
     // New: Adjust based on how quickly threshold is hit
     final timeToThresholdAdjustment = calculateTimeToThresholdAdjustment();
+    // New: Adjust based on frequent updates with large quantities
+    final frequentUpdateAdjustment = calculateFrequentUpdateAdjustment();
     // Check if this is a seasonal item to determine weighting strategy
     final isSeasonal = isSeasonalItem();
     double suggestedQuantity;
     if (isSeasonal) {
       // For seasonal items: more weight to base and demand, less to conservative factors
       suggestedQuantity =
-          (baseQuantity * 0.5 + // 50% weight to base calculation
-          stockAdjustment * 0.1 + // 10% weight to stock levels
-          seasonalAdjustment * 0.1 + // 10% weight to seasonal trends
-          leadTimeAdjustment * 0.1 + // 10% weight to lead time
-          demandAdjustment * 0.15 + // 15% weight to demand patterns
+          (baseQuantity *
+              0.55 + // 55% weight to base calculation (reduced from 60% to make room for frequent updates)
+          stockAdjustment *
+              0.15 + // 15% weight to stock levels (increased from 10%)
+          seasonalAdjustment *
+              0.15 + // 15% weight to seasonal trends (increased from 10%)
+          leadTimeAdjustment *
+              0.05 + // 5% weight to lead time (decreased from 10%)
+          demandAdjustment *
+              0.05 + // 5% weight to demand patterns (decreased from 15%)
           timeToThresholdAdjustment *
-              0.05 // 5% weight to time-to-threshold
+              0.0 + // 0% weight to time-to-threshold (decreased from 5%)
+          frequentUpdateAdjustment *
+              0.05 // 5% weight to frequent updates
               );
     } else {
       // For non-seasonal items: focus on demand and base
       suggestedQuantity =
-          (baseQuantity * 0.6 + // 60% weight to base calculation
-          stockAdjustment * 0.05 + // 5% weight to stock levels
+          (baseQuantity *
+              0.65 + // 65% weight to base calculation (reduced from 70% to make room for frequent updates)
+          stockAdjustment *
+              0.1 + // 10% weight to stock levels (increased from 5%)
           seasonalAdjustment * 0.0 + // 0% weight to seasonal trends
           leadTimeAdjustment * 0.1 + // 10% weight to lead time
-          demandAdjustment * 0.2 + // 20% weight to demand patterns
+          demandAdjustment *
+              0.1 + // 10% weight to demand patterns (decreased from 20%)
           timeToThresholdAdjustment *
-              0.05 // 5% weight to time-to-threshold
+              0.0 + // 0% weight to time-to-threshold (decreased from 5%)
+          frequentUpdateAdjustment *
+              0.05 // 5% weight to frequent updates
               );
     }
     // Use a higher fallback if calculation is low
-    final fallbackMin = (minimumStock * 1.5).round();
+    final fallbackMin = (minimumStock * 2.0).round(); // Increased from 1.5
     final finalQuantity = suggestedQuantity > 0
         ? suggestedQuantity.round()
         : fallbackMin;
-    // Lower safety margin to 5%
-    return (finalQuantity * 1.05).round();
+    // Increased safety margin to 15%
+    return (finalQuantity * 1.15).round();
   }
 
   /// New: Calculate adjustment based on how quickly threshold is hit
@@ -181,7 +195,7 @@ class StockItem {
 
   // Calculate base quantity from delivery history
   int calculateBaseQuantity() {
-    if (deliveryHistory.isEmpty) return minimumStock;
+    if (deliveryHistory.isEmpty) return minimumStock * 2; // Increased fallback
 
     // Check if this is a seasonal item to determine analysis period
     final isSeasonal = isSeasonalItem();
@@ -199,7 +213,7 @@ class StockItem {
         )
         .toList();
 
-    if (recentDeliveries.isEmpty) return minimumStock;
+    if (recentDeliveries.isEmpty) return minimumStock * 2; // Increased fallback
 
     // Calculate average daily usage
     final totalQuantity = recentDeliveries.fold(
@@ -213,10 +227,10 @@ class StockItem {
         ? totalQuantity / daysSinceFirstDelivery
         : totalQuantity / analysisDays;
 
-    // Determine order period based on item type
+    // Determine order period based on item type - increased periods
     final orderPeriodDays = isSeasonal
-        ? 21
-        : 30; // 3 weeks for seasonal, 4 weeks for non-seasonal
+        ? 28 // Increased from 21 to 28 days (4 weeks)
+        : 42; // Increased from 30 to 42 days (6 weeks)
 
     // For non-seasonal items, also consider trend analysis
     if (!isSeasonal && recentDeliveries.length >= 3) {
@@ -233,22 +247,26 @@ class StockItem {
   // Adjust based on current stock levels
   int calculateStockAdjustment() {
     final stockRatio = currentStock / maximumStock;
-    if (stockRatio < 0.2) {
+    if (stockRatio < 0.3) {
+      // Increased threshold from 0.2
       // Very low stock - increase order
-      return (minimumStock * 0.4).round();
-    } else if (stockRatio < 0.4) {
+      return (minimumStock * 0.6).round(); // Increased from 0.4
+    } else if (stockRatio < 0.5) {
+      // Increased threshold from 0.4
       // Low stock - moderate increase
-      return (minimumStock * 0.2).round();
-    } else if (stockRatio > 0.8) {
+      return (minimumStock * 0.4).round(); // Increased from 0.2
+    } else if (stockRatio > 0.9) {
+      // Increased threshold from 0.8
       // High stock - reduce order (less aggressive)
-      return -(minimumStock * 0.1).round();
+      return -(minimumStock * 0.05).round(); // Reduced from 0.1
     }
     return 0; // No adjustment needed
   }
 
   // Calculate demand trend for non-seasonal items
   double _calculateDemandTrend(List<DeliveryRecord> recentDeliveries) {
-    if (recentDeliveries.length < 3) return 1.0; // No trend data available
+    if (recentDeliveries.length < 3)
+      return 1.2; // Increased from 1.0 to be less conservative
     // Sort deliveries by date
     recentDeliveries.sort((a, b) => a.deliveryDate.compareTo(b.deliveryDate));
     // Split into two halves to compare early vs recent demand
@@ -262,25 +280,29 @@ class StockItem {
     final recentAvg =
         recentDeliveriesHalf.fold(0, (sum, record) => sum + record.quantity) /
         recentDeliveriesHalf.length;
-    if (earlyAvg == 0) return 1.0; // Avoid division by zero
+    if (earlyAvg == 0) return 1.2; // Increased from 1.0 to be less conservative
     // Calculate trend ratio
     final trendRatio = recentAvg / earlyAvg;
-    // Apply trend adjustment with less strict bounds
-    if (trendRatio > 1.5) {
-      // Strong upward trend - increase by up to 40%
-      return 1.4;
-    } else if (trendRatio > 1.2) {
-      // Moderate upward trend - increase by up to 20%
-      return 1.2;
-    } else if (trendRatio < 0.7) {
-      // Strong downward trend - decrease by up to 15%
-      return 0.85;
-    } else if (trendRatio < 0.85) {
+    // Apply trend adjustment with less strict bounds - more aggressive upward adjustments
+    if (trendRatio > 1.3) {
+      // Reduced threshold from 1.5
+      // Strong upward trend - increase by up to 50%
+      return 1.5; // Increased from 1.4
+    } else if (trendRatio > 1.1) {
+      // Reduced threshold from 1.2
+      // Moderate upward trend - increase by up to 30%
+      return 1.3; // Increased from 1.2
+    } else if (trendRatio < 0.6) {
+      // Reduced threshold from 0.7
+      // Strong downward trend - decrease by up to 10%
+      return 0.9; // Increased from 0.85
+    } else if (trendRatio < 0.8) {
+      // Reduced threshold from 0.85
       // Moderate downward trend - decrease by up to 5%
       return 0.95;
     } else {
-      // Stable demand - no adjustment
-      return 1.0;
+      // Stable demand - slight increase instead of no adjustment
+      return 1.1; // Increased from 1.0
     }
   }
 
@@ -942,7 +964,8 @@ class StockItem {
   int calculateLeadTimeAdjustment() {
     // Assume average lead time of 7 days
     // Order extra to cover lead time period
-    if (deliveryHistory.isEmpty) return minimumStock;
+    if (deliveryHistory.isEmpty)
+      return (minimumStock * 1.5).round(); // Increased fallback
 
     final recentDeliveries = deliveryHistory
         .where(
@@ -952,7 +975,8 @@ class StockItem {
         )
         .toList();
 
-    if (recentDeliveries.isEmpty) return minimumStock;
+    if (recentDeliveries.isEmpty)
+      return (minimumStock * 1.5).round(); // Increased fallback
 
     final totalQuantity = recentDeliveries.fold(
       0,
@@ -960,8 +984,8 @@ class StockItem {
     );
     final avgDailyUsage = totalQuantity / 30;
 
-    // Order extra for 7 days of lead time
-    return (avgDailyUsage * 7).round();
+    // Order extra for 10 days of lead time (increased from 7)
+    return (avgDailyUsage * 10).round();
   }
 
   // Adjust based on demand patterns and trends including slope analysis
