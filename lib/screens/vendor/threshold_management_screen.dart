@@ -9,11 +9,17 @@ class ThresholdManagementScreen extends StatefulWidget {
   final String vendorEmail;
   final String? productName;
   final int? thresholdLevel;
-  
-  const ThresholdManagementScreen({super.key, required this.vendorEmail, this.productName, this.thresholdLevel});
+
+  const ThresholdManagementScreen({
+    super.key,
+    required this.vendorEmail,
+    this.productName,
+    this.thresholdLevel,
+  });
 
   @override
-  State<ThresholdManagementScreen> createState() => _ThresholdManagementScreenState();
+  State<ThresholdManagementScreen> createState() =>
+      _ThresholdManagementScreenState();
 }
 
 class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
@@ -25,20 +31,33 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
     super.initState();
     // Check for navigation arguments and pre-fill threshold if provided
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null && args['thresholdLevel'] != null) {
-        setState(() {
-          // You can use this value to pre-fill a field or highlight the product
-        });
+      final args = ModalRoute.of(context)?.settings.arguments;
+      String vendorEmail = widget.vendorEmail;
+      String? productName = widget.productName;
+      int? thresholdLevel = widget.thresholdLevel;
+      if (args != null) {
+        if (args is String) {
+          vendorEmail = args;
+        } else if (args is Map<String, dynamic>) {
+          vendorEmail = args['vendorEmail'] ?? vendorEmail;
+          productName = args['productName'] ?? productName;
+          thresholdLevel = args['thresholdLevel'] ?? thresholdLevel;
+        }
       }
+      setState(() {
+        // Update the widget fields if needed
+        // (If you want to use these values to pre-fill fields, do so here)
+      });
     });
     _loadStockData();
   }
 
   Future<void> _loadStockData() async {
     try {
-      setState(() { isLoading = true; });
-      
+      setState(() {
+        isLoading = true;
+      });
+
       final stockSnapshot = await FirebaseFirestore.instance
           .collection('stock_items')
           .get();
@@ -52,22 +71,25 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
             currentStock: data['currentStock'] ?? 0,
             minimumStock: data['minimumStock'] ?? 0,
             maximumStock: data['maximumStock'] ?? 0,
-            deliveryHistory: _parseDeliveryHistory(data['deliveryHistory'] ?? []),
+            deliveryHistory: _parseDeliveryHistory(
+              data['deliveryHistory'] ?? [],
+            ),
             primarySupplier: data['primarySupplier'],
             primarySupplierEmail: data['primarySupplierEmail'],
-            firstDeliveryDate: data['firstDeliveryDate'] != null 
-                ? (data['firstDeliveryDate'] as Timestamp).toDate() 
+            firstDeliveryDate: data['firstDeliveryDate'] != null
+                ? (data['firstDeliveryDate'] as Timestamp).toDate()
                 : null,
-            lastDeliveryDate: data['lastDeliveryDate'] != null 
-                ? (data['lastDeliveryDate'] as Timestamp).toDate() 
+            lastDeliveryDate: data['lastDeliveryDate'] != null
+                ? (data['lastDeliveryDate'] as Timestamp).toDate()
                 : null,
             autoOrderEnabled: data['autoOrderEnabled'] ?? false,
             averageUnitPrice: data['averageUnitPrice']?.toDouble(),
             vendorEmail: widget.vendorEmail,
             thresholdLevel: data['thresholdLevel'] ?? 0,
-            thresholdNotificationsEnabled: data['thresholdNotificationsEnabled'] ?? true,
-            lastThresholdAlert: data['lastThresholdAlert'] != null 
-                ? (data['lastThresholdAlert'] as Timestamp).toDate() 
+            thresholdNotificationsEnabled:
+                data['thresholdNotificationsEnabled'] ?? true,
+            lastThresholdAlert: data['lastThresholdAlert'] != null
+                ? (data['lastThresholdAlert'] as Timestamp).toDate()
                 : null,
             suggestedOrderQuantity: data['suggestedOrderQuantity'] ?? 0,
           );
@@ -78,40 +100,52 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
           isLoading = false;
         });
       } else {
-        setState(() { isLoading = false; });
+        setState(() {
+          isLoading = false;
+        });
       }
     } catch (e) {
       print('Error loading stock data: $e');
-      setState(() { isLoading = false; });
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   List<DeliveryRecord> _parseDeliveryHistory(List<dynamic> history) {
-    return history.map((item) => DeliveryRecord(
-      id: item['id'] ?? '',
-      orderId: item['orderId'] ?? '',
-      productName: item['productName'] ?? '',
-      quantity: item['quantity'] ?? 0,
-      supplierName: item['supplierName'] ?? '',
-      supplierEmail: item['supplierEmail'] ?? '',
-      deliveryDate: (item['deliveryDate'] as Timestamp).toDate(),
-      unitPrice: item['unitPrice']?.toDouble(),
-      notes: item['notes'],
-      status: item['status'] ?? '',
-      vendorEmail: widget.vendorEmail,
-    )).toList();
+    return history
+        .map(
+          (item) => DeliveryRecord(
+            id: item['id'] ?? '',
+            orderId: item['orderId'] ?? '',
+            productName: item['productName'] ?? '',
+            quantity: item['quantity'] ?? 0,
+            supplierName: item['supplierName'] ?? '',
+            supplierEmail: item['supplierEmail'] ?? '',
+            deliveryDate: (item['deliveryDate'] as Timestamp).toDate(),
+            unitPrice: item['unitPrice']?.toDouble(),
+            notes: item['notes'],
+            status: item['status'] ?? '',
+            vendorEmail: widget.vendorEmail,
+          ),
+        )
+        .toList();
   }
 
-  Future<void> _updateThreshold(StockItem item, int newThreshold, bool notificationsEnabled) async {
+  Future<void> _updateThreshold(
+    StockItem item,
+    int newThreshold,
+    bool notificationsEnabled,
+  ) async {
     try {
       await FirebaseFirestore.instance
           .collection('stock_items')
           .doc(item.id)
           .update({
-        'thresholdLevel': newThreshold,
-        'thresholdNotificationsEnabled': notificationsEnabled,
-        'suggestedOrderQuantity': item.calculateSuggestedOrderQuantity(),
-      });
+            'thresholdLevel': newThreshold,
+            'thresholdNotificationsEnabled': notificationsEnabled,
+            'suggestedOrderQuantity': item.calculateSuggestedOrderQuantity(),
+          });
 
       // Also update the product_inventory collection for this product/vendor
       final inventoryQuery = await FirebaseFirestore.instance
@@ -128,7 +162,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
 
       // Reload data
       await _loadStockData();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -152,7 +186,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Threshold Management'),
@@ -164,9 +198,9 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-                                colors: isDark
-                      ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
-                      : [maroonThreshold, maroonThreshold.withOpacity(0.8)],
+              colors: isDark
+                  ? [const Color(0xFF3D3D3D), const Color(0xFF2D2D2D)]
+                  : [maroonThreshold, maroonThreshold.withOpacity(0.8)],
             ),
           ),
         ),
@@ -176,15 +210,15 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : stockItems.isEmpty
-                ? _buildEmptyState(isDark)
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: stockItems.length,
-                    itemBuilder: (context, index) {
-                      final item = stockItems[index];
-                      return _buildStockItemCard(item, isDark);
-                    },
-                  ),
+            ? _buildEmptyState(isDark)
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: stockItems.length,
+                itemBuilder: (context, index) {
+                  final item = stockItems[index];
+                  return _buildStockItemCard(item, isDark);
+                },
+              ),
       ),
     );
   }
@@ -226,7 +260,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
     final thresholdStatus = item.thresholdStatus;
     Color statusColor;
     IconData statusIcon;
-    
+
     switch (thresholdStatus) {
       case ThresholdStatus.critical:
         statusColor = Colors.red;
@@ -286,7 +320,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Stock Level Indicator
             Row(
               children: [
@@ -304,7 +338,9 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                       const SizedBox(height: 4),
                       LinearProgressIndicator(
                         value: item.stockPercentage.clamp(0.0, 1.0),
-                        backgroundColor: isDark ? Colors.white24 : Colors.grey[300],
+                        backgroundColor: isDark
+                            ? Colors.white24
+                            : Colors.grey[300],
                         valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                       ),
                     ],
@@ -334,7 +370,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Threshold Settings
             Row(
               children: [
@@ -375,11 +411,8 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                     const SizedBox(height: 4),
                     Switch(
                       value: item.thresholdNotificationsEnabled,
-                      onChanged: (value) => _updateThreshold(
-                        item,
-                        item.thresholdLevel,
-                        value,
-                      ),
+                      onChanged: (value) =>
+                          _updateThreshold(item, item.thresholdLevel, value),
                       activeColor: maroonThreshold,
                     ),
                   ],
@@ -387,7 +420,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Action Buttons
             Row(
               children: [
@@ -413,7 +446,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
   Widget _buildThresholdStatusChip(ThresholdStatus status, bool isDark) {
     Color chipColor;
     String statusText;
-    
+
     switch (status) {
       case ThresholdStatus.critical:
         chipColor = Colors.red;
@@ -461,9 +494,7 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         title: Text(
           'Set Threshold for ${item.productName}',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-          ),
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -485,24 +516,23 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
                 ),
               ),
               keyboardType: TextInputType.number,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-              ),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: maroonThreshold),
-            ),
+            child: Text('Cancel', style: TextStyle(color: maroonThreshold)),
           ),
           ElevatedButton(
             onPressed: () {
               final newThreshold = int.tryParse(thresholdController.text) ?? 0;
-              _updateThreshold(item, newThreshold, item.thresholdNotificationsEnabled);
+              _updateThreshold(
+                item,
+                newThreshold,
+                item.thresholdNotificationsEnabled,
+              );
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -515,6 +545,4 @@ class _ThresholdManagementScreenState extends State<ThresholdManagementScreen> {
       ),
     );
   }
-
-
-} 
+}

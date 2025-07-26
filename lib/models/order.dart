@@ -1112,6 +1112,114 @@ class StockItem {
 
     return 0; // Stable demand - no adjustment
   }
+
+  // Calculate adjustment based on frequent updates with large quantities
+  int calculateFrequentUpdateAdjustment() {
+    if (deliveryHistory.isEmpty) return 0;
+
+    // Get recent deliveries (last 30 days)
+    final recentDeliveries = deliveryHistory
+        .where(
+          (record) => record.deliveryDate.isAfter(
+            DateTime.now().subtract(const Duration(days: 30)),
+          ),
+        )
+        .toList();
+
+    if (recentDeliveries.length < 2) return 0;
+
+    // Group deliveries by date to find days with multiple updates
+    final deliveriesByDate = <DateTime, List<DeliveryRecord>>{};
+    for (final delivery in recentDeliveries) {
+      final dateKey = DateTime(
+        delivery.deliveryDate.year,
+        delivery.deliveryDate.month,
+        delivery.deliveryDate.day,
+      );
+      deliveriesByDate.putIfAbsent(dateKey, () => []).add(delivery);
+    }
+
+    // Find days with multiple deliveries (frequent updates)
+    final frequentUpdateDays = deliveriesByDate.entries
+        .where((entry) => entry.value.length >= 2)
+        .toList();
+
+    if (frequentUpdateDays.isEmpty) return 0;
+
+    // Calculate total quantity delivered on frequent update days
+    int totalFrequentUpdateQuantity = 0;
+    for (final day in frequentUpdateDays) {
+      final dayTotal = day.value.fold(
+        0,
+        (sum, record) => sum + record.quantity,
+      );
+      totalFrequentUpdateQuantity += dayTotal;
+    }
+
+    // Calculate average quantity per frequent update day
+    final avgQuantityPerFrequentDay =
+        totalFrequentUpdateQuantity / frequentUpdateDays.length;
+
+    // Calculate percentage of days that had frequent updates
+    final frequentUpdatePercentage =
+        (frequentUpdateDays.length / deliveriesByDate.length) * 100;
+
+    // Determine adjustment based on frequency and quantity
+    int adjustment = 0;
+
+    if (frequentUpdatePercentage >= 50) {
+      // Very frequent updates (50%+ of days had multiple deliveries)
+      if (avgQuantityPerFrequentDay >= minimumStock * 2) {
+        // Large quantities on frequent days
+        adjustment = (minimumStock * 1.5).round();
+      } else if (avgQuantityPerFrequentDay >= minimumStock) {
+        // Moderate quantities on frequent days
+        adjustment = (minimumStock * 1.0).round();
+      } else {
+        // Small quantities on frequent days
+        adjustment = (minimumStock * 0.5).round();
+      }
+    } else if (frequentUpdatePercentage >= 25) {
+      // Moderately frequent updates (25-49% of days had multiple deliveries)
+      if (avgQuantityPerFrequentDay >= minimumStock * 2) {
+        // Large quantities on moderately frequent days
+        adjustment = (minimumStock * 1.0).round();
+      } else if (avgQuantityPerFrequentDay >= minimumStock) {
+        // Moderate quantities on moderately frequent days
+        adjustment = (minimumStock * 0.7).round();
+      } else {
+        // Small quantities on moderately frequent days
+        adjustment = (minimumStock * 0.3).round();
+      }
+    } else if (frequentUpdatePercentage >= 10) {
+      // Occasionally frequent updates (10-24% of days had multiple deliveries)
+      if (avgQuantityPerFrequentDay >= minimumStock * 2) {
+        // Large quantities on occasionally frequent days
+        adjustment = (minimumStock * 0.7).round();
+      } else if (avgQuantityPerFrequentDay >= minimumStock) {
+        // Moderate quantities on occasionally frequent days
+        adjustment = (minimumStock * 0.5).round();
+      } else {
+        // Small quantities on occasionally frequent days
+        adjustment = (minimumStock * 0.2).round();
+      }
+    }
+
+    // Additional boost for items with very large individual delivery quantities
+    final maxSingleDelivery = recentDeliveries
+        .map((record) => record.quantity)
+        .reduce((max, quantity) => quantity > max ? quantity : max);
+
+    if (maxSingleDelivery >= minimumStock * 3) {
+      // Very large individual deliveries - add extra boost
+      adjustment += (minimumStock * 0.5).round();
+    } else if (maxSingleDelivery >= minimumStock * 2) {
+      // Large individual deliveries - add moderate boost
+      adjustment += (minimumStock * 0.3).round();
+    }
+
+    return adjustment;
+  }
 }
 
 enum ThresholdStatus { normal, info, warning, critical }
